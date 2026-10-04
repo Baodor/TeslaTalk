@@ -44,9 +44,48 @@ jobs:
       - run: npm run test:e2e
         working-directory: frontend
       - name: Build production container
-        run: docker build -t teslatalk:check .
+        run: |
+          # Reproduce checkouts created with a restrictive umask.
+          chmod -R go-rwx backend/app frontend/public
+          docker build -t teslatalk:check .
+      - name: Start production container as its application user
+        run: |
+          docker run -d --name tt-app \
+            -e APP_SECRET=ci-only-startup-secret-aaaaaaaaaaaaaaaaaaaaaaaa \
+            -e APP_URL=http://localhost:8780 \
+            --mount type=volume,source=teslatalk-ci-data,target=/data \
+            -p 127.0.0.1:18780:8780 teslatalk:check
+          python - <<'PY'
+          import json, re, subprocess, time, urllib.request
+          base = 'http://127.0.0.1:18780'
+          for attempt in range(40):
+              state = json.loads(subprocess.check_output(['docker', 'inspect', 'tt-app']))[0]['State']
+              if not state['Running']:
+                  raise SystemExit(f"Production container stopped: {state['ExitCode']}")
+              try:
+                  with urllib.request.urlopen(base + '/api/health', timeout=2) as response:
+                      health = json.load(response)
+              except OSError:
+                  time.sleep(1)
+                  continue
+              assert health['status'] == 'ok', health
+              break
+          else:
+              raise SystemExit('Production container did not become ready')
+          with urllib.request.urlopen(base + '/', timeout=5) as response:
+              page = response.read().decode()
+          assert 'TeslaTalk' in page
+          assets = re.findall(r'(?:src|href)="(/assets/[^\"]+)"', page)
+          assert assets, 'Frontend assets missing from index.html'
+          for path in assets + ['/favicon.svg']:
+              with urllib.request.urlopen(base + path, timeout=5) as response:
+                  assert response.status == 200 and response.read(), path
+          print('Production HTTP, SQLite volume and frontend assets are accessible.')
+          PY
+          docker exec tt-app python -c 'import os; assert os.getuid() == 10001, os.getuid(); print("Application UID:", os.getuid())'
       - name: Logs on failure
         if: failure()
         run: |
           docker logs tt-audio || true
+          docker logs tt-app || true
           find frontend/test-results -name error-context.md -exec cat {} \; || true
