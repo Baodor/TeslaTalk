@@ -1,0 +1,14 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+frontend/dist/
+data/
+deploy/livekit.yaml
+*.sqlite*
+test-results/
+playwright-report/
+*.tsbuildinfo
+deploy/keys/
+*.log

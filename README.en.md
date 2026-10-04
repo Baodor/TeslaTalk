@@ -2,15 +2,17 @@
 
 # TeslaTalk
 
+<img src="frontend/public/favicon.svg" alt="TeslaTalk: Tesla T and walkie-talkie" width="88">
+
 ### Travel together. Stay connected.
 
 <a href="README.md"><img alt="Read in German" src="https://img.shields.io/badge/Read_in-Deutsch-8eefbb?style=for-the-badge&labelColor=101a20"></a>
 
-**Voice radio · Trips · Live map · Friends · Road trips**
+**Voice radio · Trips · Live map · Friends · Installable PWA**
 
 ![License](https://img.shields.io/badge/License-AGPLv3-8eefbb?style=flat-square&labelColor=101a20)
 ![Self hosted](https://img.shields.io/badge/Self--Hosted-Docker-8eefbb?style=flat-square&labelColor=101a20)
-![Status](https://img.shields.io/badge/Status-V1_in_development-f5c76d?style=flat-square&labelColor=101a20)
+![Status](https://img.shields.io/badge/Status-0.1_Preview-f5c76d?style=flat-square&labelColor=101a20)
 
 Your group. Your trip. Your server.
 
@@ -18,13 +20,17 @@ Your group. Your trip. Your server.
 
 ---
 
-TeslaTalk connects friends travelling together in their Teslas. Each trip brings voice radio, chat and a participant map into one place. The interface is designed for the Tesla browser and also works on phones, tablets and computers. Run your own server in Docker.
+TeslaTalk connects friends travelling together in their Teslas. Each trip brings voice radio, chat and a participant map into one place. The interface is designed for the Tesla browser and also works on phones, tablets and computers. Run your own server in Docker. Install TeslaTalk on your phone’s **home screen**, with its own icon and **Web Push notifications**.
 
-> The initial implementation is currently being developed. This overview distinguishes the agreed first release from later additions. Vehicle features use Tesla's official interfaces. TeslaTalk is an independent project.
+> **0.1 preview:** The web interface, API and demo are implemented. Real vehicles require a configured Tesla Fleet application and a reachable LiveKit server. Testing inside a real Tesla and delivery of notifications on physical phones are still pending.
 
-## First release
+![TeslaTalk – trips, map and voice radio](docs/assets/desktop.png)
 
-| Area | Scope for V1 |
+*Interface in demo mode. Vehicle values shown are sample data.*
+
+## Included in version 0.1
+
+| Area | Implemented scope |
 | --- | --- |
 | Tesla sign-in | Official OAuth redirect; TeslaTalk never collects Tesla passwords |
 | Vehicles | Retrieve account vehicles, select a vehicle and set a favourite |
@@ -32,11 +38,13 @@ TeslaTalk connects friends travelling together in their Teslas. Each trip brings
 | Trips | Name, destination, start and end dates; join using a PIN or invitation |
 | Map | Location and vehicle data shared exclusively within your own trip |
 | Voice radio | Multiple simultaneous speakers; push-to-talk and voice activation; self-hosted LiveKit server |
-| Chat | Persistent trip chat, also usable from the future mobile app |
+| Chat | Persistent trip chat with real-time updates, including the mobile PWA |
+| PWA & Push | Home-screen installation; notifications for chat, trip invitations and friend requests |
 | Passengers | Personal name and PIN, QR entry without a Tesla account, valid only during the trip |
 | History | Full storage of captured data and export; rankings for consumption, time and average speed |
 | Administration | Separate administrator sign-in through OIDC |
-| API | Foundation for future apps and personal API keys |
+| API | Documented endpoints and personal, revocable API keys |
+| Sharing | Separate, revocable read-only trip summary link after a trip; album access follows with Immich |
 
 ## Roadmap
 
@@ -57,11 +65,13 @@ TeslaTalk connects friends travelling together in their Teslas. Each trip brings
 - After the trip, create a separate, revocable **read-only link** that lets external visitors view the trip overview and album.
 - Public links never grant access to private chat, Tesla accounts or live locations.
 
-### iOS and Android apps
+### Mobile PWA development
 
-- Configure your own server address.
-- Use trips, vehicle data, the map, voice radio and chat on the go.
-- Support passenger access via QR code.
+TeslaTalk starts as a website that can be installed on the home screen. Open your own server address; an App Store app is not needed.
+
+- Continue testing mobile controls and notifications on real devices.
+- Integrate shared charging stops and Immich into the PWA.
+- Make changing servers easier directly in the interface later.
 
 #### Idea: “I need a toilet break” 🚻
 
@@ -81,7 +91,57 @@ The notification is a request for a break. The leader chooses the rest area. Mul
 | Tesla Fleet API | Official account and vehicle integration |
 | OIDC | Separate administrator sign-in |
 
-Setup instructions, screenshots, API documentation and verified limitations will accompany the runnable first release.
+## Try it
+
+Requirements: Git, Python 3, OpenSSL and Docker Compose v2.
+
+```bash
+git clone https://github.com/Baodor/TeslaTalk.git
+cd TeslaTalk
+python3 scripts/configure.py --demo
+docker compose up -d --build
+```
+
+Open **http://localhost:8780**. The explicitly enabled demo mode creates sample data and requires no Tesla account. Keep `DEMO_MODE=false` for a real installation.
+
+For HTTPS on a new installation:
+
+```bash
+python3 scripts/configure.py \
+  --url https://talk.example.com \
+  --voice-url wss://voice.example.com \
+  --email you@example.com
+docker compose -f compose.yaml -f deploy/compose.https.yaml up -d --build
+```
+
+Bootstrap does not overwrite an existing `.env`. On an existing installation, edit the addresses directly and keep the current keys. An overlay for an existing Traefik installation is provided in `deploy/compose.traefik.yaml`.
+
+[Setup, Tesla Fleet API, OIDC and backup](docs/SETUP.md) · [API documentation](docs/API.md)
+
+## Add to the home screen
+
+**iPhone/iPad:** Open in Safari → Share → **Add to Home Screen**. Launch from the new icon, then enable **Benachrichtigungen** (notifications). Web Push requires iOS/iPadOS 16.4 or newer here. [Apple/WebKit explains support](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
+
+**Android/Chrome:** Use the install button or browser menu, then explicitly allow notifications. The icon combines a **Tesla T with a walkie-talkie**. Installation and Push require HTTPS; the local `localhost` demo is the development exception.
+
+Notifications never reveal chat contents, plates or location. Passengers receive Push only while their access is valid. An offline page explains connection problems; voice radio and current data require internet. Continuous background audio depends on the device and browser.
+
+## Verified so far
+
+- **29 backend tests:** Trip access, PINs, scheduled boundaries, private sharing, OAuth state, API keys, rankings and push subscriptions.
+- **3 browser tests:** Real-time chat with two drivers, passenger entry and trip expiry, mobile layout, service workers, offline caching and notification consent.
+- **TypeScript and the production build** pass. GitHub Actions includes an optional LiveKit test and a Docker build.
+
+Server Push delivery is tested with mocked push services; the browser consent test uses a mocked subscription. Real Tesla sign-in and end-to-end delivery on iOS/Android have not yet been confirmed here.
+
+## Known limitations
+
+- Location and vehicle polling runs every **120 seconds** by default for connected drivers in active trips. This is not Fleet Telemetry streaming and may incur Tesla API charges.
+- Consumption requires measured energy and odometer counters from a suitable integration. V1 does not estimate consumption from battery percentage.
+- Charging planning, synchronized routes, music control and Immich are **roadmap features**. QR guest access works already; photo uploads are not connected yet.
+- Microphone and browser availability while driving must be verified for the vehicle, region and firmware. V1 sends no vehicle commands.
+- The initial admin page is an operational overview. Server configuration uses environment variables.
+- One server runs one FastAPI process with SQLite. Multiple instances and distributed scaling come later.
 
 ## Licence
 

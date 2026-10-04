@@ -1,0 +1,8 @@
+fastapi>=0.115,<1
+uvicorn[standard]>=0.34,<1
+httpx[socks]>=0.28,<1
+cryptography>=44,<48
+authlib>=1.5,<2
+PyJWT>=2.10,<3
+itsdangerous>=2.2,<3
+pywebpush>=2,<3

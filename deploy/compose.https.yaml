@@ -1,0 +1,22 @@
+# docker compose -f compose.yaml -f deploy/compose.https.yaml up -d --build
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      APP_HOST: "${APP_HOST}"
+      VOICE_HOST: "${VOICE_HOST}"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - teslatalk
+      - livekit
+volumes:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,7 @@
+{$APP_HOST} {
+  encode zstd gzip
+  reverse_proxy teslatalk:8780
+}
+{$VOICE_HOST} {
+  reverse_proxy livekit:7880
+}

@@ -1,0 +1,25 @@
+# Existing Traefik must have a websecure entrypoint and a TLS certificate resolver.
+# Set PROXY_NETWORK and CERT_RESOLVER to match your installation.
+services:
+  teslatalk:
+    networks: [default, proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "${PROXY_NETWORK:-proxy}"
+      traefik.http.routers.teslatalk.rule: "Host(`${APP_HOST}`)"
+      traefik.http.routers.teslatalk.entrypoints: websecure
+      traefik.http.routers.teslatalk.tls.certresolver: "${CERT_RESOLVER:-letsencrypt}"
+      traefik.http.services.teslatalk.loadbalancer.server.port: "8780"
+  livekit:
+    networks: [default, proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "${PROXY_NETWORK:-proxy}"
+      traefik.http.routers.teslatalk-voice.rule: "Host(`${VOICE_HOST}`)"
+      traefik.http.routers.teslatalk-voice.entrypoints: websecure
+      traefik.http.routers.teslatalk-voice.tls.certresolver: "${CERT_RESOLVER:-letsencrypt}"
+      traefik.http.services.teslatalk-voice.loadbalancer.server.port: "7880"
+networks:
+  proxy:
+    external: true
+    name: "${PROXY_NETWORK:-proxy}"

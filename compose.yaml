@@ -1,0 +1,33 @@
+services:
+  teslatalk:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_PATH: /data/teslatalk.sqlite
+      LIVEKIT_INTERNAL_URL: http://livekit:7880
+      TESLA_PUBLIC_KEY_PATH: /app/keys/tesla-public-key.pem
+    ports:
+      - "127.0.0.1:8780:8780"
+    volumes:
+      - teslatalk-data:/data
+      - ./deploy/keys/tesla-public-key.pem:/app/keys/tesla-public-key.pem:ro
+    depends_on:
+      - livekit
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8780/api/health',timeout=5)"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+  livekit:
+    image: livekit/livekit-server:v1.13.7
+    restart: unless-stopped
+    command: ["--config", "/etc/livekit.yaml"]
+    volumes:
+      - ./deploy/livekit.yaml:/etc/livekit.yaml:ro
+    ports:
+      - "127.0.0.1:7880:7880"
+      - "7881:7881/tcp"
+      - "7882:7882/udp"
+volumes:
+  teslatalk-data:

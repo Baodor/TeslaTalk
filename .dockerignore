@@ -1,0 +1,13 @@
+.git
+.env
+.venv
+**/node_modules
+**/__pycache__
+**/*.tsbuildinfo
+frontend/dist
+deploy/keys
+deploy/livekit.yaml
+data
+test-results
+.pytest_cache
+docs/assets/*.png

@@ -1,0 +1,12 @@
+port: 7880
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  use_external_ip: true
+keys:
+  REPLACE_API_KEY: REPLACE_API_SECRET_AT_LEAST_32_CHARACTERS
+room:
+  auto_create: false
+  empty_timeout: 60
+logging:
+  level: warn
