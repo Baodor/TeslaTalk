@@ -40,6 +40,8 @@ services:
       - "traefik.http.routers.teslatalk.rule=Host(`${APP_HOST:-teslatalk.glockb.de}`)"
       - "traefik.http.routers.teslatalk.entrypoints=websecure"
       - "traefik.http.routers.teslatalk.tls=true"
+      # Optional existing Traefik resolver; leave empty for managed/wildcard certificates.
+      - "traefik.http.routers.teslatalk.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-}"
       - "traefik.http.routers.teslatalk.service=teslatalk"
       # TeslaTalk's application server listens on 8780 inside the container.
       - "traefik.http.services.teslatalk.loadbalancer.server.port=8780"
@@ -68,6 +70,7 @@ services:
       - "traefik.http.routers.teslatalk-voice.rule=Host(`${VOICE_HOST:-teslatalk-voice.glockb.de}`)"
       - "traefik.http.routers.teslatalk-voice.entrypoints=websecure"
       - "traefik.http.routers.teslatalk-voice.tls=true"
+      - "traefik.http.routers.teslatalk-voice.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-}"
       - "traefik.http.routers.teslatalk-voice.service=teslatalk-voice"
       - "traefik.http.services.teslatalk-voice.loadbalancer.server.port=7880"
 

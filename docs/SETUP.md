@@ -54,7 +54,7 @@ docker compose -f compose.traefik.yaml up -d --build
 
 To use your own domains, pass them to the bootstrap script; its `APP_HOST` and `VOICE_HOST` values also configure the router rules. On an existing installation, edit `.env` while retaining existing secrets. Put your Tesla and optional administrator OIDC credentials in `.env` as described below. Settings changes require `up -d` to recreate the application container; `restart` alone does not reload environment variables.
 
-The file uses `tls=true` and an explicit service for each router, without assuming a certificate resolver name. If your Traefik requires a per-router resolver, add `traefik.http.routers.teslatalk.tls.certresolver=YOUR_RESOLVER` and `traefik.http.routers.teslatalk-voice.tls.certresolver=YOUR_RESOLVER` using your existing resolver name. Set `PROXY_NETWORK` in `.env` only if your external Docker network has another name.
+The file uses `tls=true` and an explicit service for each router. TLS alone does not issue a trusted certificate. If your Traefik requires a per-router ACME resolver, set `TRAEFIK_CERT_RESOLVER=YOUR_RESOLVER` in `.env`; both routers use that exact existing resolver. This does not create a resolver in Traefik. Leave it empty for existing matching certificates or centrally configured TLS defaults. Set `PROXY_NETWORK` in `.env` only if your external Docker network has another name. The [German certificate diagnostics](START.de.md#https-zertifikatfehler-pr%C3%BCfen) cover browser certificate errors.
 
 Application port **8780** and LiveKit signalling port **7880** are available over the Docker network only in this file. Open/forward **7881/TCP** and **7882/UDP** directly to the Docker host for audio. Traefik serves both domains over **443/TCP** and supports WebSocket connections.
 
@@ -64,7 +64,7 @@ For installations already using the base file, the original overlay remains avai
 docker compose -f compose.yaml -f deploy/compose.traefik.yaml up -d --build
 ```
 
-When switching from the base-plus-overlay setup to the complete file, keep the same project directory and any existing `-p` project name to retain your data volume. Do not combine the root Traefik file with the base or Caddy files. The overlay now uses existing TLS configuration too; `CERT_RESOLVER` in `.env` is no longer read, so add the resolver labels above if your routers need them.
+When switching from the base-plus-overlay setup to the complete file, keep the same project directory and any existing `-p` project name to retain your data volume. Do not combine the root Traefik file with the base or Caddy files. The overlay uses the same optional `TRAEFIK_CERT_RESOLVER` setting. An old `CERT_RESOLVER` variable is not read; move its value to `TRAEFIK_CERT_RESOLVER` if it names the resolver you use.
 
 ### Audio networking
 
@@ -72,14 +72,16 @@ HTTPS carries the application and LiveKit signalling, while actual audio uses We
 
 Do not enable `room.auto_create`. TeslaTalk creates authorized rooms through the internal server API, deletes them when a trip ends and issues microphone-only join tokens. Disabling automatic room creation prevents a retained LiveKit token from recreating a finished room. The application additionally disconnects audio at the end of the scheduled interval.
 
+The default microphone control is a tap toggle: tap once to speak and again to mute. It stays enabled after touch/key release, and its active state is visibly labelled. In tap mode, leaving the page or disconnecting mutes the microphone. Optional voice activation remains available; multiple participants can speak concurrently.
+
 ## Tesla Fleet API
 
 1. Create your own application at [Tesla's developer portal](https://developer.tesla.com/). Configure the allowed origin `https://talk.example.com` and exact callback `https://talk.example.com/auth/tesla/callback`.
 2. Enable the account, vehicle data and location permissions used by V1. The authorization request uses `openid offline_access user_data vehicle_device_data vehicle_location`; it does not request vehicle command permissions.
 3. Put the client ID and client secret in `.env`. The default `TESLA_FLEET_URL` is the EU/EMEA endpoint. Use `https://fleet-api.prd.na.vn.cloud.tesla.com` for North America/APAC outside China. This preview uses one configured region per server.
-4. Start the HTTPS server and check that the public EC key is reachable at `https://talk.example.com/.well-known/appspecific/com.tesla.3p.public-key.pem`. The private key is never served.
+4. Start the HTTPS server and run `python3 scripts/register_tesla.py --check`. This checks configuration and validates the public secp256r1 EC key served at `https://talk.example.com/.well-known/appspecific/com.tesla.3p.public-key.pem` against your local public key. The check needs Python 3 and OpenSSL but does not register the application or validate the client credentials. The private key is never served.
 5. Register the partner account in your configured region with `python3 scripts/register_tesla.py`. This explicitly sends the domain registration request to Tesla; it does not print or persist the partner token. Follow Tesla's [partner registration](https://developer.tesla.com/docs/fleet-api/endpoints/partner-endpoints) and [partner token](https://developer.tesla.com/docs/fleet-api/authentication/partner-tokens) documentation if your application requires a different onboarding flow.
-6. Restart TeslaTalk after changing `.env`, sign in via Tesla's own authorization page, then open your profile and retrieve/select your vehicle.
+6. Recreate TeslaTalk with `docker compose ... up -d` after changing `.env`, sign in via Tesla's own authorization page, then open your profile and retrieve/select your vehicle. A plain `restart` does not reload environment variables.
 
 TeslaTalk stores encrypted OAuth tokens, not Tesla passwords. The initial driver account is created from Tesla's `/users/me` response. Vehicle access stays scoped to that signed-in account. An account with several vehicles can select a default; the selected vehicle is used for its current and upcoming trips.
 
@@ -103,7 +105,11 @@ The service worker caches public assets and the offline page only. Trips, accoun
 
 ## OIDC administration
 
-Use a **separate OIDC application** with callback `https://talk.example.com/auth/admin/callback`. Configure `OIDC_ISSUER`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`. Grant access using the `teslatalk-admin` group (configurable with `ADMIN_GROUP`) or the `ADMIN_EMAILS` allowlist with a verified email claim. Group-based access requires your IdP to include `groups` in the ID token.
+Use a **separate OIDC application** with callback `https://talk.example.com/auth/admin/callback`. Configure `OIDC_ISSUER`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`. Grant access using the `teslatalk-admin` group (configurable with `ADMIN_GROUP`) or the `ADMIN_EMAILS` allowlist with a verified email claim.
+
+`OIDC_SCOPES` defaults to `openid email profile`; add `groups` if your provider requires and permits that scope. `OIDC_GROUPS_CLAIM` defaults to `groups`, with nested paths such as `realm_access.roles` supported when explicitly configured. Group names are compared exactly and case-sensitively. TeslaTalk reads the verified ID token and, where available, retrieves UserInfo using the access token. UserInfo must have the same `sub` as the ID token. Group claims may come from either source. For example, Authentik must have a scope mapping that emits `groups`; Authelia generally requires the `groups` scope. Keycloak needs an appropriate group mapper or an explicitly configured role claim.
+
+After updating `.env`, use `docker compose ... up -d` and start a fresh login at `/auth/admin`; use `--build` too when updating code. A denied login writes `OIDC admin access denied` with the active expected group, claim path, claim names and group count. The log omits tokens, subjects, email values and group lists. A missing claim indicates an IdP mapping or scope problem; confirm that the running container has your updated settings before changing the provider. The [German guide](START.de.md#6-administration-und-handy-einrichten) includes diagnostic commands.
 
 The admin page at `/admin` shows instance counts, integration readiness, storage and polling settings. Configuration and secrets remain in the operator's environment; this first admin page is an operational overview. A Tesla driver login never grants administrator access.
 

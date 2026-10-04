@@ -20,14 +20,18 @@ test('two microphones can publish concurrently in a real LiveKit room', async ({
     try { await expect(client.getByText('Verbunden · mehrere Sprecher möglich',{exact:true})).toBeVisible({timeout:20000}); }
     catch(error){console.log('Audio UI: '+await client.locator('.radio-panel').innerText());throw error;}
   }
-  await page.getByRole('button',{name:'Zum Sprechen gedrückt halten',exact:true}).dispatchEvent('keydown',{key:' '});
-  await second.getByRole('button',{name:'Zum Sprechen gedrückt halten',exact:true}).dispatchEvent('keydown',{key:' '});
-  await expect(page.getByText('Du sendest …',{exact:true})).toBeVisible();
-  await expect(second.getByText('Du sendest …',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Mikrofon einschalten',exact:true}).click();
+  await second.getByRole('button',{name:'Mikrofon einschalten',exact:true}).press('Space');
+  // Mouse/touch release and key release leave both microphones enabled.
+  for(const client of [page,second]) {
+    await expect(client.getByRole('button',{name:'Mikrofon ausschalten',exact:true})).toHaveAttribute('aria-pressed','true');
+    await expect(client.getByText('Mikrofon an · Du sendest',{exact:true})).toBeVisible();
+  }
   await expect.poll(()=>page.locator('audio').count()).toBeGreaterThan(0);
   await expect.poll(()=>second.locator('audio').count()).toBeGreaterThan(0);
-  await page.getByRole('button',{name:'Du sendest …',exact:true}).dispatchEvent('keyup',{key:' '});
-  await second.getByRole('button',{name:'Du sendest …',exact:true}).dispatchEvent('keyup',{key:' '});
+  await page.getByRole('button',{name:'Mikrofon ausschalten',exact:true}).click();
+  await second.getByRole('button',{name:'Mikrofon ausschalten',exact:true}).press('Space');
+  for(const client of [page,second]) await expect(client.getByRole('button',{name:'Mikrofon einschalten',exact:true})).toHaveAttribute('aria-pressed','false');
   await page.request.post('/api/trips/'+trip.id+'/finish',{headers:origin});
   await expect(page.getByRole('button',{name:'Funk verbinden',exact:true})).toBeDisabled();
   await secondContext.close();

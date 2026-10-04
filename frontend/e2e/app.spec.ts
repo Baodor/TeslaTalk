@@ -7,7 +7,20 @@ async function login(page: Page, name: string) {
   await expect(page.getByRole('heading', { name: 'Deine Fahrten.' })).toBeVisible();
 }
 
+async function waitForMapTiles(page: Page) {
+  if (process.env.TT_SCREENSHOTS !== 'true') return;
+  await expect.poll(() => page.locator('.leaflet-container').evaluate(map => {
+    const bounds = map.getBoundingClientRect();
+    const visible = Array.from(map.querySelectorAll<HTMLImageElement>('.leaflet-tile')).filter(image => {
+      const tile = image.getBoundingClientRect();
+      return tile.right > bounds.left && tile.left < bounds.right && tile.bottom > bounds.top && tile.top < bounds.bottom;
+    });
+    return visible.length > 0 && visible.every(image => image.complete && image.naturalWidth === 256);
+  }), { timeout: 45000 }).toBe(true);
+}
+
 test('two drivers chat live; named guest expires and public sharing stays private', async ({ page, browser }) => {
+  if (process.env.TT_SCREENSHOTS === 'true') test.setTimeout(90000);
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await login(page, 'Fahrtleiter '+Date.now());
@@ -58,12 +71,13 @@ test('two drivers chat live; named guest expires and public sharing stays privat
   await page.getByRole('button', { name: 'Karte', exact: true }).click();
   await expect(page.locator('.car-marker')).toHaveCount(2);
   await page.waitForTimeout(1000);
-  if(process.env.TT_SCREENSHOTS==='true') await expect.poll(()=>page.locator('.leaflet-tile').first().evaluate(image=>(image as HTMLImageElement).naturalWidth),{timeout:15000}).toBe(256);
+  await waitForMapTiles(page);
   await page.screenshot({path:'../docs/assets/desktop.png',fullPage:true});
   await page.getByRole('button', { name: 'Fotos & Mitfahrer', exact: true }).click();
   await page.screenshot({path:'../docs/assets/passengers.png',fullPage:true});
   await page.setViewportSize({width:390,height:844});
   await page.getByRole('button', { name: 'Karte', exact: true }).click();
+  await waitForMapTiles(page);
   await page.screenshot({path:'../docs/assets/mobile.png',fullPage:true});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
   await page.request.post(`/api/trips/${tripId}/finish`,{headers:csrf});

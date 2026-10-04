@@ -23,6 +23,27 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: pip install -r backend/requirements-dev.txt
       - run: PYTHONPATH=backend pytest -q backend/tests
+      - name: Validate Traefik configuration with and without a certificate resolver
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, subprocess
+          path = pathlib.Path('.env')
+          # Test-only public placeholders; never overwrite an existing environment.
+          with path.open('x') as output:
+              output.write(pathlib.Path('.env.example').read_text())
+          try:
+              for resolver in ('', 'ci-resolver'):
+                  environment = dict(os.environ, TRAEFIK_CERT_RESOLVER=resolver)
+                  command = ['docker', 'compose', '-f', 'compose.traefik.yaml', 'config', '--format', 'json']
+                  configuration = json.loads(subprocess.check_output(command, env=environment))
+                  for service, router in [('teslatalk', 'teslatalk'), ('livekit', 'teslatalk-voice')]:
+                      labels = configuration['services'][service]['labels']
+                      assert labels[f'traefik.http.routers.{router}.tls.certresolver'] == resolver
+                      assert labels[f'traefik.http.routers.{router}.tls'] == 'true'
+          finally:
+              path.unlink()
+          print('Traefik TLS labels render correctly for both resolver settings.')
+          PY
       - run: npm ci --ignore-scripts --no-audit --no-fund
         working-directory: frontend
       - run: npm run build

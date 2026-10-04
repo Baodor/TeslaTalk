@@ -28,7 +28,7 @@ docker network inspect proxy
 
 Die Compose-Datei übernimmt deine Labels mit `tls=true` und der ausdrücklichen Service-Zuordnung. Der Zielport für TeslaTalk lautet **8780**, weil die Anwendung dort im Container lauscht. LiveKit lauscht intern auf **7880**. Beide Ports werden in dieser Konfiguration über das Docker-Netzwerk erreicht und nicht am Host veröffentlicht.
 
-Ein Zertifikatsresolver ist nicht fest vorgegeben. Falls dein Traefik neue Zertifikate nur mit einem Router-Label anfordert, ergänze bei beiden Services `traefik.http.routers.teslatalk.tls.certresolver=DEIN_RESOLVER` beziehungsweise `traefik.http.routers.teslatalk-voice.tls.certresolver=DEIN_RESOLVER` mit dem Namen aus deiner bestehenden Traefik-Konfiguration.
+`tls=true` schaltet HTTPS ein; ein gültiges Zertifikat muss Traefik zusätzlich bereitstellen. Wenn dein Traefik Zertifikate über einen ACME-Resolver anfordert, setze in `.env` `TRAEFIK_CERT_RESOLVER=DEIN_RESOLVER`. TeslaTalk übernimmt denselben Resolver für Webanwendung und Sprachserver. Der Name muss exakt einem bereits in Traefik konfigurierten Resolver entsprechen, zum Beispiel dem Resolver eines funktionierenden anderen Dienstes. Ein Eintrag in `.env` legt keinen neuen Traefik-Resolver an. Bei vorhandenen passenden Zertifikaten oder einem zentralen TLS-Standard lässt du den Wert leer. Siehe [Traefiks Zertifikatsresolver](https://doc.traefik.io/traefik/reference/install-configuration/tls/certificate-resolvers/acme/).
 
 ### Ports für den Sprechfunk
 
@@ -91,10 +91,13 @@ Die weiteren Angaben ergänzt du in derselben `.env`. Trage dort die tatsächlic
 | `OIDC_ISSUER` | Issuer-URL deines OIDC-Anbieters für die Administration; optional beim ersten Start |
 | `OIDC_CLIENT_ID` | Client-ID der separaten Administrator-Anwendung |
 | `OIDC_CLIENT_SECRET` | Deren Client-Secret |
-| `ADMIN_GROUP` | Standard `teslatalk-admin`; diese Gruppe muss im ID-Token enthalten sein |
+| `OIDC_SCOPES` | Standard `openid email profile`; ergänze `groups`, wenn dein Anbieter diesen Scope für Gruppen verlangt |
+| `OIDC_GROUPS_CLAIM` | Standard `groups`; alternativ der genaue Claim-Pfad, etwa `realm_access.roles` |
+| `ADMIN_GROUP` | Standard `teslatalk-admin`; bei dir `admin`, exakt wie vom Anbieter übermittelt |
 | `ADMIN_EMAILS` | Alternativ erlaubte Admin-E-Mail-Adressen, durch Kommas getrennt; der Anbieter muss die E-Mail als verifiziert melden |
 | `VAPID_SUBJECT` | `mailto:` gefolgt von deiner echten Kontaktadresse |
 | `PROXY_NETWORK` | Nur ergänzen, wenn dein Netzwerk anders heißt; Standard ist `proxy` |
+| `TRAEFIK_CERT_RESOLVER` | Exakter Name deines vorhandenen Zertifikatsresolvers; sonst leer lassen |
 
 `APP_SECRET`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `VAPID_PRIVATE_KEY` und `VAPID_PUBLIC_KEY` werden automatisch erzeugt. Du brauchst für Web Push keinen weiteren Container.
 
@@ -117,39 +120,81 @@ curl -fsS https://teslatalk.glockb.de/api/health
 docker compose -f compose.traefik.yaml logs --tail=100 teslatalk livekit
 ```
 
-Der Health-Endpunkt bestätigt die laufende Anwendung. Er prüft keine echte Tesla-Anmeldung, Mikrofonverbindung oder Push-Zustellung. Für einen Sprachtest treten zwei getrennte Browserprofile einer aktuell laufenden Fahrt bei, aktivieren jeweils das Mikrofon und sprechen miteinander.
+Der Health-Endpunkt bestätigt die laufende Anwendung. Er prüft keine echte Tesla-Anmeldung, Mikrofonverbindung oder Push-Zustellung. Für einen Sprachtest treten zwei getrennte Browserprofile einer aktuell laufenden Fahrt bei und verbinden jeweils den Funk. Einmal auf den großen Mikrofonknopf tippen schaltet das Sprechen ein, ein weiterer Tipp schaltet es aus. Der Zustand wird sichtbar angezeigt. Beim Verlassen der Seite oder Trennen wird das Mikrofon stumm. Alternativ gibt es Sprachaktivierung; mehrere Teilnehmer können gleichzeitig sprechen.
 
 ## 5. Tesla-Anmeldung freischalten
 
-1. Lege im [Tesla-Entwicklerportal](https://developer.tesla.com/) eine Fleet-API-Anwendung an. Hinterlege als erlaubten Ursprung `https://teslatalk.glockb.de` und als exakte Redirect-URI **`https://teslatalk.glockb.de/auth/tesla/callback`**.
+1. Lege im [Tesla-Entwicklerportal](https://developer.tesla.com/) eine Fleet-API-Anwendung an. Dein Tesla-Konto braucht eine verifizierte E-Mail und aktivierte Mehrfaktor-Authentifizierung. Gib die vom Portal verlangten Anwendungsdaten wahrheitsgemäß an; falls der Name `TeslaTalk` bereits vergeben ist, verwende einen eindeutigen Namen für deine Instanz.
+
+   | Feld im Tesla-Portal | Wert für deine Instanz |
+   | --- | --- |
+   | Allowed origin / erlaubter Ursprung | `https://teslatalk.glockb.de` |
+   | Redirect URI | `https://teslatalk.glockb.de/auth/tesla/callback` |
+   | Region / API-Audience | Europa: `https://fleet-api.prd.eu.vn.cloud.tesla.com` |
+   | Öffentlicher Schlüssel | `https://teslatalk.glockb.de/.well-known/appspecific/com.tesla.3p.public-key.pem` |
+
 2. Konfiguriere die für V1 benötigten Konto-, Fahrzeugdaten- und Standortberechtigungen. TeslaTalk fordert `openid offline_access user_data vehicle_device_data vehicle_location` an. Setze auch ein passendes API-Budget im Tesla-Portal.
-3. Trage `TESLA_CLIENT_ID` und `TESLA_CLIENT_SECRET` in `.env` ein und wende die Änderung an:
+3. Trage die Zugangsdaten dieser TeslaTalk-Anwendung in die bestehende `.env` ein. Behalte alle bereits erzeugten Schlüssel:
+
+   ```dotenv
+   TESLA_CLIENT_ID=DEINE_CLIENT_ID
+   TESLA_CLIENT_SECRET=DEIN_CLIENT_SECRET
+   TESLA_FLEET_URL=https://fleet-api.prd.eu.vn.cloud.tesla.com
+   DEMO_MODE=false
+   ```
+
+   Wende die Änderung an:
 
    ```bash
    docker compose -f compose.traefik.yaml up -d
    ```
 
-4. Prüfe die öffentlich erreichbare Schlüsseldatei:
+4. Prüfe Konfiguration und öffentlich erreichbare Schlüsseldatei, bevor du registrierst:
 
    ```bash
-   curl -fsS https://teslatalk.glockb.de/.well-known/appspecific/com.tesla.3p.public-key.pem
+   python3 scripts/register_tesla.py --check
    ```
 
-5. Registriere die Domain mit den eingetragenen Client-Zugangsdaten in der konfigurierten Fleet-Region:
+   Das Skript prüft per HTTPS, ob ein gültiger öffentlicher EC-Schlüssel ausgeliefert wird und mit `deploy/keys/tesla-public-key.pem` übereinstimmt. Es verwendet Python 3 und OpenSSL auf dem Docker-Host, benötigt keine zusätzlichen Python-Pakete und ändert bei `--check` nichts bei Tesla. Die Gültigkeit deiner Client-Zugangsdaten wird erst im nächsten Schritt geprüft.
+
+5. Registriere die Domain einmalig mit den eingetragenen Client-Zugangsdaten in der konfigurierten Fleet-Region:
 
    ```bash
    python3 scripts/register_tesla.py
    ```
 
-   Das Skript sendet die Partnerregistrierung an Tesla. Die Schritte und Berechtigungen richten sich nach Teslas [Partnerregistrierung](https://developer.tesla.com/docs/fleet-api/endpoints/partner-endpoints); abweichende Anforderungen deiner Anwendung stehen im Entwicklerportal.
+   Das Skript fordert einen kurzlebigen Partner-Token an und sendet die Partnerregistrierung an Tesla. Es gibt weder Secret noch Token aus und speichert keinen Partner-Token. Bei Fehlern nennt es den betroffenen Schritt und HTTP-Status. `401` beim Token-Abruf deutet auf die Client-Zugangsdaten, `403` auf Anwendungsfreigabe oder Berechtigungen hin; prüfe außerdem Allowed Origin und Region. Die Einrichtung folgt Teslas [Onboarding](https://developer.tesla.com/docs/fleet-api/getting-started/what-is-fleet-api), [Partner-Token-Verfahren](https://developer.tesla.com/docs/fleet-api/authentication/partner-tokens) und [Partnerregistrierung](https://developer.tesla.com/docs/fleet-api/endpoints/partner-endpoints).
 
 6. Melde dich auf TeslaTalk über die offizielle Tesla-Anmeldeseite an. Öffne dein Profil, rufe die Fahrzeuge ab und wähle dein Fahrzeug beziehungsweise einen Favoriten.
 
-TeslaTalk erhält OAuth-Tokens und fragt keine Tesla-Passwörter ab. Ein laufender Container allein ersetzt die Einrichtung der Fleet-API-Anwendung nicht.
+TeslaTalk erhält OAuth-Tokens und fragt keine Tesla-Passwörter ab. Ein laufender Container allein ersetzt die Einrichtung der Fleet-API-Anwendung nicht. Die Kopplung eines virtuellen Fahrzeugschlüssels wird später für Fahrzeugbefehle und Fleet Telemetry benötigt; die aktuelle Version ruft Konto-, Fahrzeug- und Standortdaten ab.
 
 ## 6. Administration und Handy einrichten
 
-Für die Administration registrierst du beim OIDC-Anbieter eine eigene Anwendung mit Redirect-URI **`https://teslatalk.glockb.de/auth/admin/callback`**. Setze die drei `OIDC_*`-Variablen sowie die Gruppe oder E-Mail-Freigabe in `.env`. Wende Änderungen mit `docker compose -f compose.traefik.yaml up -d` an. Die Administration liegt unter **https://teslatalk.glockb.de/admin** und bietet in V1 eine Statusübersicht.
+Für die Administration registrierst du beim OIDC-Anbieter eine eigene Anwendung mit Redirect-URI **`https://teslatalk.glockb.de/auth/admin/callback`**. Trage dessen tatsächlichen Issuer, Client-ID und Client-Secret ein. Für die Gruppe `admin` kommen diese Einstellungen hinzu:
+
+```dotenv
+ADMIN_GROUP=admin
+OIDC_GROUPS_CLAIM=groups
+OIDC_SCOPES=openid email profile
+```
+
+TeslaTalk prüft den signierten ID-Token und fragt zusätzlich den UserInfo-Endpunkt des Anbieters ab, wenn dieser vorhanden ist. Beide Antworten müssen dieselbe Nutzer-ID (`sub`) haben. Der konfigurierte Gruppen-Claim darf in einer dieser Antworten stehen. Der Gruppenname muss exakt passen, einschließlich Groß-/Kleinschreibung. Die Zuordnung zum OIDC-Client allein garantiert noch nicht, dass der Anbieter die Gruppe übermittelt.
+
+- **Authelia:** Für Gruppen normalerweise `OIDC_SCOPES=openid email profile groups` setzen und den `groups`-Scope am Client erlauben.
+- **Authentik:** Eine Scope-Zuordnung muss die Gruppe im `groups`-Claim liefern. Die Gruppe kann über UserInfo kommen, auch wenn sie nicht in den ID-Token aufgenommen wird.
+- **Keycloak:** Gruppen über einen Mapper als `groups` ausgeben. Für Realm-Rollen den Mapper so konfigurieren, dass die Rollen im ID-Token oder in UserInfo stehen, und `OIDC_GROUPS_CLAIM=realm_access.roles` setzen. Client-Rollen benötigen ihren tatsächlichen Claim-Pfad.
+
+Wende `.env`-Änderungen mit `docker compose -f compose.traefik.yaml up -d` an und starte anschließend eine neue Anmeldung über `/auth/admin`. Wenn du zugleich den Code aktualisiert hast, verwende `up -d --build`. Die Administration liegt unter **https://teslatalk.glockb.de/admin** und bietet in V1 eine Statusübersicht.
+
+Bei `Keine Administrator-Berechtigung.` prüfst du zuerst, welche Einstellungen im laufenden Container angekommen sind:
+
+```bash
+docker compose -f compose.traefik.yaml exec -T teslatalk python -c 'from app.config import settings; print("ADMIN_GROUP:", repr(settings.admin_group)); print("OIDC_GROUPS_CLAIM:", settings.oidc_groups_claim); print("OIDC_SCOPES:", settings.oidc_scopes)'
+docker compose -f compose.traefik.yaml logs --tail=100 teslatalk
+```
+
+Die Logzeile `OIDC admin access denied` nennt die erwartete Gruppe, den Claim-Pfad, vorhandene Claim-Namen und die Anzahl übermittelter Gruppen. `groups_present: false` bedeutet, dass der konfigurierte Claim fehlt. `group_count: 0` bedeutet, dass keine verwertbare Gruppe vorliegt. Bei einer anderen Gruppe bleibt der Zugang gesperrt. Die Diagnose enthält keine OAuth-Tokens, Nutzer-IDs, E-Mail-Adressen oder tatsächlichen Gruppenlisten. `ADMIN_EMAILS` ist eine alternative ausdrückliche Freigabe und verlangt `email_verified=true` vom Anbieter.
 
 Für das Handy öffnest du deine TeslaTalk-Adresse und installierst die PWA über **Zum Home-Bildschirm** beziehungsweise **App installieren**. Starte sie anschließend über das Symbol und aktiviere in TeslaTalk ausdrücklich die Benachrichtigungen. Auf iPhone/iPad erfordert Home-Screen-Web-Push mindestens iOS/iPadOS 16.4. Die [ausführliche Anleitung](SETUP.md#home-screen-installation-and-notifications) erklärt Geräteunterstützung und die noch ausstehenden Praxistests.
 
@@ -169,11 +214,33 @@ Fahrten, Konten und Chat liegen im Volume `teslatalk-data`; der tatsächliche Do
 | Symptom | Prüfen |
 | --- | --- |
 | Traefik meldet `502` | Beide Container und Traefik sind am selben `proxy`-Netzwerk; Zielports sind `8780` und `7880` |
-| Zertifikatsfehler | DNS und gültiges Traefik-Zertifikat für beide Hostnamen; gegebenenfalls deinen vorhandenen Resolver ergänzen |
+| Zertifikatsfehler | `TRAEFIK_CERT_RESOLVER`, DNS-A/AAAA-Einträge und gültige Traefik-Zertifikate für beide Hostnamen prüfen; Details unten |
 | Mikrofon/Karte bleiben gesperrt | Seite per HTTPS öffnen und Browserberechtigungen erteilen; Unterstützung im jeweiligen Tesla prüfen |
 | Chat funktioniert, Sprechfunk nicht | Voice-DNS, TLS, WebSocket-Verbindung sowie Firewall/Portweiterleitung für `7881/TCP` und `7882/UDP` |
 | Tesla-Anmeldung fehlt | `TESLA_CLIENT_ID`, `TESLA_CLIENT_SECRET`, Callback und Partnerregistrierung prüfen; Container nach `.env`-Änderung neu erstellen |
 | OIDC-Anmeldung wird abgewiesen | Issuer/Callback sowie `groups`-Claim oder verifizierte E-Mail-Freigabe prüfen |
 | Bind-Datei fehlt oder wird als Verzeichnis erkannt | Bootstrap aus Schritt 2 ausführen; öffentliche Schlüsseldatei und `deploy/livekit.yaml` müssen Dateien sein |
+
+### HTTPS-Zertifikatfehler prüfen
+
+Prüfe beide Domains ohne Umgehung der Zertifikatsprüfung:
+
+```bash
+curl -I https://teslatalk.glockb.de
+curl -I https://teslatalk-voice.glockb.de
+```
+
+Bei einem Fehler kannst du auf dem Server das ausgelieferte Zertifikat und den Prüfgrund anzeigen:
+
+```bash
+openssl s_client -connect teslatalk.glockb.de:443 -servername teslatalk.glockb.de -verify_hostname teslatalk.glockb.de -verify_return_error </dev/null
+```
+
+- **`TRAEFIK DEFAULT CERT` oder selbst signiertes Zertifikat:** Traefik hat kein passendes vertrauenswürdiges Zertifikat für diesen Host. Prüfe den bestehenden Resolver und die ACME-Logs in Traefik.
+- **Falscher Hostname:** Zertifikat, Router-Regel und DNS passen nicht zusammen. Öffne die Domain aus `APP_URL` und kontrolliere auch einen vorhandenen AAAA-Eintrag; er muss zum richtigen Server führen.
+- **Abgelaufen / noch nicht gültig:** Zertifikatserneuerung sowie Datum und Uhrzeit auf dem Gerät prüfen.
+- **Fehler nur auf einem Gerät oder im WLAN:** Prüfe, ob interne DNS-Einträge, ein zusätzlicher Proxy oder ein Zertifikatscache auf einen anderen Endpunkt führen.
+
+Nach Korrektur der `.env` den Container mit `docker compose -f compose.traefik.yaml up -d` neu erstellen. Webanwendung und Voice-Domain brauchen beide gültiges HTTPS, damit Anmeldung, Mikrofon und PWA zuverlässig funktionieren.
 
 Weitere Details: [allgemeine Einrichtung](SETUP.md) · [API](API.md) · [Projektübersicht](../README.md).

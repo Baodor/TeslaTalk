@@ -1,5 +1,5 @@
 /* Cache public assets only. Accounts, trips, chat and GPS are never cached. */
-const CACHE = 'teslatalk-public-v1';
+const CACHE = 'teslatalk-public-v2';
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(['/offline.html', '/offline.css', '/favicon.svg', '/icons/icon-192.png'])));
   self.skipWaiting();

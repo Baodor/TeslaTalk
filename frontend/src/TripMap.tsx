@@ -5,7 +5,7 @@ import { LocateFixed, MapPin } from 'lucide-react';
 import type { Participant } from './api';
 import 'leaflet/dist/leaflet.css';
 
-const colors = ['#8eefbb', '#95b9ff', '#f5c76d', '#e6a7d9', '#94dbec'];
+const colors = ['#ff6b72', '#95b9ff', '#f5c76d', '#e6a7d9', '#94dbec'];
 const car = (color: string) => L.divIcon({ className: 'car-marker', iconSize: [42, 42], iconAnchor: [21, 21],
   html: `<span style="background:${color}"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="#101a20" stroke-width="1.8"><path d="m5 10 2-5h10l2 5M4 10h16v7H4zM6 17v2m12-2v2M7 13h2m6 0h2"/></svg></span>` });
 

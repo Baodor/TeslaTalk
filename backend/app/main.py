@@ -21,6 +21,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from . import db, fleet, push
 from .config import settings
 from .metrics import ranking
+from .oidc import admin_access, admin_claims
 from .models import GuestLogin, Join, KeyCreate, Message, PassengerCreate, Profile, Query, Sample, TripCreate, PushSubscription, PushRemove
 from .realtime import hub, voice_token, delete_voice_room, ensure_voice_room
 from .security import Identity, authenticate, current_admin, current_user, digest, driver, limiter, pin_hash, pin_matches, join_pin_hash, set_session, user_public
@@ -30,7 +31,7 @@ oauth = OAuth()
 if settings.oidc_issuer:
     oauth.register('admin', client_id=settings.oidc_client_id, client_secret=settings.oidc_client_secret,
                    server_metadata_url=settings.oidc_issuer+'/.well-known/openid-configuration',
-                   client_kwargs={'scope':'openid email profile', 'code_challenge_method':'S256'})
+                   client_kwargs={'scope':settings.oidc_scopes, 'code_challenge_method':'S256'})
 
 
 def effective_end(trip):
@@ -265,14 +266,10 @@ async def admin_login(request:Request):
 async def admin_callback(request:Request):
     try:
         token=await oauth.admin.authorize_access_token(request)
-        claims=token.get('userinfo')
-        if not claims:
-            raise ValueError('Missing verified ID token')
-        groups=claims.get('groups',[])
-        if isinstance(groups,str):
-            groups=[groups]
-        email_allowed=claims.get('email_verified') is True and str(claims.get('email','')).lower() in settings.admin_emails
-        if settings.admin_group not in groups and not email_allowed:
+        claims=await admin_claims(oauth.admin, token)
+        allowed, diagnostic=admin_access(claims)
+        if not allowed:
+            log.warning('OIDC admin access denied: %s', json.dumps(diagnostic, sort_keys=True))
             raise HTTPException(403, 'Keine Administrator-Berechtigung.')
         response=RedirectResponse('/admin',status_code=303)
         set_session(response,str(claims['sub']),expires_at=time.time()+8*3600,admin=True)

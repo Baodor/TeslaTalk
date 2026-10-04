@@ -6,12 +6,12 @@
 
 ### Gemeinsam unterwegs. Verbunden bleiben.
 
-<a href="README.en.md"><img alt="Read in English" src="https://img.shields.io/badge/Read_in-English-8eefbb?style=for-the-badge&labelColor=101a20"></a>
+<a href="README.en.md"><img alt="Read in English" src="https://img.shields.io/badge/Read_in-English-ff6b72?style=for-the-badge&labelColor=101a20"></a>
 
 **Sprachfunk · Fahrten · Live-Karte · Freunde · Installierbare PWA**
 
-![License](https://img.shields.io/badge/Lizenz-AGPLv3-8eefbb?style=flat-square&labelColor=101a20)
-![Self hosted](https://img.shields.io/badge/Self--Hosted-Docker-8eefbb?style=flat-square&labelColor=101a20)
+![License](https://img.shields.io/badge/Lizenz-AGPLv3-ff6b72?style=flat-square&labelColor=101a20)
+![Self hosted](https://img.shields.io/badge/Self--Hosted-Docker-ff6b72?style=flat-square&labelColor=101a20)
 ![Status](https://img.shields.io/badge/Status-0.1_Preview-f5c76d?style=flat-square&labelColor=101a20)
 
 Deine Gruppe. Deine Fahrt. Dein Server.
@@ -37,7 +37,7 @@ TeslaTalk verbindet Freunde, die gemeinsam mit ihren Teslas unterwegs sind. Eine
 | Freunde | Anfragen, Annahme und Einladungen über Benutzername, Kennzeichen oder vorhandene E-Mail-Adresse |
 | Fahrten | Name, Ziel, Beginn und Ende; Beitritt per PIN oder Einladung |
 | Karte | Standort und Fahrzeugdaten ausschließlich innerhalb der eigenen Fahrt |
-| Sprachfunk | Mehrere Sprecher gleichzeitig; Push-to-Talk und Sprachaktivierung; selbst gehosteter LiveKit-Server |
+| Sprachfunk | Mehrere Sprecher gleichzeitig; Mikrofon per Antippen an/aus und Sprachaktivierung; selbst gehosteter LiveKit-Server |
 | Chat | Persistenter Fahrt-Chat mit Echtzeit-Updates, auch in der mobilen PWA |
 | PWA & Push | Installation auf dem Home-Bildschirm; Benachrichtigungen für Chat, Fahrteinladungen und Freundschaftsanfragen |
 | Mitfahrer | Persönlicher Name und PIN, QR-Beitritt ohne Tesla-Konto, auf den Fahrtzeitraum begrenzt |
@@ -138,9 +138,9 @@ Benachrichtigungen verraten keine Chattexte, Kennzeichen oder Standorte. Mitfahr
 
 ## Was schon geprüft ist
 
-- **29 Backend-Tests:** Rechte innerhalb einer Fahrt, PINs, Zeitgrenzen, private Freigaben, OAuth-Zustand, API-Schlüssel, Ranglisten und Push-Abonnements.
+- **Backend-Tests:** Rechte innerhalb einer Fahrt, PINs, Zeitgrenzen, private Freigaben, OAuth-Zustand, API-Schlüssel, Ranglisten, Push-Abonnements, OIDC-Gruppen und Tesla-Registrierung.
 - **3 Browser-Tests:** Echtzeit-Chat mit zwei Fahrern, Mitfahrerzugang und Fahrtende, mobile Darstellung, Service Worker, Offline-Cache und Push-Einwilligung.
-- **TypeScript und Produktionsbuild** erfolgreich. Ein optionaler LiveKit-Test und Docker-Build sind in GitHub Actions hinterlegt.
+- **TypeScript und Produktionsbuild** erfolgreich. GitHub Actions prüft zusätzlich zwei gleichzeitige Mikrofone mit Antippbedienung sowie Build und Start des Produktionscontainers.
 
 Push-Versand wird im Backend mit simulierten Push-Diensten geprüft; der Browser-Test prüft die Einwilligung mit einem simulierten Abonnement. Eine echte Tesla-Anmeldung und echte Push-Zustellung auf iOS/Android wurden hier noch nicht bestätigt.
 

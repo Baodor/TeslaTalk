@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Room, RoomEvent, Track, LocalAudioTrack, createLocalAudioTrack } from 'livekit-client';
-import { Mic, Radio as RadioIcon, Power, Waves } from 'lucide-react';
+import { MicOff, Radio as RadioIcon, Power, Waves } from 'lucide-react';
 import { api } from './api';
 
 export default function Radio({ tripId, active, endsAt }: { tripId: string; active: boolean; endsAt: number }) {
@@ -12,20 +12,38 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [speakers, setSpeakers] = useState<string[]>([]);
-  const [mode, setMode] = useState<'ptt' | 'vox'>('ptt');
+  const [mode, setMode] = useState<'tap' | 'vox'>('tap');
   const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
+  const transmitQueue = useRef(Promise.resolve());
   const modeRef = useRef(mode);
   const generation = useRef(0);
 
   async function transmit(enabled: boolean) {
-    if (!track.current) return;
-    await (enabled ? track.current.unmute() : track.current.mute());
-    setSending(enabled);
+    const mic = track.current;
+    if (!mic) return;
+    sendingRef.current = enabled;
+    // Apply rapid taps in order; a disconnected track must never update the UI.
+    const operation = transmitQueue.current.then(async () => {
+      if (track.current !== mic) return;
+      await (enabled ? mic.unmute() : mic.mute());
+      if (track.current === mic) setSending(enabled);
+    });
+    transmitQueue.current = operation.catch(() => {});
+    try { await operation; }
+    catch {
+      if (track.current === mic) {
+        mic.mediaStreamTrack.enabled = false;
+        sendingRef.current = false; setSending(false);
+        setError('Das Mikrofon konnte nicht umgeschaltet werden. Bitte den Funk neu verbinden.');
+      }
+    }
   }
   async function disconnect() {
     generation.current++;
     track.current?.stop();
     track.current = null;
+    sendingRef.current = false;
     await room.current?.disconnect();
     room.current = null;
     await context.current?.close();
@@ -50,7 +68,11 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
       });
       next.on(RoomEvent.TrackUnsubscribed, remote => remote.detach().forEach(el => { audioElements.current.delete(el); el.remove(); }));
       next.on(RoomEvent.ActiveSpeakersChanged, values => setSpeakers(values.map(p => p.name || 'Teilnehmer')));
-      next.on(RoomEvent.Disconnected, () => { setConnected(false); setSending(false); track.current?.stop(); });
+      next.on(RoomEvent.Disconnected, () => {
+        if (room.current !== next) return;
+        setConnected(false); setSending(false); sendingRef.current = false;
+        track.current?.stop(); track.current = null;
+      });
       await next.connect(credentials.url, credentials.token);
       if (generation.current !== current) { await next.disconnect(); return; }
       await next.startAudio();
@@ -87,7 +109,7 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
     return () => { clearInterval(interval); sourceTrack.stop(); source.disconnect(); void ctx.close(); context.current = null; };
   }, [connected, mode]);
   useEffect(() => {
-    const mute = () => { if (modeRef.current === 'ptt') void transmit(false); };
+    const mute = () => { if (modeRef.current === 'tap') void transmit(false); };
     window.addEventListener('blur', mute); document.addEventListener('visibilitychange', mute);
     const timer = window.setInterval(() => { if (Date.now() / 1000 >= endsAt) void disconnect(); }, 1000);
     return () => { clearInterval(timer); window.removeEventListener('blur', mute); document.removeEventListener('visibilitychange', mute); void disconnect(); };
@@ -97,12 +119,13 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
     <div className="radio-title"><RadioIcon size={19} /><div><strong>Sprechfunk</strong><small>{connected ? 'Verbunden · mehrere Sprecher möglich' : 'Deine Gruppe auf einer Frequenz'}</small></div>
       <button className={`icon-button ${connected ? 'selected' : ''}`} aria-label={connected ? 'Funk trennen' : 'Funk verbinden'} disabled={!active || busy} onClick={() => void (connected ? disconnect() : connect())}><Power size={19} /></button>
     </div>
-    <div className="segmented"><button className={mode === 'ptt' ? 'selected' : ''} onClick={() => setMode('ptt')}>Push-to-Talk</button><button className={mode === 'vox' ? 'selected' : ''} onClick={() => setMode('vox')}>Sprachaktivierung</button></div>
-    <button className={`talk-button ${sending ? 'transmitting' : ''}`} disabled={!connected || mode !== 'ptt'}
-      onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); void transmit(true); }} onPointerUp={() => void transmit(false)} onPointerCancel={() => void transmit(false)}
-      onKeyDown={e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); void transmit(true); } }}
-      onKeyUp={e => { if (e.key === ' ' || e.key === 'Enter') void transmit(false); }}>
-      {sending ? <Waves size={27} /> : <Mic size={27} />}<span>{mode === 'vox' ? 'Sprache wird automatisch erkannt' : sending ? 'Du sendest …' : 'Zum Sprechen gedrückt halten'}</span>
+    <div className="segmented"><button className={mode === 'tap' ? 'selected' : ''} onClick={() => setMode('tap')}>Antippen</button><button className={mode === 'vox' ? 'selected' : ''} onClick={() => setMode('vox')}>Sprachaktivierung</button></div>
+    <button className={`talk-button ${sending ? 'transmitting' : ''}`} disabled={!connected || mode !== 'tap'}
+      aria-pressed={sending} aria-label={mode === 'vox' ? 'Sprachaktivierung aktiv' : sending ? 'Mikrofon ausschalten' : 'Mikrofon einschalten'}
+      onClick={() => void transmit(!sendingRef.current)}
+      onKeyDown={e => { if ((e.key === ' ' || e.key === 'Enter') && e.repeat) e.preventDefault(); }}>
+      {sending ? <Waves size={27} /> : <MicOff size={27} />}<span>{mode === 'vox' ? 'Sprache wird automatisch erkannt' : sending ? 'Mikrofon an · Du sendest' : 'Mikrofon aus'}</span>
+      {mode === 'tap' && <small>{sending ? 'Antippen zum Ausschalten' : 'Antippen zum Sprechen'}</small>}
     </button>
     <small className="radio-footer">{speakers.length ? speakers.join(', ') + ' spricht' : connected ? 'Bereit. Empfang läuft auch bei stummem Mikrofon.' : active ? 'Funk einschalten und Mikrofon freigeben.' : 'Funk ist nur im Fahrtzeitraum verfügbar.'}</small>
     {error && <p className="error" role="alert">{error}</p>}

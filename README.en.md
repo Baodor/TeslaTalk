@@ -6,12 +6,12 @@
 
 ### Travel together. Stay connected.
 
-<a href="README.md"><img alt="Read in German" src="https://img.shields.io/badge/Read_in-Deutsch-8eefbb?style=for-the-badge&labelColor=101a20"></a>
+<a href="README.md"><img alt="Read in German" src="https://img.shields.io/badge/Read_in-Deutsch-ff6b72?style=for-the-badge&labelColor=101a20"></a>
 
 **Voice radio · Trips · Live map · Friends · Installable PWA**
 
-![License](https://img.shields.io/badge/License-AGPLv3-8eefbb?style=flat-square&labelColor=101a20)
-![Self hosted](https://img.shields.io/badge/Self--Hosted-Docker-8eefbb?style=flat-square&labelColor=101a20)
+![License](https://img.shields.io/badge/License-AGPLv3-ff6b72?style=flat-square&labelColor=101a20)
+![Self hosted](https://img.shields.io/badge/Self--Hosted-Docker-ff6b72?style=flat-square&labelColor=101a20)
 ![Status](https://img.shields.io/badge/Status-0.1_Preview-f5c76d?style=flat-square&labelColor=101a20)
 
 Your group. Your trip. Your server.
@@ -37,7 +37,7 @@ TeslaTalk connects friends travelling together in their Teslas. Each trip brings
 | Friends | Requests, acceptance and invitations using a username, licence plate or existing email address |
 | Trips | Name, destination, start and end dates; join using a PIN or invitation |
 | Map | Location and vehicle data shared exclusively within your own trip |
-| Voice radio | Multiple simultaneous speakers; push-to-talk and voice activation; self-hosted LiveKit server |
+| Voice radio | Multiple simultaneous speakers; tap to toggle your microphone and voice activation; self-hosted LiveKit server |
 | Chat | Persistent trip chat with real-time updates, including the mobile PWA |
 | PWA & Push | Home-screen installation; notifications for chat, trip invitations and friend requests |
 | Passengers | Personal name and PIN, QR entry without a Tesla account, valid only during the trip |
@@ -138,9 +138,9 @@ Notifications never reveal chat contents, plates or location. Passengers receive
 
 ## Verified so far
 
-- **29 backend tests:** Trip access, PINs, scheduled boundaries, private sharing, OAuth state, API keys, rankings and push subscriptions.
+- **Backend tests:** Trip access, PINs, scheduled boundaries, private sharing, OAuth state, API keys, rankings, push subscriptions, OIDC groups and Tesla registration.
 - **3 browser tests:** Real-time chat with two drivers, passenger entry and trip expiry, mobile layout, service workers, offline caching and notification consent.
-- **TypeScript and the production build** pass. GitHub Actions includes an optional LiveKit test and a Docker build.
+- **TypeScript and the production build** pass. GitHub Actions also verifies concurrent microphones with tap controls and builds and starts the production container.
 
 Server Push delivery is tested with mocked push services; the browser consent test uses a mocked subscription. Real Tesla sign-in and end-to-end delivery on iOS/Android have not yet been confirmed here.
 

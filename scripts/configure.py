@@ -52,13 +52,14 @@ def main():
     (keys/'tesla-public-key.pem').chmod(0o644)
     livekit_key, livekit_secret = 'tt_'+secrets.token_hex(12), secrets.token_urlsafe(48)
     values = {
-        'APP_URL':args.url.rstrip('/'),'APP_HOST':app.hostname,'APP_TIMEZONE':'Europe/Berlin',
+        'APP_URL':args.url.rstrip('/'),'APP_HOST':app.hostname,'APP_TIMEZONE':'Europe/Berlin','TRAEFIK_CERT_RESOLVER':'',
         'APP_SECRET':secrets.token_urlsafe(48),'DEMO_MODE':str(args.demo).lower(),
         'TESLA_CLIENT_ID':'','TESLA_CLIENT_SECRET':'','TESLA_FLEET_URL':'https://fleet-api.prd.eu.vn.cloud.tesla.com',
         'LIVEKIT_URL':args.voice_url.rstrip('/'),'VOICE_HOST':voice.hostname,
         'LIVEKIT_API_KEY':livekit_key,'LIVEKIT_API_SECRET':livekit_secret,'FLEET_POLL_INTERVAL':'120',
         'VAPID_PRIVATE_KEY':private,'VAPID_PUBLIC_KEY':public,'VAPID_SUBJECT':'mailto:'+args.email,
-        'OIDC_ISSUER':'','OIDC_CLIENT_ID':'','OIDC_CLIENT_SECRET':'','ADMIN_GROUP':'teslatalk-admin','ADMIN_EMAILS':'',
+        'OIDC_ISSUER':'','OIDC_CLIENT_ID':'','OIDC_CLIENT_SECRET':'','OIDC_SCOPES':'openid email profile',
+        'OIDC_GROUPS_CLAIM':'groups','ADMIN_GROUP':'teslatalk-admin','ADMIN_EMAILS':'',
     }
     env_path.write_text('# Generated locally. Keep this file private and back it up.\n'+'\n'.join(f'{key}={value}' for key,value in values.items())+'\n')
     env_path.chmod(0o600)
