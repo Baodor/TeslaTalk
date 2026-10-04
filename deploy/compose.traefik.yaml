@@ -1,5 +1,6 @@
-# Existing Traefik must have a websecure entrypoint and a TLS certificate resolver.
-# Set PROXY_NETWORK and CERT_RESOLVER to match your installation.
+# Overlay for compose.yaml. For a complete single file use ../compose.traefik.yaml.
+# Existing Traefik must have websecure and valid TLS certificates for both hosts.
+# Set PROXY_NETWORK to match your installation. No resolver name is assumed.
 services:
   teslatalk:
     networks: [default, proxy]
@@ -8,7 +9,8 @@ services:
       traefik.docker.network: "${PROXY_NETWORK:-proxy}"
       traefik.http.routers.teslatalk.rule: "Host(`${APP_HOST}`)"
       traefik.http.routers.teslatalk.entrypoints: websecure
-      traefik.http.routers.teslatalk.tls.certresolver: "${CERT_RESOLVER:-letsencrypt}"
+      traefik.http.routers.teslatalk.tls: "true"
+      traefik.http.routers.teslatalk.service: teslatalk
       traefik.http.services.teslatalk.loadbalancer.server.port: "8780"
   livekit:
     networks: [default, proxy]
@@ -17,7 +19,8 @@ services:
       traefik.docker.network: "${PROXY_NETWORK:-proxy}"
       traefik.http.routers.teslatalk-voice.rule: "Host(`${VOICE_HOST}`)"
       traefik.http.routers.teslatalk-voice.entrypoints: websecure
-      traefik.http.routers.teslatalk-voice.tls.certresolver: "${CERT_RESOLVER:-letsencrypt}"
+      traefik.http.routers.teslatalk-voice.tls: "true"
+      traefik.http.routers.teslatalk-voice.service: teslatalk-voice
       traefik.http.services.teslatalk-voice.loadbalancer.server.port: "7880"
 networks:
   proxy:

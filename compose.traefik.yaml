@@ -1,0 +1,81 @@
+# Complete deployment behind an EXISTING Traefik. Use this file on its own:
+# docker compose -f compose.traefik.yaml up -d --build
+# First generate .env, deploy/livekit.yaml and the public Tesla key:
+# python3 scripts/configure.py --url https://teslatalk.glockb.de \
+#   --voice-url wss://teslatalk-voice.glockb.de --email you@example.com
+# All credentials and application settings go in .env. See docs/START.de.md.
+services:
+  teslatalk:
+    build:
+      context: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_PATH: /data/teslatalk.sqlite
+      LIVEKIT_INTERNAL_URL: http://livekit:7880
+      TESLA_PUBLIC_KEY_PATH: /app/keys/tesla-public-key.pem
+    volumes:
+      - teslatalk-data:/data
+      - type: bind
+        source: ./deploy/keys/tesla-public-key.pem
+        target: /app/keys/tesla-public-key.pem
+        read_only: true
+        bind:
+          create_host_path: false
+    depends_on:
+      - livekit
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8780/api/health',timeout=5)"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+      start_period: 15s
+    networks:
+      - default
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${PROXY_NETWORK:-proxy}"
+      - "traefik.http.routers.teslatalk.rule=Host(`${APP_HOST:-teslatalk.glockb.de}`)"
+      - "traefik.http.routers.teslatalk.entrypoints=websecure"
+      - "traefik.http.routers.teslatalk.tls=true"
+      - "traefik.http.routers.teslatalk.service=teslatalk"
+      # TeslaTalk's application server listens on 8780 inside the container.
+      - "traefik.http.services.teslatalk.loadbalancer.server.port=8780"
+
+  livekit:
+    image: livekit/livekit-server:v1.13.7
+    restart: unless-stopped
+    command: ["--config", "/etc/livekit.yaml"]
+    volumes:
+      - type: bind
+        source: ./deploy/livekit.yaml
+        target: /etc/livekit.yaml
+        read_only: true
+        bind:
+          create_host_path: false
+    # Audio media reaches LiveKit directly; Traefik handles HTTPS/WebSockets.
+    ports:
+      - "7881:7881/tcp"
+      - "7882:7882/udp"
+    networks:
+      - default
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${PROXY_NETWORK:-proxy}"
+      - "traefik.http.routers.teslatalk-voice.rule=Host(`${VOICE_HOST:-teslatalk-voice.glockb.de}`)"
+      - "traefik.http.routers.teslatalk-voice.entrypoints=websecure"
+      - "traefik.http.routers.teslatalk-voice.tls=true"
+      - "traefik.http.routers.teslatalk-voice.service=teslatalk-voice"
+      - "traefik.http.services.teslatalk-voice.loadbalancer.server.port=7880"
+
+volumes:
+  teslatalk-data:
+
+networks:
+  default:
+  proxy:
+    external: true
+    name: "${PROXY_NETWORK:-proxy}"

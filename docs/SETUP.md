@@ -39,13 +39,32 @@ On an existing installation, edit `APP_URL`, `APP_HOST`, `LIVEKIT_URL`, `VOICE_H
 
 ### Existing Traefik
 
-Use `deploy/compose.traefik.yaml` instead of the Caddy overlay:
+The root [compose.traefik.yaml](../compose.traefik.yaml) is a complete deployment file for an existing Traefik; use it **on its own**. Traefik must already be connected to the external Docker network `proxy`, have a `websecure` entrypoint and provide valid TLS certificates for both domains. A [German step-by-step guide](START.de.md) covers the same setup.
+
+On a **new installation**, point both DNS names below to your server, replace the email address and run:
+
+```bash
+python3 scripts/configure.py \
+  --url https://teslatalk.glockb.de \
+  --voice-url wss://teslatalk-voice.glockb.de \
+  --email you@example.com
+docker compose -f compose.traefik.yaml config --quiet
+docker compose -f compose.traefik.yaml up -d --build
+```
+
+To use your own domains, pass them to the bootstrap script; its `APP_HOST` and `VOICE_HOST` values also configure the router rules. On an existing installation, edit `.env` while retaining existing secrets. Put your Tesla and optional administrator OIDC credentials in `.env` as described below. Settings changes require `up -d` to recreate the application container; `restart` alone does not reload environment variables.
+
+The file uses `tls=true` and an explicit service for each router, without assuming a certificate resolver name. If your Traefik requires a per-router resolver, add `traefik.http.routers.teslatalk.tls.certresolver=YOUR_RESOLVER` and `traefik.http.routers.teslatalk-voice.tls.certresolver=YOUR_RESOLVER` using your existing resolver name. Set `PROXY_NETWORK` in `.env` only if your external Docker network has another name.
+
+Application port **8780** and LiveKit signalling port **7880** are available over the Docker network only in this file. Open/forward **7881/TCP** and **7882/UDP** directly to the Docker host for audio. Traefik serves both domains over **443/TCP** and supports WebSocket connections.
+
+For installations already using the base file, the original overlay remains available:
 
 ```bash
 docker compose -f compose.yaml -f deploy/compose.traefik.yaml up -d --build
 ```
 
-Set `PROXY_NETWORK` and `CERT_RESOLVER` in `.env` to match the external Docker network and TLS resolver of your Traefik installation. The entrypoint must be named `websecure`, or edit the labels. Both routers support WebSocket connections. The media ports must still be reachable directly.
+When switching from the base-plus-overlay setup to the complete file, keep the same project directory and any existing `-p` project name to retain your data volume. Do not combine the root Traefik file with the base or Caddy files. The overlay now uses existing TLS configuration too; `CERT_RESOLVER` in `.env` is no longer read, so add the resolver labels above if your routers need them.
 
 ### Audio networking
 

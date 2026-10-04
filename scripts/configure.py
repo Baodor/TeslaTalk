@@ -77,7 +77,7 @@ logging:
 ''')
     (ROOT/'deploy/livekit.yaml').chmod(0o600)
     print('Created .env, deploy/livekit.yaml and local EC keys. No secrets were printed.')
-    print('Next: docker compose up -d --build')
+    print('Next: docker compose up -d --build (local), or follow docs/SETUP.md for HTTPS/Traefik.')
 
 
 if __name__=='__main__':

@@ -114,7 +114,17 @@ python3 scripts/configure.py \
 docker compose -f compose.yaml -f deploy/compose.https.yaml up -d --build
 ```
 
-Das Bootstrap-Skript überschreibt keine bestehende `.env`. Bei einer vorhandenen Installation passt du die Adressen direkt an und behältst die bestehenden Schlüssel. Eine Alternative für einen vorhandenen Traefik liegt unter `deploy/compose.traefik.yaml`.
+Das Bootstrap-Skript überschreibt keine bestehende `.env`. Bei einer vorhandenen Installation passt du die Adressen direkt an und behältst die bestehenden Schlüssel.
+
+### Mit vorhandenem Traefik starten
+
+Die vollständige [compose.traefik.yaml](compose.traefik.yaml) enthält TeslaTalk, den LiveKit-Sprachserver, den Datenspeicher und die Router für dein externes `proxy`-Netzwerk. Für `teslatalk.glockb.de` gibt es eine **[deutsche Schritt-für-Schritt-Startanleitung](docs/START.de.md)** mit Schlüsselerzeugung, DNS, Ports, Tesla-Anmeldung, OIDC und PWA-Benachrichtigungen. Nach der Einrichtung startest du mit:
+
+```bash
+docker compose -f compose.traefik.yaml up -d --build
+```
+
+Traefik spricht TeslaTalk intern auf **8780** und LiveKit auf **7880** an. Für Audiodaten müssen zusätzlich **7881/TCP** und **7882/UDP** erreichbar sein. Die bisherigen Overlays unter `deploy/` bleiben für Kombinationen mit `compose.yaml` verfügbar.
 
 [Einrichtung, Tesla Fleet API, OIDC und Backup](docs/SETUP.md) · [API-Dokumentation](docs/API.md)
 

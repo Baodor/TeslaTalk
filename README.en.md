@@ -114,7 +114,17 @@ python3 scripts/configure.py \
 docker compose -f compose.yaml -f deploy/compose.https.yaml up -d --build
 ```
 
-Bootstrap does not overwrite an existing `.env`. On an existing installation, edit the addresses directly and keep the current keys. An overlay for an existing Traefik installation is provided in `deploy/compose.traefik.yaml`.
+Bootstrap does not overwrite an existing `.env`. On an existing installation, edit the addresses directly and keep the current keys.
+
+### Start behind an existing Traefik
+
+The complete [compose.traefik.yaml](compose.traefik.yaml) includes TeslaTalk, the LiveKit voice server, persistent storage and both routers on your external `proxy` network. Follow the [English Traefik setup](docs/SETUP.md#existing-traefik) or the [German step-by-step guide](docs/START.de.md) for `teslatalk.glockb.de`, including key generation, DNS, ports, Tesla sign-in, OIDC and PWA notifications. Once configured, start with:
+
+```bash
+docker compose -f compose.traefik.yaml up -d --build
+```
+
+Traefik connects to TeslaTalk on internal port **8780** and LiveKit on **7880**. Audio also requires directly reachable **7881/TCP** and **7882/UDP**. The existing files under `deploy/` remain overlays for `compose.yaml`.
 
 [Setup, Tesla Fleet API, OIDC and backup](docs/SETUP.md) · [API documentation](docs/API.md)
 
