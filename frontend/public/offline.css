@@ -1,1 +1,4 @@
 body{margin:0;background:#101a20;color:#f5edef;font:17px/1.7 system-ui;min-height:100vh;display:grid;place-items:center}main{max-width:440px;padding:30px}img{width:72px}h1{font-size:32px;line-height:1.2}p{color:#bfadb1}a{display:inline-block;background:#ff6b72;color:#101a20;border-radius:10px;padding:10px 20px;text-decoration:none;font-weight:700}
+#status{font-size:14px;min-height:1.7em}a[aria-busy=true]{opacity:.65;pointer-events:none}
+
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-height:100svh;overscroll-behavior:none}a{touch-action:manipulation}main{padding-top:max(30px,env(safe-area-inset-top));padding-bottom:max(30px,env(safe-area-inset-bottom))}

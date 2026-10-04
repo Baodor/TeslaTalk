@@ -36,14 +36,14 @@ TeslaTalk verbindet Freunde, die gemeinsam mit ihren Teslas unterwegs sind. Eine
 | Fahrzeuge | Fahrzeuge des Kontos abrufen, Fahrzeug auswählen und Favoriten festlegen |
 | Freunde | Anfragen, Annahme und Einladungen über Benutzername, Kennzeichen oder vorhandene E-Mail-Adresse |
 | Fahrten | Name, Ziel, Beginn und Ende; Beitritt per PIN oder Einladung |
-| Karte | Standort und Fahrzeugdaten ausschließlich innerhalb der eigenen Fahrt |
+| Karte | Personenmarker für Browser-Standorte, separate Fahrzeugmarker; auch Mitfahrer können ihren Standort teilen |
 | Sprachfunk | Mehrere Sprecher gleichzeitig; Mikrofon per Antippen an/aus und Sprachaktivierung; selbst gehosteter LiveKit-Server |
 | Chat | Persistenter Fahrt-Chat mit Echtzeit-Updates, auch in der mobilen PWA |
-| PWA & Push | Installation auf dem Home-Bildschirm; Benachrichtigungen für Chat, Fahrteinladungen und Freundschaftsanfragen |
+| PWA & Push | Installation auf dem Home-Bildschirm; dauerhaft gespeicherte Benachrichtigungsauswahl im persönlichen Profil |
 | Mitfahrer | Persönlicher Name und PIN, QR-Beitritt ohne Tesla-Konto, auf den Fahrtzeitraum begrenzt |
 | Historie | Vollständige Speicherung der erfassten Daten und Export; Rankings für Verbrauch, Zeit und Durchschnittstempo |
 | Administration | Separater Administratorzugang über OIDC |
-| API | Dokumentierte Endpunkte und persönliche, widerrufbare API-Schlüssel |
+| API | Dokumentierte Endpunkte und persönliche, widerrufbare API-Schlüssel, optional ohne Ablaufdatum |
 | Teilen | Separater, widerrufbarer Leselink zur Fahrtübersicht nach Fahrtende; Albumzugriff folgt mit Immich |
 
 ## Roadmap
@@ -130,7 +130,7 @@ Traefik spricht TeslaTalk intern auf **8780** und LiveKit auf **7880** an. Für 
 
 ## Auf den Home-Bildschirm
 
-**iPhone/iPad:** In Safari öffnen → Teilen → **Zum Home-Bildschirm**. Anschließend über das neue Symbol starten und **Benachrichtigungen** aktivieren. Web-Push setzt hier iOS/iPadOS 16.4 oder neuer voraus. [Apple/WebKit erklärt die Unterstützung](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
+**iPhone/iPad:** In Safari öffnen → Teilen → **Zum Home-Bildschirm**. Anschließend über das neue Symbol starten und unter **Mein Profil → Benachrichtigungen & Web-App** aktivieren. Web-Push setzt hier iOS/iPadOS 16.4 oder neuer voraus. [Apple/WebKit erklärt die Unterstützung](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
 
 **Android/Chrome:** Installationsknopf oder Browser-Menü nutzen und Benachrichtigungen ausdrücklich erlauben. Dein Icon kombiniert ein **Tesla-T mit einem Walkie-Talkie**. Installation und Push benötigen HTTPS; der lokale Demo-Aufruf über `localhost` ist die Entwicklungs-Ausnahme.
 
@@ -146,7 +146,7 @@ Push-Versand wird im Backend mit simulierten Push-Diensten geprüft; der Browser
 
 ## Bekannte Grenzen
 
-- Standort- und Fahrzeugabfragen laufen standardmäßig alle **120 Sekunden** bei verbundenen Fahrern einer aktiven Fahrt. Das ist noch kein Fleet-Telemetry-Streaming und kann Tesla-API-Kosten verursachen.
+- Fahrzeugabfragen laufen standardmäßig alle **120 Sekunden** bei verbundenen Fahrern einer aktiven Fahrt. Persönliche Browser-Standorte werden bei aktiver Freigabe höchstens alle zehn Sekunden übertragen. Das ist noch kein Fleet-Telemetry-Streaming und kann Tesla-API-Kosten verursachen.
 - Verbrauchswerte erscheinen nur mit gemessenen Energie- und Kilometerzählern aus einer passenden Integration. V1 leitet keinen Verbrauch aus dem Akkustand ab.
 - Ladeplanung, synchronisierte Routen, Musiksteuerung und Immich sind **Roadmap-Funktionen**. Der QR-Zugang ist bereits nutzbar; Foto-Uploads sind noch nicht angebunden.
 - Ob Mikrofon und Browser während der Fahrt verfügbar sind, muss für Fahrzeug, Region und Firmware geprüft werden. V1 sendet keine Fahrzeugbefehle.

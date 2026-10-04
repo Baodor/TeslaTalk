@@ -74,6 +74,10 @@ Do not enable `room.auto_create`. TeslaTalk creates authorized rooms through the
 
 The default microphone control is a tap toggle: tap once to speak and again to mute. It stays enabled after touch/key release, and its active state is visibly labelled. In tap mode, leaving the page or disconnecting mutes the microphone. Optional voice activation remains available; multiple participants can speak concurrently.
 
+If you see `could not establish signal connection: Load failed`, first check the **public** `LIVEKIT_URL` (`wss://...`) and its trusted HTTPS certificate. `LIVEKIT_INTERNAL_URL` (`http://livekit:7880`) is for the application server only. A `TRAEFIK DEFAULT CERT` cannot establish a trusted LiveKit connection. Run `python3 scripts/check_traefik.py` on the Docker host to see configured resolver names, public origins, network connectivity and internal target ports without displaying credentials. Set `TRAEFIK_CERT_RESOLVER` to the exact resolver name already configured in your Traefik; a Cloudflare DNS provider does not establish that name.
+
+When using Cloudflare's proxy, check **Network → WebSockets** and rules affecting the voice domain. An extra login page, browser challenge or WAF rule may block the initial upgrade request. [Cloudflare's WebSocket documentation](https://developers.cloudflare.com/network/websockets/) explains the relevant checks. Only adjust a rule confirmed to block the connection. TLS and signalling must work before troubleshooting audio media ports.
+
 ## Tesla Fleet API
 
 1. Create your own application at [Tesla's developer portal](https://developer.tesla.com/). Configure the allowed origin `https://talk.example.com` and exact callback `https://talk.example.com/auth/tesla/callback`.
@@ -91,7 +95,7 @@ Fields not supplied by Tesla stay unavailable. Consumption rankings need a measu
 
 ## Home-screen installation and notifications
 
-TeslaTalk is a PWA. Visit **your own server address** in the phone browser, sign in and use **Zum Home-Bildschirm**. The icon combines a Tesla-style T with a walkie-talkie.
+TeslaTalk is a PWA. Visit **your own server address** in the phone browser, sign in and use **Mein Profil → Zum Home-Bildschirm**, or the browser's installation menu. The icon combines a Tesla-style T with a walkie-talkie. Notifications live under **Mein Profil → Benachrichtigungen & Web-App**, including for named passengers.
 
 - **iPhone/iPad:** Safari → Share → Add to Home Screen. Launch from that icon, then explicitly enable notifications. Home-screen Web Push requires iOS/iPadOS 16.4 or newer.
 - **Android/desktop Chrome:** Use the install button or browser menu, then enable notifications.
@@ -101,13 +105,29 @@ The interface checks capabilities and explains missing support. VAPID keys are g
 
 Notifications cover trip invitations, friend requests and new chat messages. They exclude chat text, plates and location. Each device opts in separately, can revoke permission, and is tied to a valid browser session. Logout or session expiry removes its server subscription; reauthentication renews an existing browser subscription without another permission prompt. Guest subscriptions end no later than the trip and queued trip messages are checked again before dispatch.
 
+The opt-in choice is remembered per account/device. A failed server sync never clears it. If the browser removes the subscription or blocks permission, the profile explains the problem and offers repair or deactivation. Removing website data resets local preferences; inspect and enable notifications again afterwards. The 180×180 Apple PNG is also available at `/apple-touch-icon.png` and `/apple-touch-icon-precomposed.png`. If an existing iPhone shortcut shows a letter, first fix HTTPS, then remove and recreate that Home Screen entry in Safari.
+
 The service worker caches public assets and the offline page only. Trips, accounts, GPS history and chat responses are never cached. Audio, current maps and new messages need connectivity. Mobile browsers can suspend audio when the app goes into the background; PWA installation does not guarantee continuous background radio. Verify the intended behaviour on your phone and Tesla firmware.
+
+The offline page now serves its cached CSS/icons and checks server health before reconnecting, preserving trip links. If a Mac keeps showing it after HTTPS is fixed, try a private Safari window. If that works, remove only this site's data via Safari → Settings → Privacy → Manage Website Data, then sign in again. [Apple's guidance](https://support.apple.com/en-us/102564).
+
+Mobile page zoom is suppressed and input text is at least 16 px to avoid iOS focus zoom. Map zoom is separate. Browsers and operating-system accessibility tools may enforce their own display rules; physical-device verification is still required.
+
+## Personal and vehicle locations
+
+Choose **Standort teilen** during an active trip to share your own browser location, including as a named passenger. The map shows people as circular person markers and vehicle positions from Fleet/telemetry as separate car markers. They can appear at the same time; a browser position never replaces vehicle data. Stop sharing to remove the live person marker. Without fresh updates, it expires after five minutes; the private recorded history remains. Personal and vehicle history lines stay separate, and vehicle rankings use vehicle samples only.
+
+## Personal API keys
+
+In **Mein Profil → Persönliche API-Schlüssel**, choose **Ohne Ablaufdatum** for a key that stays valid until revoked, or choose a fixed lifetime of 1–365 days. There is no total key-count cap. Creation still has an abuse-prevention rate limit. Unlimited keys inherit the owner's permissions and cannot bypass trip boundaries. The API accepts `days: null` and returns `expires_at: null` for this option.
 
 ## OIDC administration
 
 Use a **separate OIDC application** with callback `https://talk.example.com/auth/admin/callback`. Configure `OIDC_ISSUER`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`. Grant access using the `teslatalk-admin` group (configurable with `ADMIN_GROUP`) or the `ADMIN_EMAILS` allowlist with a verified email claim.
 
 `OIDC_SCOPES` defaults to `openid email profile`; add `groups` if your provider requires and permits that scope. `OIDC_GROUPS_CLAIM` defaults to `groups`, with nested paths such as `realm_access.roles` supported when explicitly configured. Group names are compared exactly and case-sensitively. TeslaTalk reads the verified ID token and, where available, retrieves UserInfo using the access token. UserInfo must have the same `sub` as the ID token. Group claims may come from either source. For example, Authentik must have a scope mapping that emits `groups`; Authelia generally requires the `groups` scope. Keycloak needs an appropriate group mapper or an explicitly configured role claim.
+
+For **Pocket ID**, use `OIDC_SCOPES=openid email profile groups`, `OIDC_GROUPS_CLAIM=groups` and your actual group name in `ADMIN_GROUP` (for this installation, `admin`). Pocket ID returns actual group names, not the friendly labels shown in its administration UI. Check client **OIDC Data Preview** and your user's membership if needed. Client **Allowed User Groups** controls who may sign in and does not replace TeslaTalk's administrator check. [Pocket ID's scopes and claims](https://pocket-id.org/docs/guides/scopes-and-claims).
 
 After updating `.env`, use `docker compose ... up -d` and start a fresh login at `/auth/admin`; use `--build` too when updating code. A denied login writes `OIDC admin access denied` with the active expected group, claim path, claim names and group count. The log omits tokens, subjects, email values and group lists. A missing claim indicates an IdP mapping or scope problem; confirm that the running container has your updated settings before changing the provider. The [German guide](START.de.md#6-administration-und-handy-einrichten) includes diagnostic commands.
 

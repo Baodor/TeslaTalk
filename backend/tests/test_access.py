@@ -68,7 +68,8 @@ def test_passenger_name_pin_and_driver_privileges(owner):
     assert guest.post(root+'/messages',json={'text':'Hallo Fahrer!'}).status_code==200
     assert guest.post(root+'/finish').status_code==403
     assert guest.post('/api/keys',json={'label':'Verboten'}).status_code==403
-    assert guest.post(root+'/samples',json={'latitude':50,'longitude':8,'source':'browser'}).status_code==403
+    assert guest.post(root+'/samples',json={'latitude':50,'longitude':8,'source':'browser'}).status_code==200
+    assert guest.post(root+'/samples',json={'battery_pct':80,'source':'telemetry'}).status_code==403
     guest.cookies.clear()
     assert guest.post('/api/guest/'+key+'/login',json={'name':'Nicht eingeladen','pin':pin}).status_code==401
     assert guest.post('/api/guest/'+key+'/login',json={'name':'Mitfahrer','pin':'999999' if pin!='999999' else '000000'}).status_code==401

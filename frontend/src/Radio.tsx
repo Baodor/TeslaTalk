@@ -59,9 +59,11 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
     const next = new Room({ audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       publishDefaults: { audioPreset: { maxBitrate: 32000 }, dtx: true, stopMicTrackOnMute: false } });
     room.current = next;
+    let voiceHost = '';
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error('Mikrofonzugriff benötigt HTTPS und einen unterstützten Browser.');
       const credentials = await api(`/api/trips/${tripId}/voice-token`, 'POST');
+      voiceHost = new URL(credentials.url).host;
       if (generation.current !== current) return;
       next.on(RoomEvent.TrackSubscribed, remote => {
         if (remote.kind === Track.Kind.Audio) { const el = remote.attach(); audioElements.current.add(el); document.body.appendChild(el); }
@@ -83,7 +85,13 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
       await next.localParticipant.publishTrack(mic, { source: Track.Source.Microphone });
       await mic.mute();
       setConnected(true);
-    } catch (e) { setError((e as Error).message); await disconnect(); }
+    } catch (e) {
+      const message = (e as Error).message || 'Die Sprachverbindung ist fehlgeschlagen.';
+      setError(/signal connection|Load failed|Failed to fetch|NetworkError/i.test(message) && voiceHost
+        ? `Sprachserver ${voiceHost} nicht erreichbar. Der Betreiber muss das HTTPS-Zertifikat, die öffentliche LiveKit-Adresse und den WebSocket-Router prüfen.`
+        : message);
+      await disconnect();
+    }
     finally { setBusy(false); }
   }
   useEffect(() => { modeRef.current = mode; void transmit(false); }, [mode]);

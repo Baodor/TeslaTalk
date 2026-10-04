@@ -182,6 +182,7 @@ OIDC_SCOPES=openid email profile
 TeslaTalk prüft den signierten ID-Token und fragt zusätzlich den UserInfo-Endpunkt des Anbieters ab, wenn dieser vorhanden ist. Beide Antworten müssen dieselbe Nutzer-ID (`sub`) haben. Der konfigurierte Gruppen-Claim darf in einer dieser Antworten stehen. Der Gruppenname muss exakt passen, einschließlich Groß-/Kleinschreibung. Die Zuordnung zum OIDC-Client allein garantiert noch nicht, dass der Anbieter die Gruppe übermittelt.
 
 - **Authelia:** Für Gruppen normalerweise `OIDC_SCOPES=openid email profile groups` setzen und den `groups`-Scope am Client erlauben.
+- **Pocket ID:** Ebenfalls `OIDC_SCOPES=openid email profile groups` verwenden, `OIDC_GROUPS_CLAIM=groups` und bei dir `ADMIN_GROUP=admin`. Dein Benutzer muss Mitglied dieser Gruppe sein. Pocket ID übermittelt den tatsächlichen **Gruppennamen**, nicht den Anzeigenamen; prüfe ihn bei Bedarf mit „OIDC Data Preview“ am Client. „Allowed User Groups“ erlaubt die Client-Anmeldung und ersetzt nicht die Administratorprüfung in TeslaTalk. Siehe [Pocket-ID-Scopes und Claims](https://pocket-id.org/docs/guides/scopes-and-claims).
 - **Authentik:** Eine Scope-Zuordnung muss die Gruppe im `groups`-Claim liefern. Die Gruppe kann über UserInfo kommen, auch wenn sie nicht in den ID-Token aufgenommen wird.
 - **Keycloak:** Gruppen über einen Mapper als `groups` ausgeben. Für Realm-Rollen den Mapper so konfigurieren, dass die Rollen im ID-Token oder in UserInfo stehen, und `OIDC_GROUPS_CLAIM=realm_access.roles` setzen. Client-Rollen benötigen ihren tatsächlichen Claim-Pfad.
 
@@ -196,7 +197,11 @@ docker compose -f compose.traefik.yaml logs --tail=100 teslatalk
 
 Die Logzeile `OIDC admin access denied` nennt die erwartete Gruppe, den Claim-Pfad, vorhandene Claim-Namen und die Anzahl übermittelter Gruppen. `groups_present: false` bedeutet, dass der konfigurierte Claim fehlt. `group_count: 0` bedeutet, dass keine verwertbare Gruppe vorliegt. Bei einer anderen Gruppe bleibt der Zugang gesperrt. Die Diagnose enthält keine OAuth-Tokens, Nutzer-IDs, E-Mail-Adressen oder tatsächlichen Gruppenlisten. `ADMIN_EMAILS` ist eine alternative ausdrückliche Freigabe und verlangt `email_verified=true` vom Anbieter.
 
-Für das Handy öffnest du deine TeslaTalk-Adresse und installierst die PWA über **Zum Home-Bildschirm** beziehungsweise **App installieren**. Starte sie anschließend über das Symbol und aktiviere in TeslaTalk ausdrücklich die Benachrichtigungen. Auf iPhone/iPad erfordert Home-Screen-Web-Push mindestens iOS/iPadOS 16.4. Die [ausführliche Anleitung](SETUP.md#home-screen-installation-and-notifications) erklärt Geräteunterstützung und die noch ausstehenden Praxistests.
+Für das Handy öffnest du deine TeslaTalk-Adresse und installierst die PWA über **Mein Profil → Zum Home-Bildschirm** beziehungsweise das Browser-Menü. Starte sie anschließend über das Symbol und aktiviere unter **Mein Profil → Benachrichtigungen & Web-App** ausdrücklich die Benachrichtigungen. Die Auswahl wird pro Konto und Gerät gespeichert. Ein fehlgeschlagener Serverabgleich schaltet sie nicht aus. Fehlt das Browser-Abonnement oder ist die Freigabe blockiert, zeigt das Profil den Grund und bietet die erneute Aktivierung an. Mitfahrer erhalten dieselbe Einstellung; ihr Zugang endet weiterhin mit der Fahrt. Auf iPhone/iPad erfordert Home-Screen-Web-Push mindestens iOS/iPadOS 16.4.
+
+Die mobile Seite unterbindet Seitenzoom und verwendet Eingabefelder mit mindestens 16 px, damit iOS beim Schreiben nicht automatisch vergrößert. Die Karte behält ihre eigene Zoomfunktion. Browser- und Betriebssystemhilfen können eigene Darstellungsregeln haben; die Bedienung im echten Fahrzeug und auf iOS bleibt Teil des Praxistests.
+
+Unter **Mein Profil → Persönliche API-Schlüssel** kannst du „Ohne Ablaufdatum“ wählen. Auch diese Schlüssel sind jederzeit widerrufbar. Bei **Standort teilen** wird dein Browser-Standort als Person dargestellt, getrennt vom Fahrzeugstandort aus Fleet/Telemetrie. Mitfahrer können ebenfalls teilen. Beim Stoppen verschwindet der persönliche Live-Marker; ohne neue Daten läuft er nach fünf Minuten aus. Der private Fahrtverlauf bleibt erhalten.
 
 ## Updates, Neustart und Sicherung
 
@@ -223,6 +228,14 @@ Fahrten, Konten und Chat liegen im Volume `teslatalk-data`; der tatsächliche Do
 
 ### HTTPS-Zertifikatfehler prüfen
 
+Wenn `TRAEFIK DEFAULT CERT` angezeigt wird, lasse zuerst den tatsächlichen Resolvernamen und die TeslaTalk-Router prüfen:
+
+```bash
+python3 scripts/check_traefik.py
+```
+
+Der Check liest laufende Docker-Container und zeigt nur Resolvernamen, öffentliche Adressen, Netzwerkzuordnung und Zielports. Er verändert nichts und gibt keine Zugangsdaten aus. Cloudflare als DNS-Anbieter bedeutet nicht automatisch, dass dein Resolver `cloudflare` heißt. Übernimm den **exakten bereits konfigurierten** Namen in `TRAEFIK_CERT_RESOLVER`, falls du ACME nutzt; beim Zertifikats-Standard des Routers oder manuell hinterlegten Zertifikaten muss die passende Traefik-Konfiguration greifen.
+
 Prüfe beide Domains ohne Umgehung der Zertifikatsprüfung:
 
 ```bash
@@ -242,5 +255,29 @@ openssl s_client -connect teslatalk.glockb.de:443 -servername teslatalk.glockb.d
 - **Fehler nur auf einem Gerät oder im WLAN:** Prüfe, ob interne DNS-Einträge, ein zusätzlicher Proxy oder ein Zertifikatscache auf einen anderen Endpunkt führen.
 
 Nach Korrektur der `.env` den Container mit `docker compose -f compose.traefik.yaml up -d` neu erstellen. Webanwendung und Voice-Domain brauchen beide gültiges HTTPS, damit Anmeldung, Mikrofon und PWA zuverlässig funktionieren.
+
+### Mikrofon: `could not establish signal connection: Load failed`
+
+Diese Meldung betrifft den Verbindungsaufbau zum Sprachserver. Prüfe die Konfiguration im laufenden Container; persönliche Tokens und Geheimnisse werden dabei nicht angezeigt:
+
+```bash
+python3 scripts/check_traefik.py
+curl -I https://teslatalk-voice.glockb.de
+docker compose -f compose.traefik.yaml logs --tail=100 livekit
+```
+
+`LIVEKIT_URL` muss **`wss://teslatalk-voice.glockb.de`** sein. Die interne Adresse `http://livekit:7880` gehört ausschließlich in `LIVEKIT_INTERNAL_URL`. Der Voice-Router muss intern auf **7880** zeigen und am Traefik-Netz hängen. Ein HTTP-Status allein beweist noch keine autorisierte Audioverbindung; entscheidend ist zunächst, dass `curl` **keinen Zertifikatsfehler** erhält. LiveKit verlangt ein vertrauenswürdiges Zertifikat; ein selbst signiertes Traefik-Standardzertifikat reicht nicht. [Offizielle LiveKit-Einrichtung](https://docs.livekit.io/transport/self-hosting/deployment/).
+
+Bei einem aktivierten **Cloudflare-Proxy** prüfe **Network → WebSockets** und die Regeln für die Voice-Domain. Der Verbindungsaufbau darf nicht an einer zusätzlichen Login-Seite, Browser-Challenge oder WAF-Regel hängen bleiben. Cloudflare unterstützt WebSockets, prüft aber den anfänglichen Upgrade-Request mit seinen Sicherheitsregeln. Ändere nur die tatsächlich blockierende Regel; [Cloudflare-WebSocket-Diagnose](https://developers.cloudflare.com/network/websockets/). Audio benötigt zusätzlich die direkten Media-Ports aus Schritt 1; diese ersetzen keine funktionierende HTTPS-Signalisierung.
+
+### Mac zeigt die Offline-Seite, iPhone zeigt die Anwendung
+
+Die Offline-Seite bedeutet, dass **dieser Browser** TeslaTalk nicht erreicht. Neben einer fehlenden Internetverbindung können TLS, unterschiedliche DNS-Wege oder lokale Browserdaten die Ursache sein. Nach dem Update prüft „Erneut verbinden“ den Serverstatus; die Seite kehrt bei wiederhergestellter Verbindung automatisch zurück. CSS und Icons funktionieren nun auch offline.
+
+Falls das Problem nach gültigem HTTPS bestehen bleibt: Öffne die Seite am Mac in einem privaten Safari-Fenster (**⇧⌘N**). Funktioniert sie dort, entferne nur die Daten dieser Website unter **Safari → Einstellungen → Datenschutz → Websitedaten verwalten** und melde dich erneut an. Dadurch werden auch lokale Geräteeinstellungen zurückgesetzt; Benachrichtigungen anschließend im Profil erneut prüfen. [Apple-Anleitung](https://support.apple.com/de-de/102564).
+
+### iPhone zeigt nur ein „t“ als Home-Bildschirm-Icon
+
+Ein 180×180-PNG ist eingebunden und zusätzlich unter `/apple-touch-icon.png` sowie `/apple-touch-icon-precomposed.png` verfügbar. Öffne bei gültigem HTTPS `https://teslatalk.glockb.de/apple-touch-icon.png`; dort muss das rote TeslaTalk-Icon erscheinen. Entferne anschließend den alten Home-Bildschirm-Eintrag und füge TeslaTalk in Safari erneut hinzu, damit iOS das neue Icon übernimmt. Prüfe und aktiviere Benachrichtigungen danach wieder im persönlichen Profil.
 
 Weitere Details: [allgemeine Einrichtung](SETUP.md) · [API](API.md) · [Projektübersicht](../README.md).

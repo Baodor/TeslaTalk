@@ -36,14 +36,14 @@ TeslaTalk connects friends travelling together in their Teslas. Each trip brings
 | Vehicles | Retrieve account vehicles, select a vehicle and set a favourite |
 | Friends | Requests, acceptance and invitations using a username, licence plate or existing email address |
 | Trips | Name, destination, start and end dates; join using a PIN or invitation |
-| Map | Location and vehicle data shared exclusively within your own trip |
+| Map | Personal browser-location markers and separate vehicle markers; passengers can share their own location too |
 | Voice radio | Multiple simultaneous speakers; tap to toggle your microphone and voice activation; self-hosted LiveKit server |
 | Chat | Persistent trip chat with real-time updates, including the mobile PWA |
-| PWA & Push | Home-screen installation; notifications for chat, trip invitations and friend requests |
+| PWA & Push | Home-screen installation; remembered notification preferences in your personal profile |
 | Passengers | Personal name and PIN, QR entry without a Tesla account, valid only during the trip |
 | History | Full storage of captured data and export; rankings for consumption, time and average speed |
 | Administration | Separate administrator sign-in through OIDC |
-| API | Documented endpoints and personal, revocable API keys |
+| API | Documented endpoints and personal, revocable API keys, optionally without expiration |
 | Sharing | Separate, revocable read-only trip summary link after a trip; album access follows with Immich |
 
 ## Roadmap
@@ -130,7 +130,7 @@ Traefik connects to TeslaTalk on internal port **8780** and LiveKit on **7880**.
 
 ## Add to the home screen
 
-**iPhone/iPad:** Open in Safari → Share → **Add to Home Screen**. Launch from the new icon, then enable **Benachrichtigungen** (notifications). Web Push requires iOS/iPadOS 16.4 or newer here. [Apple/WebKit explains support](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
+**iPhone/iPad:** Open in Safari → Share → **Add to Home Screen**. Launch from the new icon, then enable notifications under **Mein Profil → Benachrichtigungen & Web-App** (personal profile). Web Push requires iOS/iPadOS 16.4 or newer here. [Apple/WebKit explains support](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
 
 **Android/Chrome:** Use the install button or browser menu, then explicitly allow notifications. The icon combines a **Tesla T with a walkie-talkie**. Installation and Push require HTTPS; the local `localhost` demo is the development exception.
 
@@ -146,7 +146,7 @@ Server Push delivery is tested with mocked push services; the browser consent te
 
 ## Known limitations
 
-- Location and vehicle polling runs every **120 seconds** by default for connected drivers in active trips. This is not Fleet Telemetry streaming and may incur Tesla API charges.
+- Vehicle polling runs every **120 seconds** by default for connected drivers in active trips. Personal browser location is sent at most once every ten seconds while sharing is enabled. This is not Fleet Telemetry streaming and may incur Tesla API charges.
 - Consumption requires measured energy and odometer counters from a suitable integration. V1 does not estimate consumption from battery percentage.
 - Charging planning, synchronized routes, music control and Immich are **roadmap features**. QR guest access works already; photo uploads are not connected yet.
 - Microphone and browser availability while driving must be verified for the vehicle, region and firmware. V1 sends no vehicle commands.

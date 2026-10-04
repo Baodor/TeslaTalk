@@ -1,17 +1,28 @@
 /* Cache public assets only. Accounts, trips, chat and GPS are never cached. */
-const CACHE = 'teslatalk-public-v2';
+const CACHE = 'teslatalk-public-v3';
+const PUBLIC_ASSETS = ['/offline.html', '/offline.css', '/offline.js', '/viewport.js', '/favicon.svg', '/icons/icon-192.png', '/icons/apple-touch-icon.png', '/apple-touch-icon.png'];
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(['/offline.html', '/offline.css', '/favicon.svg', '/icons/icon-192.png'])));
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(PUBLIC_ASSETS)));
   self.skipWaiting();
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('teslatalk-public-') && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
   if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request).catch(() => caches.match('/offline.html')));
+    event.respondWith(fetch(event.request, { cache: 'no-store' }).catch(async () => {
+      const cached = await caches.match('/offline.html');
+      const headers = new Headers(cached.headers);
+      // A temporary offline document must not be retained as the application page.
+      headers.set('Cache-Control', 'no-store');
+      headers.set('X-TeslaTalk-Offline', '1');
+      headers.delete('ETag'); headers.delete('Last-Modified');
+      return new Response(cached.body, { headers });
+    }));
+  } else if (PUBLIC_ASSETS.includes(url.pathname)) {
+    event.respondWith(caches.match(event.request, { ignoreSearch: true }).then(cached => cached || fetch(event.request)));
   } else if (url.pathname.startsWith('/assets/')) {
     event.respondWith(caches.open(CACHE).then(async cache => {
       const cached = await cache.match(event.request);

@@ -32,6 +32,11 @@ CREATE TABLE IF NOT EXISTS samples (
  battery_pct REAL, range_km REAL, odometer_km REAL, energy_used_kwh REAL, source TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS samples_trip_user ON samples(trip_id,user_id,captured_at);
+CREATE TABLE IF NOT EXISTS personal_locations (
+ trip_id TEXT NOT NULL REFERENCES trips(id), user_id TEXT NOT NULL REFERENCES users(id),
+ updated_at REAL NOT NULL, latitude REAL NOT NULL, longitude REAL NOT NULL, speed_kmh REAL, heading REAL,
+ PRIMARY KEY (trip_id,user_id)
+);
 CREATE TABLE IF NOT EXISTS api_keys (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), token_hash TEXT UNIQUE NOT NULL, label TEXT NOT NULL, expires_at REAL NOT NULL, created_at REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS push_subscriptions (
  endpoint_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id),

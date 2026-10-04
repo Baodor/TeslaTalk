@@ -78,7 +78,7 @@ class Sample(BaseModel):
 
 class KeyCreate(BaseModel):
     label: str = Field(min_length=1, max_length=60)
-    days: int = Field(default=30, ge=1, le=365)
+    days: int | None = Field(default=30, ge=1, le=365, description='null creates a key without an expiration date.')
 
 
 class PushSubscription(BaseModel):

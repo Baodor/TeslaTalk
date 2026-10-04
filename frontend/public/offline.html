@@ -1,1 +1,22 @@
-<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101a20"><title>TeslaTalk · Offline</title><link rel="stylesheet" href="/offline.css"><main><img src="/favicon.svg" alt="TeslaTalk"><h1>Die Verbindung fehlt.</h1><p>Für Sprachfunk, Karte und neue Nachrichten braucht TeslaTalk Internet. Deine gespeicherten Fahrten sind wieder verfügbar, sobald du online bist.</p><a href="/">Erneut verbinden</a></main></html>
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#101a20">
+    <meta name="apple-mobile-web-app-title" content="TeslaTalk">
+    <title>TeslaTalk · Offline</title>
+    <link rel="stylesheet" href="/offline.css">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=red2">
+    <script src="/viewport.js" defer></script>
+    <script src="/offline.js" defer></script>
+  </head>
+  <body><main>
+    <img src="/favicon.svg" alt="TeslaTalk">
+    <h1>Die Verbindung fehlt.</h1>
+    <p>Dein Browser kann den TeslaTalk-Server gerade nicht erreichen. Fahrten, Karte, Sprachfunk und neue Nachrichten sind verfügbar, sobald die Verbindung wieder steht.</p>
+    <a id="reconnect" href="/">Erneut verbinden</a>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main></body>
+</html>

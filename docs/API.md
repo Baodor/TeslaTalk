@@ -1,6 +1,6 @@
 # TeslaTalk API · 0.1
 
-All endpoints use the same server origin. Browser authentication uses an HttpOnly session cookie. Unsafe cookie-authenticated requests require `Origin` equal to `APP_URL`. Integrations can send `Authorization: Bearer <personal API key>`; an invalid key never falls back to cookies. Keys are issued once, expire and can be revoked from the profile. They inherit their owner's vehicle and trip permissions.
+All endpoints use the same server origin. Browser authentication uses an HttpOnly session cookie. Unsafe cookie-authenticated requests require `Origin` equal to `APP_URL`. Integrations can send `Authorization: Bearer <personal API key>`; an invalid key never falls back to cookies. Keys are displayed once and can be revoked from the profile. Choose a fixed lifetime of 1–365 days or no expiration with `days: null`. They inherit their owner's vehicle and trip permissions; an unlimited key never extends a trip's own time window.
 
 The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign-in. `/api/health` and `/api/config` are public; neither returns secrets. No unauthenticated interactive documentation is exposed.
 
@@ -28,7 +28,8 @@ The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign
 | GET | `/api/guest/{invite_key}` | Public title and guest access window |
 | POST | `/api/guest/{invite_key}/login` | Guest name/PIN sign-in inside the scheduled interval |
 | GET / POST | `/api/trips/{trip_id}/messages` | Read persistent chat / post before trip end |
-| POST | `/api/trips/{trip_id}/samples` | Store active-trip position or normalized telemetry |
+| POST | `/api/trips/{trip_id}/samples` | Store an active-trip personal browser position (drivers and passengers) or vehicle telemetry (drivers only) |
+| DELETE | `/api/trips/{trip_id}/location` | Stop sharing the current user's live person marker; vehicle position and history remain |
 | GET | `/api/trips/{trip_id}/history` | Samples with `after_id` and `limit` pagination |
 | GET | `/api/trips/{trip_id}/export` | Stream all captured samples as JSON |
 | GET | `/api/trips/{trip_id}/ranking` | Measured consumption, captured duration and average speed |
@@ -59,7 +60,11 @@ The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign
 }
 ```
 
-Telemetry samples require a personal Bearer key. `energy_used_kwh` is a **cumulative measured counter**, not energy consumed by this one sample or an estimate from SOC. Odometer is cumulative kilometres. Unknown fields may be omitted; latitude/longitude must come as a pair. A browser sample uses `source: "browser"` and can supply only location, speed and heading. It cannot overwrite energy, SOC or odometer.
+Telemetry samples require a driver's personal Bearer key. `energy_used_kwh` is a **cumulative measured counter**, not energy consumed by this one sample or an estimate from SOC. Odometer is cumulative kilometres. Unknown fields may be omitted; latitude/longitude must come as a pair. A browser sample uses `source: "browser"`, requires latitude and longitude, and can supply only personal location, speed and heading. Drivers and named passengers may share it during their own active trip. It never changes the vehicle's position, energy, SOC or odometer.
+
+Each member in `participants_detail` and WebSocket `participants` has `data` for vehicle state and a separate `personal_location` object (or `null`). Both positions can appear simultaneously on the map. Live personal positions expire after five minutes without updates, disappear when explicitly stopped and are removed at trip end. Recorded browser samples remain in private trip history/export; personal and vehicle traces are drawn separately. Vehicle rankings exclude browser samples and passengers' positions.
+
+For a key without an expiry, use `POST /api/keys` with `{"label":"My integration","days":null}`. Creation and listing return `expires_at: null`; fixed lifetimes return a Unix timestamp. The default remains 30 days when `days` is omitted. There is no total key-count cap; creation remains rate limited to prevent abuse. `DELETE /api/keys/{id}` revokes either kind immediately.
 
 Consumption is `(last_energy - first_energy) / distance * 100`, only with valid counters and at least 1 km. Counter resets invalidate the affected metric. Duration is the captured sample interval; average speed is measured distance divided by that interval. These are recorded-section statistics, not charging-inclusive arrival forecasts. Tesla vehicle-data polling supplies no cumulative energy counter for ordinary passenger cars in this implementation; attach a suitable integration for consumption rankings.
 

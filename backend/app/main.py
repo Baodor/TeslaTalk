@@ -66,7 +66,8 @@ def trip_summary(trip):
 def participants(trip_id):
     rows = db.all_rows('SELECT u.id,u.display_name,u.username,u.plate,m.role,m.vehicle_id,m.left_at,v.name AS vehicle_name,v.model FROM members m JOIN users u ON u.id=m.user_id LEFT JOIN vehicles v ON v.id=m.vehicle_id WHERE m.trip_id=?', (trip_id,))
     for row in rows:
-        row['data'] = db.one('SELECT captured_at AS updated_at,latitude,longitude,speed_kmh,heading,battery_pct,range_km,source FROM samples WHERE trip_id=? AND user_id=? ORDER BY id DESC LIMIT 1', (trip_id,row['id'])) or {}
+        row['data'] = db.one("SELECT captured_at AS updated_at,latitude,longitude,speed_kmh,heading,battery_pct,range_km,source FROM samples WHERE trip_id=? AND user_id=? AND source!='browser' ORDER BY id DESC LIMIT 1", (trip_id,row['id'])) or {}
+        row['personal_location'] = db.one('SELECT updated_at,latitude,longitude,speed_kmh,heading FROM personal_locations WHERE trip_id=? AND user_id=? AND updated_at>?', (trip_id,row['id'],time.time()-300))
         row['online'] = row['id'] in hub.online()
     return rows
 
@@ -76,17 +77,28 @@ async def store_sample(trip_id, user_id, data):
     trip = db.one('SELECT * FROM trips WHERE id=?', (trip_id,))
     if not trip or not trip['starts_at'] <= time.time() < effective_end(trip):
         return
-    previous = db.one('SELECT * FROM samples WHERE trip_id=? AND user_id=? ORDER BY id DESC LIMIT 1', (trip_id,user_id)) or {}
     data = dict(data)
-    # Keep display state when a GPS sample arrives, but never carry forward counters
-    # as if they were newly measured energy/odometer observations.
-    for field in fields[:6]:
-        if data.get(field) is None and previous.get(field) is not None:
-            data[field] = previous[field]
+    personal = data.get('source') == 'browser'
+    if personal:
+        # A person's browser position must never inherit vehicle position or metrics.
+        if data.get('latitude') is None or data.get('longitude') is None:
+            return
+        data = {key:data.get(key) for key in ('latitude','longitude','speed_kmh','heading','source')}
+    else:
+        previous = db.one("SELECT * FROM samples WHERE trip_id=? AND user_id=? AND source!='browser' ORDER BY id DESC LIMIT 1", (trip_id,user_id)) or {}
+        # Keep vehicle display state without carrying forward measured counters.
+        for field in fields[:6]:
+            if data.get(field) is None and previous.get(field) is not None:
+                data[field] = previous[field]
     if not any(data.get(key) is not None for key in fields):
         return
-    db.execute('INSERT INTO samples(trip_id,user_id,captured_at,latitude,longitude,speed_kmh,heading,battery_pct,range_km,odometer_km,energy_used_kwh,source) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-               (trip_id,user_id,time.time(),*(data.get(key) for key in fields),data.get('source','telemetry')))
+    now = time.time()
+    with db.connect() as connection:
+        connection.execute('INSERT INTO samples(trip_id,user_id,captured_at,latitude,longitude,speed_kmh,heading,battery_pct,range_km,odometer_km,energy_used_kwh,source) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                           (trip_id,user_id,now,*(data.get(key) for key in fields),data.get('source','telemetry')))
+        if personal:
+            connection.execute('INSERT INTO personal_locations VALUES (?,?,?,?,?,?,?) ON CONFLICT(trip_id,user_id) DO UPDATE SET updated_at=excluded.updated_at,latitude=excluded.latitude,longitude=excluded.longitude,speed_kmh=excluded.speed_kmh,heading=excluded.heading',
+                               (trip_id,user_id,now,*(data.get(key) for key in fields[:4])))
     await hub.broadcast(trip_id, {'type':'participants','participants':participants(trip_id)})
 
 
@@ -96,6 +108,7 @@ async def background():
         now = time.time()
         db.execute('DELETE FROM sessions WHERE expires_at<?', (now,))
         db.execute('DELETE FROM oauth_states WHERE expires_at<?', (now,))
+        db.execute('DELETE FROM personal_locations WHERE updated_at<=? OR trip_id IN (SELECT id FROM trips WHERE ends_at<=? OR finished_at IS NOT NULL)', (now-300,now))
         for trip in db.all_rows('SELECT * FROM trips WHERE (ends_at<=? OR finished_at IS NOT NULL) AND voice_cleaned=0', (now,)):
             if await delete_voice_room(trip['id']):
                 db.execute('UPDATE trips SET voice_cleaned=1 WHERE id=?', (trip['id'],))
@@ -574,14 +587,25 @@ async def post_message(trip_id:str,body:Message,identity:Identity=Depends(curren
 @app.post('/api/trips/{trip_id}/samples')
 async def upload_sample(trip_id:str,body:Sample,request:Request,identity:Identity=Depends(current_user)):
     access(trip_id,identity,active=True)
-    driver(identity)
     limiter.check(('sample',identity.user['id']),15,60)
     data=body.model_dump()
     if body.source=='browser':
+        if body.latitude is None:
+            raise HTTPException(422,'Der persönliche Standort benötigt Breite und Länge.')
         data={key:data[key] for key in ('latitude','longitude','speed_kmh','heading','source')}
-    elif not request.headers.get('authorization'):
-        raise HTTPException(403,'Telemetrie-Import benötigt einen persönlichen API-Schlüssel.')
+    else:
+        driver(identity)
+        if not request.headers.get('authorization'):
+            raise HTTPException(403,'Telemetrie-Import benötigt einen persönlichen API-Schlüssel.')
     await store_sample(trip_id,identity.user['id'],data)
+    return {'ok':True}
+
+
+@app.delete('/api/trips/{trip_id}/location')
+async def stop_location(trip_id:str,identity:Identity=Depends(current_user)):
+    access(trip_id,identity)
+    db.execute('DELETE FROM personal_locations WHERE trip_id=? AND user_id=?',(trip_id,identity.user['id']))
+    await hub.broadcast(trip_id,{'type':'participants','participants':participants(trip_id)})
     return {'ok':True}
 
 
@@ -613,7 +637,7 @@ def export_history(trip_id:str,identity:Identity=Depends(current_user)):
 @app.get('/api/trips/{trip_id}/ranking')
 def trip_ranking(trip_id:str,identity:Identity=Depends(current_user)):
     access(trip_id,identity)
-    return ranking(db.all_rows('SELECT * FROM samples WHERE trip_id=? ORDER BY captured_at',(trip_id,)))
+    return ranking(db.all_rows("SELECT * FROM samples WHERE trip_id=? AND source!='browser' ORDER BY captured_at",(trip_id,)))
 
 
 @app.post('/api/trips/{trip_id}/voice-token')
@@ -631,6 +655,7 @@ async def voice_access(trip_id:str,identity:Identity=Depends(current_user)):
 async def finish_trip(trip_id:str,identity:Identity=Depends(current_user)):
     access(trip_id,identity,leader=True)
     db.execute('UPDATE trips SET finished_at=? WHERE id=? AND finished_at IS NULL',(time.time(),trip_id))
+    db.execute('DELETE FROM personal_locations WHERE trip_id=?',(trip_id,))
     await hub.broadcast(trip_id,{'type':'ended'})
     if await delete_voice_room(trip_id):
         db.execute('UPDATE trips SET voice_cleaned=1 WHERE id=?',(trip_id,))
@@ -666,7 +691,8 @@ def public_trip(key:str):
 @app.get('/api/keys')
 def keys(identity:Identity=Depends(current_user)):
     driver(identity)
-    return db.all_rows('SELECT id,label,expires_at,created_at FROM api_keys WHERE user_id=?',(identity.user['id'],))
+    rows=db.all_rows('SELECT id,label,expires_at,created_at FROM api_keys WHERE user_id=?',(identity.user['id'],))
+    return [row | {'expires_at':row['expires_at'] or None} for row in rows]
 
 
 @app.post('/api/keys')
@@ -675,8 +701,9 @@ def create_key(body:KeyCreate,identity:Identity=Depends(current_user)):
     limiter.check(('key',identity.user['id']),5,60)
     token='tt_'+secrets.token_urlsafe(32)
     key_id=str(uuid.uuid4())
-    db.execute('INSERT INTO api_keys VALUES (?,?,?,?,?,?)',(key_id,identity.user['id'],digest(token),body.label,time.time()+body.days*86400,time.time()))
-    return {'id':key_id,'token':token}
+    expiry=time.time()+body.days*86400 if body.days is not None else 0
+    db.execute('INSERT INTO api_keys VALUES (?,?,?,?,?,?)',(key_id,identity.user['id'],digest(token),body.label,expiry,time.time()))
+    return {'id':key_id,'token':token,'expires_at':expiry or None}
 
 
 @app.delete('/api/keys/{key_id}')
@@ -742,6 +769,15 @@ def tesla_public_key():
     if not path.is_file():
         raise HTTPException(404,'Tesla-Public-Key noch nicht hinterlegt.')
     return FileResponse(path,media_type='application/x-pem-file')
+
+
+@app.get('/apple-touch-icon.png')
+@app.get('/apple-touch-icon-precomposed.png')
+def apple_touch_icon():
+    path=Path(settings.frontend_dir)/'icons/apple-touch-icon.png'
+    if not path.is_file():
+        raise HTTPException(404, 'App-Icon noch nicht gebaut.')
+    return FileResponse(path, media_type='image/png')
 
 
 @app.get('/{path:path}')

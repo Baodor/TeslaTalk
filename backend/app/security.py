@@ -47,7 +47,7 @@ def authenticate(headers, cookies, admin=False):
     if authorization:
         if admin or not authorization.startswith('Bearer '):
             raise HTTPException(401, 'Ungültiger API-Schlüssel.')
-        row = db.one('SELECT * FROM api_keys WHERE token_hash=? AND expires_at>?', (digest(authorization[7:]), time.time()))
+        row = db.one('SELECT * FROM api_keys WHERE token_hash=? AND (expires_at=0 OR expires_at>?)', (digest(authorization[7:]), time.time()))
         if not row:
             raise HTTPException(401, 'API-Schlüssel ungültig oder abgelaufen.')
     else:
@@ -60,7 +60,10 @@ def authenticate(headers, cookies, admin=False):
     user = db.one('SELECT * FROM users WHERE id=?', (row['user_id'],))
     if not user:
         raise HTTPException(401, 'Konto nicht vorhanden.')
-    return Identity(user, row['expires_at'])
+    # Zero is the persistent sentinel for non-expiring API keys. Keep internal
+    # deadline comparisons working; trip/guest deadlines still apply separately.
+    expiry = float('inf') if authorization and row['expires_at'] == 0 else row['expires_at']
+    return Identity(user, expiry)
 
 
 def current_user(request: Request):

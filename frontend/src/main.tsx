@@ -9,5 +9,5 @@ class Boundary extends React.Component<{ children: React.ReactNode }, { failed: 
 }
 createRoot(document.getElementById('root')!).render(<Boundary><App /></Boundary>);
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => { void navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+  window.addEventListener('load', () => { void navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(() => {}); });
 }

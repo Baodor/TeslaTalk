@@ -13,4 +13,4 @@ export const duration = (value: number) => `${Math.floor(value / 3600)} h ${Math
 export const localDate = (value: Date) => new Date(value.getTime() - value.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 export type User = { id: string; username: string; display_name: string; plate: string | null; favorite_vehicle: string | null; provider: string };
 export type Trip = { id: string; leader_id: string; title: string; destination: string; starts_at: number; ends_at: number; finished_at: number | null; status: string; participants: number };
-export type Participant = User & { role: string; vehicle_id: string | null; vehicle_name: string; model: string; online: boolean; left_at: number | null; data: Record<string, any> };
+export type Participant = User & { role: string; vehicle_id: string | null; vehicle_name: string; model: string; online: boolean; left_at: number | null; data: Record<string, any>; personal_location: { latitude: number; longitude: number; updated_at: number; speed_kmh: number | null; heading: number | null } | null };
