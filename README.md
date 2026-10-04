@@ -4,6 +4,8 @@
 
 ### Gemeinsam unterwegs. Verbunden bleiben.
 
+<a href="README.en.md"><img alt="Read in English" src="https://img.shields.io/badge/Read_in-English-8eefbb?style=for-the-badge&labelColor=101a20"></a>
+
 **Sprachfunk · Fahrten · Live-Karte · Freunde · Roadtrips**
 
 ![License](https://img.shields.io/badge/Lizenz-AGPLv3-8eefbb?style=flat-square&labelColor=101a20)
