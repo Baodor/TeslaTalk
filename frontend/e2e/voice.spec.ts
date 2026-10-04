@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 test('two microphones can publish concurrently in a real LiveKit room', async ({ page, browser }) => {
   test.skip(process.env.TT_VOICE_TEST!=='true','Needs the configured local LiveKit server.');
+  for(const client of [page]) client.on('console',message=>{if(message.type()==='error'||message.type()==='warning')console.log('Audio browser: '+message.text());});
   const origin={origin:'http://localhost:8780'};
   await page.goto('/');
   await page.request.post('/api/demo/login',{headers:origin,data:{query:'Voice leader '+Date.now()}});
@@ -12,8 +13,12 @@ test('two microphones can publish concurrently in a real LiveKit room', async ({
   await second.request.post('/api/trips/join',{headers:origin,data:{pin:trip.pin}});
   await Promise.all([page.goto('/trip/'+trip.id),second.goto('/trip/'+trip.id)]);
   for(const client of [page,second]) {
+    const tokenResponse=client.waitForResponse(response=>response.url().endsWith('/voice-token'));
     await client.getByRole('button',{name:'Funk verbinden',exact:true}).click();
-    await expect(client.getByText('Verbunden · mehrere Sprecher möglich',{exact:true})).toBeVisible({timeout:20000});
+    const result=await tokenResponse;
+    expect(result.status(),result.ok()?'Authorized voice token issued.':await result.text()).toBe(200);
+    try { await expect(client.getByText('Verbunden · mehrere Sprecher möglich',{exact:true})).toBeVisible({timeout:20000}); }
+    catch(error){console.log('Audio UI: '+await client.locator('.radio-panel').innerText());throw error;}
   }
   await page.getByRole('button',{name:'Zum Sprechen gedrückt halten',exact:true}).dispatchEvent('keydown',{key:' '});
   await second.getByRole('button',{name:'Zum Sprechen gedrückt halten',exact:true}).dispatchEvent('keydown',{key:' '});

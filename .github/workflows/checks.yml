@@ -35,6 +35,7 @@ jobs:
           config['keys']={os.environ['LIVEKIT_API_KEY']:os.environ['LIVEKIT_API_SECRET']}
           config['rtc']['use_external_ip']=False
           config['rtc']['node_ip']='127.0.0.1'
+          config['rtc']['enable_loopback_candidate']=True
           pathlib.Path('/tmp/livekit-ci.yaml').write_text(yaml.safe_dump(config))
           PY
           docker run -d --name tt-audio --network host -v /tmp/livekit-ci.yaml:/etc/livekit.yaml:ro livekit/livekit-server:v1.13.7 --config /etc/livekit.yaml
@@ -46,4 +47,6 @@ jobs:
         run: docker build -t teslatalk:check .
       - name: Logs on failure
         if: failure()
-        run: docker logs tt-audio || true
+        run: |
+          docker logs tt-audio || true
+          find frontend/test-results -name error-context.md -exec cat {} \; || true
