@@ -1,4 +1,7 @@
+# Local configuration and secrets; keep the documented template in Git.
 .env
+.env.*
+!.env.example
 .venv/
 __pycache__/
 .pytest_cache/
