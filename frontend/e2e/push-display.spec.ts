@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 test('push notifications replace grouped messages with a renewed alert', async ({ page, context }) => {
-  await context.grantPermissions(['notifications']);
+  await context.grantPermissions(['notifications'], { origin: 'http://localhost:8780' });
   await page.goto('/');
+  await expect.poll(() => page.evaluate(() => Notification.permission)).toBe('granted');
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   const worker = context.serviceWorkers().find(candidate => new URL(candidate.url()).pathname === '/sw.js');
   if (!worker) throw new Error('TeslaTalk service worker is missing.');
