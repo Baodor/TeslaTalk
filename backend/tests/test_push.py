@@ -91,11 +91,146 @@ def test_outbox_delivery_calls_webpush_and_clears_job(configured,monkeypatch):
     asyncio.run(real_process())
     assert len(sent)==1
     assert sent[0]['timeout']==10 and sent[0]['ttl']==3600
+    assert sent[0]['headers']=={'Urgency':'high'}
     assert json.loads(sent[0]['data'])['body']=='Neue Einladung.'
     assert not db.one('SELECT * FROM push_outbox')
 
 
 real_process=push.process_outbox
+
+
+def test_slow_device_does_not_delay_other_devices(configured,monkeypatch):
+    from threading import Event
+    slow=subscription('https://fcm.googleapis.com/fcm/send/slow-device')
+    fast=subscription('https://web.push.apple.com/fast-device')
+    configured.post('/api/push/subscribe',json=slow)
+    configured.post('/api/push/subscribe',json=fast)
+    push.enqueue(configured.get('/api/me').json()['id'],'Neue Einladung.')
+    fast_started=Event()
+    slow_observed_fast=[]
+    def deliver(data,payload):
+        if data['endpoint']==slow['endpoint']:
+            slow_observed_fast.append(fast_started.wait(1))
+        else:
+            fast_started.set()
+    monkeypatch.setattr(push,'deliver',deliver)
+    asyncio.run(real_process())
+    assert slow_observed_fast==[True]
+    assert not db.all_rows('SELECT * FROM push_outbox')
+
+
+def test_push_batch_limits_concurrent_deliveries(configured,monkeypatch):
+    for number in range(6):
+        configured.post('/api/push/subscribe',json=subscription(f'https://web.push.apple.com/device-{number}'))
+    push.enqueue(configured.get('/api/me').json()['id'],'Neue Einladung.')
+    async def scenario():
+        full,release=asyncio.Event(),asyncio.Event()
+        active=peak=sent=0
+        async def send(function,*args):
+            nonlocal active,peak,sent
+            active+=1
+            peak=max(peak,active)
+            if active==4:
+                full.set()
+            await release.wait()
+            active-=1
+            sent+=1
+        monkeypatch.setattr(push.asyncio,'to_thread',send)
+        task=asyncio.create_task(real_process())
+        try:
+            await asyncio.wait_for(full.wait(),1)
+            await asyncio.sleep(0)
+            assert active==peak==4
+        finally:
+            release.set()
+            await task
+        assert sent==6 and peak==4
+    asyncio.run(scenario())
+    assert not db.all_rows('SELECT * FROM push_outbox')
+
+
+def test_parallel_jobs_keep_messages_ordered_on_each_device(configured,monkeypatch):
+    configured.post('/api/push/subscribe',json=subscription())
+    uid=configured.get('/api/me').json()['id']
+    push.enqueue(uid,'Erste Nachricht.')
+    push.enqueue(uid,'Zweite Nachricht.')
+    async def scenario():
+        first,second,release=asyncio.Event(),asyncio.Event(),asyncio.Event()
+        async def send(function,data,payload):
+            if json.loads(payload)['body']=='Erste Nachricht.':
+                first.set()
+                await release.wait()
+            else:
+                second.set()
+        monkeypatch.setattr(push.asyncio,'to_thread',send)
+        task=asyncio.create_task(real_process())
+        try:
+            await asyncio.wait_for(first.wait(),1)
+            await asyncio.sleep(0)
+            assert not second.is_set()
+        finally:
+            release.set()
+            await task
+        assert second.is_set()
+    asyncio.run(scenario())
+
+
+def test_retry_skips_devices_already_accepted_by_provider(configured,monkeypatch):
+    from collections import Counter
+    from requests import Response
+    slow=subscription('https://fcm.googleapis.com/fcm/send/retry-device')
+    fast=subscription('https://web.push.apple.com/accepted-device')
+    configured.post('/api/push/subscribe',json=slow)
+    configured.post('/api/push/subscribe',json=fast)
+    push.enqueue(configured.get('/api/me').json()['id'],'Neue Einladung.')
+    calls=Counter()
+    def deliver(data,payload):
+        calls[data['endpoint']]+=1
+        if data['endpoint']==slow['endpoint'] and calls[data['endpoint']]==1:
+            response=Response(); response.status_code=503
+            raise push.WebPushException('private-provider-error',response=response)
+    monkeypatch.setattr(push,'deliver',deliver)
+    asyncio.run(real_process())
+    assert db.one('SELECT * FROM push_outbox')['attempts']==1
+    assert len(db.all_rows('SELECT * FROM push_deliveries'))==1
+    db.execute('UPDATE push_outbox SET next_at=?',(time.time()-1,))
+    asyncio.run(real_process())
+    assert calls[slow['endpoint']]==2 and calls[fast['endpoint']]==1
+    assert not db.all_rows('SELECT * FROM push_outbox')
+    assert not db.all_rows('SELECT * FROM push_deliveries')
+
+
+def test_passenger_delivery_rechecks_trip_after_waiting_for_slot(configured,monkeypatch):
+    created=trip(configured); guest,_,_=passenger(configured,created)
+    uid=guest.get('/api/me').json()['id']
+    assert guest.post('/api/push/subscribe',json=subscription('https://web.push.apple.com/waiting-passenger')).status_code==200
+    push.enqueue(uid,'Neue Nachricht.',trip_id=created['id'])
+    job=db.one('SELECT * FROM push_outbox')
+    endpoint=db.one('SELECT endpoint_hash FROM push_subscriptions WHERE user_id=?',(uid,))['endpoint_hash']
+    sent=[]
+    monkeypatch.setattr(push,'deliver',lambda *args:sent.append(args))
+    async def scenario():
+        slots=asyncio.Semaphore(0)
+        task=asyncio.create_task(push.send_job_device(job,endpoint,slots))
+        await asyncio.sleep(0)
+        db.execute('UPDATE trips SET finished_at=? WHERE id=?',(time.time()-1,created['id']))
+        slots.release()
+        assert await task is False
+    asyncio.run(scenario())
+    assert sent==[]
+
+
+def test_push_receipts_upgrade_preserves_existing_queued_jobs(configured):
+    configured.post('/api/push/subscribe',json=subscription())
+    uid=configured.get('/api/me').json()['id']
+    push.enqueue(uid,'Bereits eingeplante Nachricht.')
+    before=db.one('SELECT * FROM push_outbox')
+    db.execute('DROP TABLE push_deliveries')
+    db.initialize()
+    db.initialize()
+    assert db.one('SELECT * FROM push_outbox')==before
+    assert configured.get('/api/me').json()['id']==uid
+    assert db.all_rows('SELECT * FROM push_deliveries')==[]
 
 
 def test_push_test_targets_only_this_browser_session(configured,monkeypatch):
@@ -107,6 +242,8 @@ def test_push_test_targets_only_this_browser_session(configured,monkeypatch):
     monkeypatch.setattr(push,'webpush',lambda **kwargs:sent.append(kwargs))
     result=configured.post('/api/push/test',json={'endpoint':data['endpoint']})
     assert result.status_code==200 and result.json()['accepted_by_provider'] is True
+    assert result.json()['provider_elapsed_ms']>=0
+    assert abs(result.json()['provider_accepted_at']-time.time())<2
     assert len(sent)==1 and sent[0]['subscription_info']['endpoint']==data['endpoint']
     assert json.loads(sent[0]['data'])['tag']=='teslatalk-test'
     stranger=new_driver('Not recipient')

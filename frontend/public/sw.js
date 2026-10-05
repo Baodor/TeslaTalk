@@ -36,9 +36,11 @@ self.addEventListener('fetch', event => {
 self.addEventListener('push', event => {
   let data = { title: 'TeslaTalk', body: 'Es gibt Neuigkeiten für deine Fahrt.', url: '/', tag: 'teslatalk' };
   try { data = { ...data, ...event.data.json() }; } catch (_) {}
+  // Replacing a grouped message should alert again. renotify requires a nonempty tag.
+  const tag = typeof data.tag === 'string' && data.tag.trim() ? data.tag : 'teslatalk';
   event.waitUntil(self.registration.showNotification(data.title, {
-    body: data.body, tag: data.tag, icon: '/icons/icon-192.png',
-    data: { url: data.url }, renotify: false
+    body: data.body, tag, icon: '/icons/icon-192.png',
+    data: { url: data.url }, silent: false, renotify: true
   }));
 });
 self.addEventListener('notificationclick', event => {

@@ -227,8 +227,8 @@ async def push_test(body:PushRemove,request:Request,identity:Identity=Depends(cu
             raise HTTPException(403,'Mitfahrer-Zugang ist nicht mehr gültig.')
         access(member['trip_id'],identity,active=True)
     limiter.check(('push-test',identity.user['id']),3,60)
-    await push.test_message(body.endpoint,identity,request.cookies.get('tt_session',''))
-    return {'ok':True,'accepted_by_provider':True}
+    timing=await push.test_message(body.endpoint,identity,request.cookies.get('tt_session',''))
+    return {'ok':True,'accepted_by_provider':True,**timing}
 
 
 @app.get('/auth/tesla')

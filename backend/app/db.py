@@ -48,6 +48,11 @@ CREATE TABLE IF NOT EXISTS push_outbox (
  trip_id TEXT REFERENCES trips(id), payload TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0,
  next_at REAL NOT NULL, expires_at REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS push_deliveries (
+ job_id INTEGER NOT NULL REFERENCES push_outbox(id) ON DELETE CASCADE,
+ endpoint_hash TEXT NOT NULL,
+ PRIMARY KEY (job_id,endpoint_hash)
+);
 CREATE INDEX IF NOT EXISTS push_due ON push_outbox(next_at);
 '''
 

@@ -12,6 +12,8 @@ from . import db
 from .config import settings
 from .security import cipher, digest
 
+MAX_DELIVERIES = 4
+
 
 class NoRedirectSession(requests.Session):
     def request(self, method, url, **kwargs):
@@ -23,7 +25,8 @@ def deliver(data, payload):
     with NoRedirectSession() as session:
         return webpush(subscription_info=data, data=payload, requests_session=session,
                        vapid_private_key=settings.vapid_private_key,
-                       vapid_claims={'sub':settings.vapid_subject}, ttl=3600, timeout=10)
+                       vapid_claims={'sub':settings.vapid_subject}, ttl=3600, timeout=10,
+                       headers={'Urgency':'high'})
 
 
 def validate_subscription(subscription):
@@ -71,6 +74,7 @@ async def test_message(endpoint, identity, session_token):
     if not subscription:
         raise HTTPException(404, 'Dieses Browser-Abonnement ist nicht registriert. Benachrichtigungen im Profil erneut abgleichen.')
     payload = json.dumps({'title':'TeslaTalk · Testnachricht','body':'Deine Benachrichtigungen erreichen dieses Gerät.', 'url':'/', 'tag':'teslatalk-test'})
+    started = time.perf_counter()
     try:
         data = json.loads(cipher().decrypt(subscription['encrypted_subscription'].encode()))
         await asyncio.to_thread(deliver, data, payload)
@@ -82,6 +86,7 @@ async def test_message(endpoint, identity, session_token):
         raise HTTPException(502, f'Der Push-Dienst hat die Testnachricht abgelehnt (HTTP {status or "unbekannt"}). VAPID-Konfiguration und Verbindung prüfen.') from None
     except Exception:
         raise HTTPException(502, 'Der Push-Dienst ist gerade nicht erreichbar. Bitte erneut versuchen.') from None
+    return {'provider_accepted_at':time.time(), 'provider_elapsed_ms':round((time.perf_counter()-started)*1000)}
 
 
 def test_all_devices():
@@ -126,35 +131,63 @@ def eligible(job):
     return row['provider'] != 'guest' or time.time() >= row['starts_at']
 
 
+async def send_job_device(job, endpoint_hash, slots):
+    async with slots:
+        # Consent and trip lifetime can change while a delivery waits for a slot.
+        if time.time() >= job['expires_at'] or not eligible(job):
+            return False
+        subscription = db.one('SELECT * FROM push_subscriptions WHERE endpoint_hash=? AND user_id=? AND expires_at>?',
+                              (endpoint_hash,job['user_id'],time.time()))
+        if not subscription:
+            return False
+        try:
+            data = json.loads(cipher().decrypt(subscription['encrypted_subscription'].encode()))
+            await asyncio.to_thread(deliver, data, job['payload'])
+            # Successful devices must not receive the same alert again when another
+            # device needs a retry. Receipts expire together with their outbox job.
+            db.execute('INSERT OR IGNORE INTO push_deliveries(job_id,endpoint_hash) SELECT id,? FROM push_outbox WHERE id=?',
+                       (endpoint_hash,job['id']))
+        except WebPushException as error:
+            status = error.response.status_code if error.response is not None else 0
+            if status in (404, 410):
+                db.execute('DELETE FROM push_subscriptions WHERE endpoint_hash=?', (endpoint_hash,))
+            else:
+                return True
+        except Exception:
+            # Never log subscription endpoints, encryption keys or VAPID secrets.
+            return True
+        return False
+
+
+async def send_ordered(job, endpoint_hash, slots, device_locks):
+    # Keep queued messages in order on each device while other devices run freely.
+    async with device_locks.setdefault(endpoint_hash,asyncio.Lock()):
+        return await send_job_device(job,endpoint_hash,slots)
+
+
+async def process_job(job, slots, device_locks):
+    if not eligible(job):
+        db.execute('DELETE FROM push_outbox WHERE id=?', (job['id'],))
+        return
+    devices = db.all_rows('''SELECT p.endpoint_hash FROM push_subscriptions p
+        WHERE p.user_id=? AND p.expires_at>?
+          AND NOT EXISTS (SELECT 1 FROM push_deliveries d WHERE d.job_id=? AND d.endpoint_hash=p.endpoint_hash)''',
+        (job['user_id'],time.time(),job['id']))
+    results = await asyncio.gather(*(send_ordered(job,device['endpoint_hash'],slots,device_locks) for device in devices))
+    if any(results) and job['attempts'] < 2 and time.time() < job['expires_at']:
+        db.execute('UPDATE push_outbox SET attempts=attempts+1,next_at=? WHERE id=?', (time.time()+30*2**job['attempts'], job['id']))
+    else:
+        db.execute('DELETE FROM push_outbox WHERE id=?', (job['id'],))
+
+
 async def process_outbox():
     now = time.time()
     db.execute('DELETE FROM push_subscriptions WHERE expires_at<=?', (now,))
     db.execute('DELETE FROM push_outbox WHERE expires_at<=?', (now,))
-    for job in db.all_rows('SELECT * FROM push_outbox WHERE next_at<=? ORDER BY id LIMIT 20', (now,)):
-        if not eligible(job):
-            db.execute('DELETE FROM push_outbox WHERE id=?', (job['id'],))
-            continue
-        retry = False
-        for subscription in db.all_rows('SELECT * FROM push_subscriptions WHERE user_id=? AND expires_at>?', (job['user_id'], time.time())):
-            # Recheck scheduled expiry immediately before sending, including queued jobs.
-            if not eligible(job):
-                break
-            try:
-                data = json.loads(cipher().decrypt(subscription['encrypted_subscription'].encode()))
-                await asyncio.to_thread(deliver, data, job['payload'])
-            except WebPushException as error:
-                status = error.response.status_code if error.response is not None else 0
-                if status in (404, 410):
-                    db.execute('DELETE FROM push_subscriptions WHERE endpoint_hash=?', (subscription['endpoint_hash'],))
-                else:
-                    retry = True
-            except Exception:
-                # Never log subscription endpoints, encryption keys or VAPID secrets.
-                retry = True
-        if retry and job['attempts'] < 2:
-            db.execute('UPDATE push_outbox SET attempts=attempts+1,next_at=? WHERE id=?', (time.time()+30*2**job['attempts'], job['id']))
-        else:
-            db.execute('DELETE FROM push_outbox WHERE id=?', (job['id'],))
+    jobs = db.all_rows('SELECT * FROM push_outbox WHERE next_at<=? ORDER BY id LIMIT 20', (now,))
+    slots = asyncio.Semaphore(MAX_DELIVERIES)
+    device_locks = {}
+    await asyncio.gather(*(process_job(job,slots,device_locks) for job in jobs))
 
 
 async def worker():

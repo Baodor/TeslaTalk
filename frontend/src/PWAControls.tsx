@@ -150,8 +150,10 @@ export function usePWAControls(config: any, userId: string | undefined, notify: 
         return;
       }
       await api('/api/push/subscribe', 'POST', subscription.toJSON());
-      await api('/api/push/test', 'POST', { endpoint: subscription.endpoint });
-      setStatus('Testnachricht an den Push-Dienst übergeben. Prüfe die Mitteilungszentrale dieses Geräts.');
+      const result = await api('/api/push/test', 'POST', { endpoint: subscription.endpoint });
+      const acceptedAt = Number.isFinite(result.provider_accepted_at) ? new Date(result.provider_accepted_at * 1000).toLocaleTimeString('de-DE') : '';
+      const duration = Number.isFinite(result.provider_elapsed_ms) ? ` (${(result.provider_elapsed_ms / 1000).toFixed(2)} s)` : '';
+      setStatus(`Testnachricht an den Push-Dienst übergeben.${acceptedAt ? ` Angenommen um ${acceptedAt}${duration}.` : ''} Prüfe die Mitteilungszentrale dieses Geräts.`);
       notify('Testnachricht an dieses Gerät gesendet.');
     } catch (error) {
       if (error instanceof ApiError && error.status === 410) {
@@ -178,5 +180,6 @@ export default function PWAControls({ controls }: { controls: PWAState }) {
       {help && <div className="install-help" role="dialog" aria-label="TeslaTalk installieren"><button className="icon-button" aria-label="Schließen" onClick={() => setHelp(false)}><X size={18} /></button><img className="install-icon" src="/apple-touch-icon-v4.png" width="72" height="72" alt="Rotes TeslaTalk-Icon mit Walkie-Talkie und Tesla-T" /><strong>Dein Roadtrip auf dem Home-Bildschirm</strong><p><b>iPhone / iPad:</b> Öffne die TeslaTalk-Startseite in Safari. Wähle Teilen → Zum Home-Bildschirm. Bei einem alten Buchstabensymbol den bisherigen Eintrag entfernen und neu hinzufügen. Starte TeslaTalk anschließend über das neue Symbol und aktiviere Benachrichtigungen.</p><p><b>Android / Desktop:</b> Wähle im Browser-Menü „App installieren“ oder „Zum Startbildschirm hinzufügen“.</p><small>Web-Push braucht HTTPS und einen unterstützten Browser. Auf iPhone / iPad wird iOS / iPadOS 16.4 oder neuer benötigt. Sprachfunk braucht eine aktive Internetverbindung.</small></div>}
     </div>
     <p className="notification-status hint" role="status">{status || 'Auf diesem Gerät ausgeschaltet.'}</p>
+    <small>Ton und Vibration steuerst du in den Mitteilungseinstellungen deines Geräts. Ein Fokus kann Mitteilungen zurückhalten; eine geplante Übersicht zeigt sie erst später an.</small>
   </section>;
 }

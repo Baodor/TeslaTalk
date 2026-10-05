@@ -228,7 +228,7 @@ test('notification consent subscribes this device and can be revoked', async ({p
   let syncFails=false;
   await page.route('**/api/config',route=>route.fulfill({json:{demo:true,tesla_ready:false,push_ready:true,vapid_public_key:'BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'}}));
   await page.route('**/api/push/subscribe',route=>{requests.push(route.request().postDataJSON());return route.fulfill({status:syncFails?503:200,json:syncFails?{detail:'Temporarily unavailable'}:{ok:true}});});
-  await page.route('**/api/push/test',route=>{testMessages.push(route.request().postDataJSON());return route.fulfill({json:{ok:true,accepted_by_provider:true}});});
+  await page.route('**/api/push/test',route=>{testMessages.push(route.request().postDataJSON());return route.fulfill({json:{ok:true,accepted_by_provider:true,provider_accepted_at:1780000000,provider_elapsed_ms:250}});});
   await page.route('**/api/push/unsubscribe',route=>route.fulfill({json:{ok:true}}));
   await page.addInitScript(()=>{
     // Browser push delivery is mocked; keep consent deterministic across reloads,
@@ -254,6 +254,8 @@ test('notification consent subscribes this device and can be revoked', async ({p
   expect(requests[0].endpoint).toBe('https://fcm.googleapis.com/fcm/send/browser-test');
   await page.getByRole('button',{name:'Testnachricht an dieses Gerät',exact:true}).click();
   await expect(page.locator('.notification-status')).toContainText('Testnachricht an den Push-Dienst übergeben');
+  await expect(page.locator('.notification-status')).toContainText('Angenommen um');
+  await expect(page.locator('.notification-status')).toContainText('(0.25 s)');
   expect(testMessages).toEqual([{endpoint:requests[0].endpoint}]);
   syncFails=true;
   await page.reload();
