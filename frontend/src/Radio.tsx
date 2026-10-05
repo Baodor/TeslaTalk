@@ -48,9 +48,10 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
     sendingRef.current = false;
     const previous = room.current;
     room.current = null;
-    await previous?.disconnect();
-    await context.current?.close();
+    const previousContext = context.current;
     context.current = null;
+    await previous?.disconnect();
+    if (previousContext && previousContext.state !== 'closed') await previousContext.close().catch(() => {});
     audioElements.current.forEach(el => el.remove());
     audioElements.current.clear();
     setConnected(false); setSending(false); setSpeakers([]); setPhase('idle');
@@ -142,7 +143,11 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
       if (enabled !== previous) { previous = enabled; void transmit(enabled); }
     }, 50);
     void ctx.resume();
-    return () => { clearInterval(interval); sourceTrack.stop(); source.disconnect(); void ctx.close(); context.current = null; };
+    return () => {
+      clearInterval(interval); sourceTrack.stop(); source.disconnect();
+      if (ctx.state !== 'closed') void ctx.close().catch(() => {});
+      if (context.current === ctx) context.current = null;
+    };
   }, [connected, mode]);
   useEffect(() => {
     const mute = () => { if (modeRef.current === 'tap') void transmit(false); };

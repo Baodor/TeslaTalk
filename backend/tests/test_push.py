@@ -245,7 +245,7 @@ def test_push_test_targets_only_this_browser_session(configured,monkeypatch):
     assert result.json()['provider_elapsed_ms']>=0
     assert abs(result.json()['provider_accepted_at']-time.time())<2
     assert len(sent)==1 and sent[0]['subscription_info']['endpoint']==data['endpoint']
-    assert json.loads(sent[0]['data'])['tag']=='teslatalk-test'
+    assert json.loads(sent[0]['data'])['tag'].startswith('teslatalk-test-')
     stranger=new_driver('Not recipient')
     assert stranger.post('/api/push/test',json={'endpoint':data['endpoint']}).status_code==404
     # Even the same account must rebind this device after a new browser login.
@@ -255,6 +255,59 @@ def test_push_test_targets_only_this_browser_session(configured,monkeypatch):
     key=configured.post('/api/keys',json={'label':'No browser push'}).json()
     assert configured.post('/api/push/test',headers={'authorization':'Bearer '+key['token']},json={'endpoint':data['endpoint']}).status_code==403
     assert len(sent)==1
+
+
+def test_personal_test_rebinds_and_sends_with_one_request(configured,monkeypatch):
+    from app.security import digest
+    data=subscription('https://web.push.apple.com/personal-one-request')
+    assert configured.post('/api/push/subscribe',json=data).status_code==200
+    assert configured.post('/api/demo/login',json={'query':'Fahrtleiter'}).status_code==200
+    sent=[]
+    monkeypatch.setattr(push,'webpush',lambda **kwargs:sent.append(kwargs))
+    # A renewed browser session should not need a preliminary request. On iOS,
+    # the page can be suspended between that request and the actual push test.
+    for _ in range(2):
+        response=configured.post('/api/push/test',json=data)
+        assert response.status_code==200,response.text
+        assert response.json()['accepted_by_provider'] is True
+    assert len(sent)==2
+    assert all(call['subscription_info']==data for call in sent)
+    tags=[json.loads(call['data'])['tag'] for call in sent]
+    assert all(tag.startswith('teslatalk-test-') for tag in tags)
+    assert len(set(tags))==2
+    row=db.one('SELECT * FROM push_subscriptions WHERE endpoint_hash=?',(digest(data['endpoint']),))
+    assert row['session_hash']==digest(configured.cookies.get('tt_session'))
+
+
+def test_atomic_personal_test_preserves_endpoint_ownership_and_validation(configured,monkeypatch):
+    data=subscription('https://web.push.apple.com/owned-personal-test')
+    assert configured.post('/api/push/subscribe',json=data).status_code==200
+    sent=[]
+    monkeypatch.setattr(push,'webpush',lambda **kwargs:sent.append(kwargs))
+    stranger=new_driver('Not this device owner')
+    assert stranger.post('/api/push/test',json=data).status_code==409
+    assert configured.post('/api/push/test',json=subscription('https://127.0.0.1/private')).status_code==422
+    assert sent==[]
+    assert db.one('SELECT user_id FROM push_subscriptions')['user_id']==configured.get('/api/me').json()['id']
+
+
+def test_push_worker_survives_a_temporary_database_failure(configured,monkeypatch,caplog):
+    import sqlite3
+    calls=[]
+    async def process():
+        calls.append(True)
+        if len(calls)==1:
+            raise sqlite3.OperationalError('private database details')
+    async def tick(seconds):
+        if len(calls)>=2:
+            raise asyncio.CancelledError
+    monkeypatch.setattr(push,'process_outbox',process)
+    monkeypatch.setattr(push.asyncio,'sleep',tick)
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(push.worker())
+    assert len(calls)==2
+    assert 'OperationalError' in caplog.text
+    assert 'private database details' not in caplog.text
 
 
 @pytest.mark.parametrize('status',[404,410,403])
@@ -317,7 +370,7 @@ def test_admin_test_broadcast_requires_admin_and_targets_all_active_devices(conf
     configured.post('/api/trips/'+active['id']+'/finish')
     asyncio.run(real_process())
     assert {call['subscription_info']['endpoint'] for call in sent}=={first['endpoint'],second['endpoint'],friend_data['endpoint']}
-    assert all(json.loads(call['data'])['tag']=='teslatalk-admin-test' for call in sent)
+    assert all(json.loads(call['data'])['tag'].startswith('teslatalk-admin-test-') for call in sent)
     assert not db.all_rows('SELECT * FROM push_outbox')
 
 

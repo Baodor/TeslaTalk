@@ -2,7 +2,9 @@
 import asyncio
 import base64
 import json
+import logging
 import re
+import secrets
 import time
 from urllib.parse import urlsplit
 from fastapi import HTTPException
@@ -13,6 +15,7 @@ from .config import settings
 from .security import cipher, digest
 
 MAX_DELIVERIES = 4
+log = logging.getLogger('teslatalk.push')
 
 
 class NoRedirectSession(requests.Session):
@@ -73,7 +76,9 @@ async def test_message(endpoint, identity, session_token):
                           (digest(endpoint), identity.user['id'], digest(session_token), time.time()))
     if not subscription:
         raise HTTPException(404, 'Dieses Browser-Abonnement ist nicht registriert. Benachrichtigungen im Profil erneut abgleichen.')
-    payload = json.dumps({'title':'TeslaTalk · Testnachricht','body':'Deine Benachrichtigungen erreichen dieses Gerät.', 'url':'/', 'tag':'teslatalk-test'})
+    # Every tap is a distinct diagnostic alert, rather than a replacement of a
+    # previous test notification in the device's notification center.
+    payload = json.dumps({'title':'TeslaTalk · Testnachricht','body':'Deine Benachrichtigungen erreichen dieses Gerät.', 'url':'/', 'tag':'teslatalk-test-'+secrets.token_hex(8)})
     started = time.perf_counter()
     try:
         data = json.loads(cipher().decrypt(subscription['encrypted_subscription'].encode()))
@@ -95,7 +100,7 @@ def test_all_devices():
     now = time.time()
     payload = json.dumps({'title':'TeslaTalk · Server-Testnachricht',
                           'body':'Deine TeslaTalk-Administration testet die Benachrichtigungen.',
-                          'url':'/', 'tag':'teslatalk-admin-test'})
+                          'url':'/', 'tag':'teslatalk-admin-test-'+secrets.token_hex(8)})
     with db.connect() as connection:
         recipients = connection.execute('''
             SELECT p.user_id, m.trip_id, count(DISTINCT p.endpoint_hash) AS devices
@@ -192,6 +197,11 @@ async def process_outbox():
 
 async def worker():
     while True:
-        if settings.push_ready:
-            await process_outbox()
+        try:
+            if settings.push_ready:
+                await process_outbox()
+        except Exception as error:
+            # A temporary failure must not permanently stop the persistent queue.
+            # Exception messages may contain private endpoint or database details.
+            log.warning('Push processing unavailable: %s', type(error).__name__)
         await asyncio.sleep(2)

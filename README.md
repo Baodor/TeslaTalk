@@ -55,7 +55,9 @@ TeslaTalk verbindet Freunde, die gemeinsam mit ihren Teslas unterwegs sind. Eine
 - Auf nötige Änderungen hinweisen und danach die gemeinsame Route automatisch bei allen anpassen.
 - Tesla-Schnittstellen für Routenübernahme, Zwischenstopps und Musiksteuerung am echten Fahrzeug prüfen.
 
-### Fotoalben mit Immich
+### Fotoalben mit Immich (geplant)
+
+**Noch nicht implementiert:** TeslaTalk erzeugt bisher nur den geplanten Albumnamen. Es gibt keine Verbindung zur Immich-API, keine Speicherung von Immich-Zugangsdaten und keine Foto-Uploads. Mitfahrer-Zugang und öffentliche Fahrtübersicht funktionieren unabhängig davon. Der [Projektprüfbericht](docs/PROJECT-CHECK.de.md) beschreibt den aktuellen Stand.
 
 - Die Immich-Instanz des Fahrtleiters verwenden.
 - Automatisch ein Album mit **Fahrtname und Zeitraum** anlegen.

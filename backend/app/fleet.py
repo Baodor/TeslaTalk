@@ -1,5 +1,6 @@
 import asyncio
 import json
+import math
 import time
 from urllib.parse import urlsplit
 import httpx
@@ -60,7 +61,31 @@ async def request(user_id, path, params=None):
         code = response.status_code
         message = {401:'Tesla-Anmeldung erneuern.', 403:'Tesla-Berechtigungen oder Partnerregistrierung fehlen.', 408:'Fahrzeug schläft oder ist nicht erreichbar.', 429:'Tesla-Anfragelimit erreicht.'}.get(code, 'Tesla-Fahrzeugdaten derzeit nicht erreichbar.')
         raise HTTPException(502, message)
-    return response.json().get('response')
+    try:
+        document = response.json()
+    except ValueError:
+        raise HTTPException(502, 'Tesla lieferte keine nutzbare API-Antwort.') from None
+    if not isinstance(document, dict):
+        raise HTTPException(502, 'Tesla lieferte keine nutzbare API-Antwort.')
+    return document.get('response')
+
+
+def object_data(value):
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise HTTPException(502, 'Tesla lieferte keine nutzbaren Fahrzeugdaten.')
+    return value
+
+
+def vehicle_model(configuration, fallback='Tesla'):
+    code = object_data(configuration).get('car_type')
+    if not isinstance(code, str):
+        return fallback
+    names = {'3':'Model 3', 'model3':'Model 3', 'y':'Model Y', 'modely':'Model Y',
+             's':'Model S', 'models':'Model S', 'models2':'Model S',
+             'x':'Model X', 'modelx':'Model X', 'modelx2':'Model X', 'cybertruck':'Cybertruck'}
+    return names.get(code.strip().lower(), fallback)
 
 
 async def synchronize(user_id):
@@ -72,16 +97,18 @@ async def synchronize(user_id):
         raise HTTPException(502, 'Tesla lieferte keine Fahrzeugliste.')
     with db.connect() as connection:
         for item in items:
+            item = object_data(item)
             vin = item.get('vin')
             if not vin:
                 continue
             # Only basic own-vehicle details; never return tokens or Tesla profile data.
-            model = 'Model '+str(item.get('vehicle_config', {}).get('car_type', '3')).upper()
-            existing = connection.execute('SELECT user_id FROM vehicles WHERE id=?', (vin,)).fetchone()
+            existing = connection.execute('SELECT user_id,model FROM vehicles WHERE id=?', (vin,)).fetchone()
             if existing and existing['user_id'] != user_id:
                 # Shared Tesla vehicles can occur in several accounts. Use owner-scoped IDs.
                 vin = user_id+':'+vin
-            connection.execute('INSERT INTO vehicles(id,user_id,name,model) VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name', (vin,user_id,item.get('display_name') or 'Mein Tesla',model))
+                existing = connection.execute('SELECT user_id,model FROM vehicles WHERE id=?', (vin,)).fetchone()
+            model = vehicle_model(item.get('vehicle_config'), existing['model'] if existing else 'Tesla')
+            connection.execute('INSERT INTO vehicles(id,user_id,name,model) VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,model=excluded.model', (vin,user_id,item.get('display_name') or 'Mein Tesla',model))
         vehicles = connection.execute('SELECT * FROM vehicles WHERE user_id=?', (user_id,)).fetchall()
         if vehicles and not user['favorite_vehicle']:
             connection.execute('UPDATE users SET favorite_vehicle=? WHERE id=?', (vehicles[0]['id'], user_id))
@@ -89,15 +116,24 @@ async def synchronize(user_id):
 
 
 def normalize(payload):
-    drive = payload.get('drive_state') or {}
-    charge = payload.get('charge_state') or {}
-    state = payload.get('vehicle_state') or {}
+    if not isinstance(payload, dict):
+        raise HTTPException(502, 'Tesla lieferte keine nutzbaren Fahrzeugdaten.')
+    payload = object_data(payload)
+    drive = object_data(payload.get('drive_state'))
+    charge = object_data(payload.get('charge_state'))
+    state = object_data(payload.get('vehicle_state'))
+    def number(section, field):
+        value = section.get(field)
+        if value is not None and (isinstance(value, bool) or not isinstance(value, (int,float)) or not math.isfinite(value)):
+            raise HTTPException(502, 'Tesla lieferte keine nutzbaren Fahrzeugdaten.')
+        return value
+    speed, battery_range, odometer = number(drive,'speed'), number(charge,'battery_range'), number(state,'odometer')
     return {
-        'latitude': drive.get('latitude'), 'longitude': drive.get('longitude'),
-        'speed_kmh': None if drive.get('speed') is None else round(drive['speed']*1.609344, 1),
-        'heading': drive.get('heading'), 'battery_pct':charge.get('battery_level'),
-        'range_km':None if charge.get('battery_range') is None else round(charge['battery_range']*1.609344,1),
-        'odometer_km':None if state.get('odometer') is None else round(state['odometer']*1.609344,3),
+        'latitude': number(drive,'latitude'), 'longitude': number(drive,'longitude'),
+        'speed_kmh': None if speed is None else round(speed*1.609344, 1),
+        'heading': number(drive,'heading'), 'battery_pct':number(charge,'battery_level'),
+        'range_km':None if battery_range is None else round(battery_range*1.609344,1),
+        'odometer_km':None if odometer is None else round(odometer*1.609344,3),
         'source':'fleet', 'updated_at':time.time(),
     }
 
@@ -113,6 +149,6 @@ async def fetch_vehicle(user_id, vehicle):
     payload = await request(user_id, f'/api/1/vehicles/{vin}/vehicle_data', {'endpoints':'charge_state;drive_state;location_data;vehicle_state;vehicle_config'})
     data = normalize(payload)
     data['fleet_fetched_at'] = time.time()
-    model = (payload.get('vehicle_config') or {}).get('car_type')
-    db.execute('UPDATE vehicles SET data=?,model=? WHERE id=?', (json.dumps(data), 'Model '+str(model).upper() if model else vehicle['model'], vehicle['id']))
+    model = vehicle_model(payload.get('vehicle_config'),vehicle['model'])
+    db.execute('UPDATE vehicles SET data=?,model=? WHERE id=?', (json.dumps(data), model, vehicle['id']))
     return data

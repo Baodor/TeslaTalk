@@ -21,6 +21,15 @@ async function login(page: Page, name: string) {
   await expect(page.getByRole('heading', { name: 'Deine Fahrten.' })).toBeVisible();
 }
 
+test('a failed vehicle request preserves the signed-in dashboard and profile', async ({page}) => {
+  await page.route('**/api/vehicles', route => route.fulfill({status:503,json:{detail:'Test vehicle data unavailable'}}));
+  await login(page,'Dashboard recovery '+Date.now());
+  await expect(page.getByRole('status')).toContainText('Test vehicle data unavailable');
+  await page.getByRole('button',{name:'Mein Profil',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Startklar.'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Bereit für die nächste Fahrt?'})).toHaveCount(0);
+});
+
 test('microphone permission precedes the voice request and failures release the device', async ({page}) => {
   await page.addInitScript(()=>{
     const real=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
@@ -256,7 +265,9 @@ test('notification consent subscribes this device and can be revoked', async ({p
   await expect(page.locator('.notification-status')).toContainText('Testnachricht an den Push-Dienst übergeben');
   await expect(page.locator('.notification-status')).toContainText('Angenommen um');
   await expect(page.locator('.notification-status')).toContainText('(0.25 s)');
-  expect(testMessages).toEqual([{endpoint:requests[0].endpoint}]);
+  expect(testMessages).toEqual([requests[0]]);
+  // The test must not depend on finishing another registration request first.
+  expect(requests).toHaveLength(1);
   syncFails=true;
   await page.reload();
   await page.getByRole('button',{name:'Mein Profil',exact:true}).click();

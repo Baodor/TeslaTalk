@@ -22,7 +22,7 @@ from . import db, fleet, push
 from .config import settings
 from .metrics import ranking
 from .oidc import admin_access, admin_claims, admin_denial, verification_failure
-from .models import GuestLogin, Join, KeyCreate, Message, PassengerCreate, Profile, Query, Sample, TripCreate, PushSubscription, PushRemove
+from .models import GuestLogin, Join, KeyCreate, Message, PassengerCreate, Profile, Query, Sample, TripCreate, PushSubscription, PushRemove, PushTest
 from .realtime import hub, voice_token, delete_voice_room, ensure_voice_room
 from .security import Identity, authenticate, current_admin, current_user, digest, driver, limiter, pin_hash, pin_matches, join_pin_hash, set_session, user_public
 
@@ -103,34 +103,44 @@ async def store_sample(trip_id, user_id, data):
     await hub.broadcast(trip_id, {'type':'participants','participants':participants(trip_id)})
 
 
+async def background_cycle(next_poll):
+    now = time.time()
+    db.execute('DELETE FROM sessions WHERE expires_at<?', (now,))
+    db.execute('DELETE FROM oauth_states WHERE expires_at<?', (now,))
+    db.execute('DELETE FROM personal_locations WHERE updated_at<=? OR trip_id IN (SELECT id FROM trips WHERE ends_at<=? OR finished_at IS NOT NULL)', (now-300,now))
+    for trip in db.all_rows('SELECT * FROM trips WHERE (ends_at<=? OR finished_at IS NOT NULL) AND voice_cleaned=0', (now,)):
+        if await delete_voice_room(trip['id']):
+            db.execute('UPDATE trips SET voice_cleaned=1 WHERE id=?', (trip['id'],))
+        await hub.broadcast(trip['id'], {'type':'ended'})
+    if now>=next_poll:
+        next_poll = now+settings.poll_interval
+        online = hub.online()
+        members = db.all_rows('SELECT m.trip_id,m.user_id,m.vehicle_id FROM members m JOIN trips t ON t.id=m.trip_id WHERE m.left_at IS NULL AND m.vehicle_id IS NOT NULL AND t.starts_at<=? AND t.ends_at>? AND t.finished_at IS NULL', (now,now))
+        cache = {}
+        for member in members:
+            if member['user_id'] not in online:
+                continue
+            try:
+                vehicle = db.one('SELECT * FROM vehicles WHERE id=? AND user_id=?', (member['vehicle_id'],member['user_id']))
+                if not vehicle:
+                    continue
+                if vehicle['id'] not in cache:
+                    cache[vehicle['id']] = await fleet.fetch_vehicle(member['user_id'], vehicle)
+                await store_sample(member['trip_id'], member['user_id'], cache[vehicle['id']])
+            except (HTTPException,httpx.HTTPError,ValueError) as error:
+                log.info('Fleet retrieval unavailable: %s', type(error).__name__)
+    return next_poll
+
+
 async def background():
     next_poll = 0
     while True:
-        now = time.time()
-        db.execute('DELETE FROM sessions WHERE expires_at<?', (now,))
-        db.execute('DELETE FROM oauth_states WHERE expires_at<?', (now,))
-        db.execute('DELETE FROM personal_locations WHERE updated_at<=? OR trip_id IN (SELECT id FROM trips WHERE ends_at<=? OR finished_at IS NOT NULL)', (now-300,now))
-        for trip in db.all_rows('SELECT * FROM trips WHERE (ends_at<=? OR finished_at IS NOT NULL) AND voice_cleaned=0', (now,)):
-            if await delete_voice_room(trip['id']):
-                db.execute('UPDATE trips SET voice_cleaned=1 WHERE id=?', (trip['id'],))
-            await hub.broadcast(trip['id'], {'type':'ended'})
-        if now>=next_poll:
-            next_poll = now+settings.poll_interval
-            online = hub.online()
-            members = db.all_rows('SELECT m.trip_id,m.user_id,m.vehicle_id FROM members m JOIN trips t ON t.id=m.trip_id WHERE m.left_at IS NULL AND m.vehicle_id IS NOT NULL AND t.starts_at<=? AND t.ends_at>? AND t.finished_at IS NULL', (now,now))
-            cache = {}
-            for member in members:
-                if member['user_id'] not in online:
-                    continue
-                try:
-                    vehicle = db.one('SELECT * FROM vehicles WHERE id=? AND user_id=?', (member['vehicle_id'],member['user_id']))
-                    if not vehicle:
-                        continue
-                    if vehicle['id'] not in cache:
-                        cache[vehicle['id']] = await fleet.fetch_vehicle(member['user_id'], vehicle)
-                    await store_sample(member['trip_id'], member['user_id'], cache[vehicle['id']])
-                except (HTTPException,httpx.HTTPError,ValueError) as error:
-                    log.info('Fleet retrieval unavailable: %s', type(error).__name__)
+        try:
+            next_poll = await background_cycle(next_poll)
+        except Exception as error:
+            # Keep expiry cleanup, room shutdown and polling alive after a
+            # temporary failure. Do not log provider responses or credentials.
+            log.warning('Background maintenance unavailable: %s', type(error).__name__)
         await asyncio.sleep(5)
 
 
@@ -218,7 +228,7 @@ def push_unsubscribe(body:PushRemove,identity:Identity=Depends(current_user)):
 
 
 @app.post('/api/push/test')
-async def push_test(body:PushRemove,request:Request,identity:Identity=Depends(current_user)):
+async def push_test(body:PushTest,request:Request,identity:Identity=Depends(current_user)):
     if request.headers.get('authorization'):
         raise HTTPException(403,'Push-Test benötigt eine Browser-Anmeldung.')
     if identity.user['provider']=='guest':
@@ -227,6 +237,8 @@ async def push_test(body:PushRemove,request:Request,identity:Identity=Depends(cu
             raise HTTPException(403,'Mitfahrer-Zugang ist nicht mehr gültig.')
         access(member['trip_id'],identity,active=True)
     limiter.check(('push-test',identity.user['id']),3,60)
+    if body.keys is not None:
+        push.subscribe(body.model_dump(exclude_none=True),identity,request.cookies.get('tt_session',''))
     timing=await push.test_message(body.endpoint,identity,request.cookies.get('tt_session',''))
     return {'ok':True,'accepted_by_provider':True,**timing}
 

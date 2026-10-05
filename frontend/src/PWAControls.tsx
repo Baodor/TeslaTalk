@@ -149,8 +149,9 @@ export function usePWAControls(config: any, userId: string | undefined, notify: 
         setNeedsRepair(true); setStatus('Das Browser-Abonnement fehlt oder die Freigabe wurde entzogen. Benachrichtigungen erneut aktivieren.');
         return;
       }
-      await api('/api/push/subscribe', 'POST', subscription.toJSON());
-      const result = await api('/api/push/test', 'POST', { endpoint: subscription.endpoint });
+      // Rebind and send in one server request. iOS may suspend this page when
+      // the user switches away to check the notification.
+      const result = await api('/api/push/test', 'POST', subscription.toJSON());
       const acceptedAt = Number.isFinite(result.provider_accepted_at) ? new Date(result.provider_accepted_at * 1000).toLocaleTimeString('de-DE') : '';
       const duration = Number.isFinite(result.provider_elapsed_ms) ? ` (${(result.provider_elapsed_ms / 1000).toFixed(2)} s)` : '';
       setStatus(`Testnachricht an den Push-Dienst übergeben.${acceptedAt ? ` Angenommen um ${acceptedAt}${duration}.` : ''} Prüfe die Mitteilungszentrale dieses Geräts.`);

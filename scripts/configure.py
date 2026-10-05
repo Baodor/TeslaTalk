@@ -30,7 +30,7 @@ def main():
     if env_path.exists():
         parser.error('.env exists. Edit it directly; this script will not replace encryption keys or existing settings.')
     app, voice = urlsplit(args.url), urlsplit(args.voice_url)
-    if app.scheme not in ('http','https') or voice.scheme not in ('ws','wss') or not app.hostname or not voice.hostname or app.path not in ('','/') or voice.path not in ('','/') or any((app.username,voice.username,app.query,voice.query,app.fragment,voice.fragment)):
+    if app.scheme not in ('http','https') or voice.scheme not in ('ws','wss') or not app.hostname or not voice.hostname or app.path not in ('','/') or voice.path not in ('','/') or any((app.username,app.password,voice.username,voice.password,app.query,voice.query,app.fragment,voice.fragment)):
         parser.error('Use complete origins without paths, credentials, query strings or fragments.')
     if app.scheme=='https' and voice.scheme!='wss':
         parser.error('An HTTPS application requires a wss:// voice URL.')

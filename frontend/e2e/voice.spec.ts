@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 test('two microphones can publish concurrently in a real LiveKit room', async ({ page, browser }) => {
   test.skip(process.env.TT_VOICE_TEST!=='true','Needs the configured local LiveKit server.');
+  const errors:string[]=[];
+  page.on('pageerror',error=>errors.push(error.message));
   for(const client of [page]) client.on('console',message=>{if(message.type()==='error'||message.type()==='warning')console.log('Audio browser: '+message.text());});
   const origin={origin:'http://localhost:8780'};
   await page.goto('/');
@@ -36,7 +38,12 @@ test('two microphones can publish concurrently in a real LiveKit room', async ({
   await page.getByRole('button',{name:'Mikrofon ausschalten',exact:true}).click();
   await second.getByRole('button',{name:'Mikrofon ausschalten',exact:true}).press('Space');
   for(const client of [page,second]) await expect(client.getByRole('button',{name:'Mikrofon einschalten',exact:true})).toHaveAttribute('aria-pressed','false');
+  await page.getByRole('button',{name:'Sprachaktivierung',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Sprachaktivierung aktiv',exact:true})).toBeDisabled();
+  await page.getByRole('button',{name:'Funk trennen',exact:true}).click();
+  await expect(page.locator('.radio-status')).toHaveText('FUNK AUS');
   await page.request.post('/api/trips/'+trip.id+'/finish',{headers:origin});
   await expect(page.getByRole('button',{name:'Funk verbinden',exact:true})).toBeDisabled();
+  expect(errors).toEqual([]);
   await secondContext.close();
 });

@@ -55,7 +55,9 @@ TeslaTalk connects friends travelling together in their Teslas. Each trip brings
 - Notify participants when a change is needed, then automatically update the shared route for everyone.
 - Verify Tesla interfaces for route adoption, waypoints and music control with a real vehicle.
 
-### Photo albums with Immich
+### Photo albums with Immich (planned)
+
+**Not implemented yet:** TeslaTalk currently generates only the planned album name. There is no Immich API connection, Immich credential storage or photo upload endpoint. Passenger access and public trip summaries work independently of this planned integration.
 
 - Use the **trip leader's Immich instance**.
 - Automatically create an album named after the **trip and its date range**.

@@ -88,3 +88,9 @@ class PushSubscription(BaseModel):
 
 class PushRemove(BaseModel):
     endpoint: str = Field(min_length=10, max_length=2000)
+
+
+class PushTest(PushRemove):
+    # Sending the current subscription lets the server rebind a renewed browser
+    # session and test it without a second, foreground-dependent HTTP request.
+    keys: dict[str, str] | None = None
