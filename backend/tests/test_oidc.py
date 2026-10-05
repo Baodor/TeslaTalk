@@ -107,3 +107,77 @@ def test_admin_denial_explains_configuration_without_revealing_groups(client,mon
     assert expected in result.json()['detail']
     assert 'private-user' not in result.text
     assert 'member' not in result.text
+
+
+def test_verified_admin_token_does_not_depend_on_optional_userinfo(client,monkeypatch):
+    oidc_client(monkeypatch,{'sub':'operator','groups':['admin']}, {'sub':'operator'})
+    async def unavailable(**kwargs):
+        raise RuntimeError('Optional upstream is unavailable')
+    monkeypatch.setattr(main.oauth.admin,'userinfo',unavailable)
+    assert client.get('/auth/admin/callback',follow_redirects=False).status_code==303
+
+
+@pytest.mark.parametrize('code',['mismatching_state','invalid_client','invalid_scope'])
+def test_protocol_failure_diagnoses_only_safe_codes(client,monkeypatch,caplog,code):
+    from authlib.integrations.base_client.errors import OAuthError
+    oidc_client(monkeypatch,{'sub':'operator'})
+    async def fail(request):
+        raise OAuthError(error=code,description='private-token-and-provider-body')
+    monkeypatch.setattr(main.oauth.admin,'authorize_access_token',fail)
+    result=client.get('/auth/admin/callback')
+    assert result.status_code==400
+    assert code in caplog.text and 'token_exchange_and_validation' in caplog.text
+    assert 'private-token-and-provider-body' not in caplog.text+result.text
+    assert client.get('/api/admin').status_code==401
+
+
+def test_userinfo_failure_reports_stage_and_http_status_without_response_body(client,monkeypatch,caplog):
+    import httpx
+    oidc_client(monkeypatch,{'sub':'operator'}, {'sub':'operator'})
+    async def fail(**kwargs):
+        response=httpx.Response(403,text='private-profile',request=httpx.Request('GET','https://idp.example/userinfo?secret=private-token'))
+        response.raise_for_status()
+    monkeypatch.setattr(main.oauth.admin,'userinfo',fail)
+    result=client.get('/auth/admin/callback')
+    assert result.status_code==400 and 'userinfo' in result.text and 'HTTP 403' in result.text
+    assert 'HTTPStatusError' in caplog.text
+    for private in ('private-profile','private-token','idp.example/userinfo'):
+        assert private not in caplog.text+result.text
+
+
+@pytest.mark.parametrize('bad_nonce',[False,True])
+def test_real_authlib_oidc_flow_validates_nonce_and_uses_own_cookie(client,monkeypatch,bad_nonce):
+    import base64,hashlib,json,time
+    from urllib.parse import parse_qs,urlsplit
+    import httpx,jwt
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from authlib.integrations.starlette_client import OAuth
+    issuer='https://idp.example'; client_id='teslatalk-client'; pending={}
+    private=rsa.generate_private_key(public_exponent=65537,key_size=2048)
+    jwk=json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(private.public_key())); jwk['kid']='test-key'
+    def provider(request):
+        if request.url.path=='/.well-known/openid-configuration':
+            return httpx.Response(200,json={'issuer':issuer,'authorization_endpoint':issuer+'/authorize','token_endpoint':issuer+'/token','jwks_uri':issuer+'/jwks','userinfo_endpoint':issuer+'/userinfo','id_token_signing_alg_values_supported':['RS256']})
+        if request.url.path=='/token':
+            data=parse_qs(request.content.decode())
+            challenge=base64.urlsafe_b64encode(hashlib.sha256(data['code_verifier'][0].encode()).digest()).decode().rstrip('=')
+            assert challenge==pending['code_challenge'][0]
+            assert data['redirect_uri']==['http://testserver/auth/admin/callback']
+            now=int(time.time())
+            token=jwt.encode({'iss':issuer,'aud':client_id,'sub':'operator','iat':now,'exp':now+300,'nonce':'wrong' if bad_nonce else pending['nonce'][0],'groups':['admin']},private,algorithm='RS256',headers={'kid':'test-key'})
+            return httpx.Response(200,json={'access_token':'isolated-test-token','token_type':'Bearer','id_token':token})
+        if request.url.path=='/jwks':
+            return httpx.Response(200,json={'keys':[jwk]})
+        raise AssertionError('No redundant UserInfo call expected')
+    oauth=OAuth()
+    oauth.register('admin',client_id=client_id,client_secret='isolated-client-secret',server_metadata_url=issuer+'/.well-known/openid-configuration',client_kwargs={'scope':'openid email profile groups','code_challenge_method':'S256','transport':httpx.MockTransport(provider)})
+    monkeypatch.setattr(main,'oauth',oauth)
+    monkeypatch.setattr(settings,'oidc_issuer',issuer); monkeypatch.setattr(settings,'oidc_client_id',client_id)
+    monkeypatch.setattr(settings,'admin_group','admin'); monkeypatch.setattr(settings,'admin_emails',set())
+    client.cookies.set('session','unrelated-application-cookie')
+    login=client.get('/auth/admin',follow_redirects=False)
+    assert login.status_code==302 and client.cookies.get('tt_oidc')
+    pending.update(parse_qs(urlsplit(login.headers['location']).query))
+    result=client.get('/auth/admin/callback',params={'code':'test-code','state':pending['state'][0]},follow_redirects=False)
+    assert result.status_code==(400 if bad_nonce else 303),result.text
+    assert client.get('/api/admin').status_code==(401 if bad_nonce else 200)

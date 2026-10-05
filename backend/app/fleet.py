@@ -1,6 +1,7 @@
 import asyncio
 import json
 import time
+from urllib.parse import urlsplit
 import httpx
 from fastapi import HTTPException
 from . import db
@@ -9,6 +10,20 @@ from .security import cipher
 
 TOKEN_URL = 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token'
 locks = {}
+
+
+def profile_avatar(profile):
+    for field in ('profile_image_url', 'picture'):
+        value = profile.get(field)
+        if not isinstance(value, str) or not 0 < len(value) <= 2048 or any(ord(char) < 32 for char in value):
+            continue
+        try:
+            url = urlsplit(value)
+            if url.scheme == 'https' and url.hostname and url.port in (None,443) and not url.username and not url.password:
+                return value
+        except ValueError:
+            continue
+    return None
 
 
 async def token_for(user_id):

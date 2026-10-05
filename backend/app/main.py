@@ -21,7 +21,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from . import db, fleet, push
 from .config import settings
 from .metrics import ranking
-from .oidc import admin_access, admin_claims, admin_denial
+from .oidc import admin_access, admin_claims, admin_denial, verification_failure
 from .models import GuestLogin, Join, KeyCreate, Message, PassengerCreate, Profile, Query, Sample, TripCreate, PushSubscription, PushRemove
 from .realtime import hub, voice_token, delete_voice_room, ensure_voice_room
 from .security import Identity, authenticate, current_admin, current_user, digest, driver, limiter, pin_hash, pin_matches, join_pin_hash, set_session, user_public
@@ -31,7 +31,8 @@ oauth = OAuth()
 if settings.oidc_issuer:
     oauth.register('admin', client_id=settings.oidc_client_id, client_secret=settings.oidc_client_secret,
                    server_metadata_url=settings.oidc_issuer+'/.well-known/openid-configuration',
-                   client_kwargs={'scope':settings.oidc_scopes, 'code_challenge_method':'S256'})
+                   client_kwargs={'scope':settings.oidc_scopes, 'code_challenge_method':'S256',
+                                  'token_endpoint_auth_method':settings.oidc_token_auth_method})
 
 
 def effective_end(trip):
@@ -64,7 +65,7 @@ def trip_summary(trip):
 
 
 def participants(trip_id):
-    rows = db.all_rows('SELECT u.id,u.display_name,u.username,u.plate,m.role,m.vehicle_id,m.left_at,v.name AS vehicle_name,v.model FROM members m JOIN users u ON u.id=m.user_id LEFT JOIN vehicles v ON v.id=m.vehicle_id WHERE m.trip_id=?', (trip_id,))
+    rows = db.all_rows('SELECT u.id,u.display_name,u.username,u.plate,u.avatar_url,m.role,m.vehicle_id,m.left_at,v.name AS vehicle_name,v.model FROM members m JOIN users u ON u.id=m.user_id LEFT JOIN vehicles v ON v.id=m.vehicle_id WHERE m.trip_id=?', (trip_id,))
     for row in rows:
         row['data'] = db.one("SELECT captured_at AS updated_at,latitude,longitude,speed_kmh,heading,battery_pct,range_km,source FROM samples WHERE trip_id=? AND user_id=? AND source!='browser' ORDER BY id DESC LIMIT 1", (trip_id,row['id'])) or {}
         row['personal_location'] = db.one('SELECT updated_at,latitude,longitude,speed_kmh,heading FROM personal_locations WHERE trip_id=? AND user_id=? AND updated_at>?', (trip_id,row['id'],time.time()-300))
@@ -151,7 +152,7 @@ async def lifespan(app):
 
 
 app = FastAPI(title='TeslaTalk API', version='0.1.0', lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
-app.add_middleware(SessionMiddleware, secret_key=settings.secret, https_only=settings.secure, same_site='lax')
+app.add_middleware(SessionMiddleware, secret_key=settings.secret, session_cookie='tt_oidc', https_only=settings.secure, same_site='lax')
 
 
 @app.middleware('http')
@@ -174,7 +175,7 @@ async def security_headers(request, call_next):
     media_origin = urlparse(settings.livekit_url)
     lk = f'{media_origin.scheme}://{media_origin.netloc}'
     lk_http = lk.replace('wss://','https://').replace('ws://','http://')
-    response.headers['Content-Security-Policy']=f"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org; connect-src 'self' {lk} {lk_http}; media-src 'self' blob:; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    response.headers['Content-Security-Policy']=f"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' {lk} {lk_http}; media-src 'self' blob:; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     return response
 
 
@@ -275,6 +276,7 @@ async def tesla_callback(request:Request, state:str='', code:str=''):
                    (uid,'tesla','tesla:'+subject,'fahrer-'+uid[:8],profile.get('full_name') or 'Tesla-Fahrer',profile.get('email'),time.time()))
     else:
         uid=user['id']
+    db.execute('UPDATE users SET avatar_url=? WHERE id=?', (fleet.profile_avatar(profile),uid))
     fleet.save_token(uid,token)
     response=RedirectResponse('/',status_code=303)
     response.delete_cookie('tt_oauth')
@@ -286,13 +288,20 @@ async def tesla_callback(request:Request, state:str='', code:str=''):
 async def admin_login(request:Request):
     if not settings.oidc_issuer or not settings.oidc_client_id:
         raise HTTPException(503, 'OIDC-Administration ist noch nicht konfiguriert.')
-    return await oauth.admin.authorize_redirect(request, settings.app_url+'/auth/admin/callback')
+    try:
+        return await oauth.admin.authorize_redirect(request, settings.app_url+'/auth/admin/callback')
+    except Exception as error:
+        message, diagnostic = verification_failure(error, 'authorization_redirect')
+        log.warning('OIDC verification failed: %s', json.dumps(diagnostic, sort_keys=True))
+        raise HTTPException(400, message) from None
 
 
 @app.get('/auth/admin/callback')
 async def admin_callback(request:Request):
+    stage = 'token_exchange_and_validation'
     try:
         token=await oauth.admin.authorize_access_token(request)
+        stage = 'identity_claims'
         claims=await admin_claims(oauth.admin, token)
         allowed, diagnostic=admin_access(claims)
         if not allowed:
@@ -304,8 +313,11 @@ async def admin_callback(request:Request):
         return response
     except HTTPException:
         raise
-    except Exception:
-        raise HTTPException(400, 'OIDC-Anmeldung konnte nicht verifiziert werden.')
+    except Exception as error:
+        message, diagnostic = verification_failure(error, stage)
+        log.warning('OIDC verification failed: %s', json.dumps(diagnostic, sort_keys=True))
+        request.session.clear()
+        raise HTTPException(400, message) from None
 
 
 @app.post('/auth/logout')
@@ -351,6 +363,19 @@ def profile(body:Profile, identity:Identity=Depends(current_user)):
     driver(identity)
     db.execute('UPDATE users SET username=?,display_name=?,plate=? WHERE id=?',
                (body.username.strip(),body.display_name.strip(),''.join(body.plate.upper().split()) or None,identity.user['id']))
+    return user_public(db.one('SELECT * FROM users WHERE id=?',(identity.user['id'],)))
+
+
+@app.post('/api/me/tesla-profile')
+async def refresh_tesla_profile(identity:Identity=Depends(current_user)):
+    driver(identity)
+    if identity.user['provider'] != 'tesla':
+        raise HTTPException(409, 'Profilbilder werden über dein verbundenes Tesla-Konto geladen.')
+    limiter.check(('tesla-profile',identity.user['id']),3,60)
+    profile = await fleet.request(identity.user['id'], '/api/1/users/me')
+    if not isinstance(profile, dict):
+        raise HTTPException(502, 'Tesla lieferte kein nutzbares Kontoprofil.')
+    db.execute('UPDATE users SET avatar_url=? WHERE id=?', (fleet.profile_avatar(profile),identity.user['id']))
     return user_public(db.one('SELECT * FROM users WHERE id=?',(identity.user['id'],)))
 
 

@@ -56,9 +56,9 @@ def main():
         'APP_SECRET':secrets.token_urlsafe(48),'DEMO_MODE':str(args.demo).lower(),
         'TESLA_CLIENT_ID':'','TESLA_CLIENT_SECRET':'','TESLA_FLEET_URL':'https://fleet-api.prd.eu.vn.cloud.tesla.com',
         'LIVEKIT_URL':args.voice_url.rstrip('/'),'VOICE_HOST':voice.hostname,
-        'LIVEKIT_API_KEY':livekit_key,'LIVEKIT_API_SECRET':livekit_secret,'FLEET_POLL_INTERVAL':'120',
+        'LIVEKIT_API_KEY':livekit_key,'LIVEKIT_API_SECRET':livekit_secret,'LIVEKIT_PUBLIC_IP':'','FLEET_POLL_INTERVAL':'120',
         'VAPID_PRIVATE_KEY':private,'VAPID_PUBLIC_KEY':public,'VAPID_SUBJECT':'mailto:'+args.email,
-        'OIDC_ISSUER':'','OIDC_CLIENT_ID':'','OIDC_CLIENT_SECRET':'','OIDC_SCOPES':'openid email profile',
+        'OIDC_ISSUER':'','OIDC_CLIENT_ID':'','OIDC_CLIENT_SECRET':'','OIDC_TOKEN_AUTH_METHOD':'client_secret_basic','OIDC_SCOPES':'openid email profile',
         'OIDC_GROUPS_CLAIM':'groups','ADMIN_GROUP':'teslatalk-admin','ADMIN_EMAILS':'',
     }
     env_path.write_text('# Generated locally. Keep this file private and back it up.\n'+'\n'.join(f'{key}={value}' for key,value in values.items())+'\n')

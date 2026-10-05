@@ -87,7 +87,7 @@ def set_session(response, user_id, expires_at=None, admin=False):
 
 
 def user_public(user):
-    return {key: user.get(key) for key in ('id', 'username', 'display_name', 'plate', 'favorite_vehicle', 'provider')}
+    return {key: user.get(key) for key in ('id', 'username', 'display_name', 'plate', 'favorite_vehicle', 'provider', 'avatar_url')}
 
 
 class RateLimiter:

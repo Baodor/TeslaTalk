@@ -36,7 +36,7 @@ TeslaTalk connects friends travelling together in their Teslas. Each trip brings
 | Vehicles | Retrieve account vehicles, select a vehicle and set a favourite |
 | Friends | Requests, acceptance and invitations using a username, licence plate or existing email address |
 | Trips | Name, destination, start and end dates; join using a PIN or invitation |
-| Map | Personal browser-location markers and separate vehicle markers; passengers can share their own location too |
+| Map | Personal browser-location markers with Tesla profile photos and separate vehicle markers; passengers can share their own location too |
 | Voice radio | Multiple simultaneous speakers; tap to toggle your microphone and voice activation; self-hosted LiveKit server |
 | Chat | Persistent trip chat with real-time updates, including the mobile PWA |
 | PWA & Push | Home-screen installation; remembered notification preferences in your personal profile |
@@ -128,6 +128,22 @@ Traefik connects to TeslaTalk on internal port **8780** and LiveKit on **7880**.
 
 [Setup, Tesla Fleet API, OIDC and backup](docs/SETUP.md) · [API documentation](docs/API.md)
 
+## Voice networking ports
+
+| Port | Purpose | Exposure |
+| --- | --- | --- |
+| **443/TCP** | Website and LiveKit signalling over HTTPS/WebSocket | Public through the existing HTTPS proxy |
+| **7882/UDP** | Direct WebRTC audio media | Forward publicly all the way to the LiveKit container |
+| **7881/TCP** | Direct WebRTC fallback when UDP is unavailable | Forward publicly all the way to the LiveKit container |
+| 7880/TCP | Internal LiveKit HTTP/API | Only for TeslaTalk and the HTTPS proxy; do not expose directly |
+| 8780/TCP | Internal TeslaTalk HTTP | Traefik forwards website requests here |
+
+**CGNAT with a VPS and WireGuard:** Forward **7882/UDP and 7881/TCP** on the public VPS to the same ports on the home server's WireGuard address, allow forwarding and ensure that replies use the tunnel. A working HTTPS endpoint or outbound VPN tunnel alone does not provide this reachability.
+
+Set `LIVEKIT_PUBLIC_IP` in `.env` to the **public VPS IPv4**, run `python3 scripts/configure_voice.py` and recreate LiveKit. The ordinary Cloudflare HTTPS proxy does not replace direct forwarding of the audio ports. This configuration uses UDP mux on 7882, so it does not require an additional 50000–60000 UDP range.
+
+The [CGNAT guide (German)](docs/CGNAT.de.md) includes diagnostics, persistent VPS forwarding and a mobile-network audio test. The [startup guide (German)](docs/START.de.md) covers the complete Docker/Traefik setup.
+
 ## Add to the home screen
 
 **iPhone/iPad:** Open in Safari → Share → **Add to Home Screen**. Launch from the new icon, then enable notifications under **Mein Profil → Benachrichtigungen & Web-App** (personal profile). Web Push requires iOS/iPadOS 16.4 or newer here. [Apple/WebKit explains support](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
@@ -139,7 +155,7 @@ Notifications never reveal chat contents, plates or location. Passengers receive
 ## Verified so far
 
 - **Backend tests:** Trip access, PINs, scheduled boundaries, private sharing, OAuth state, API keys, rankings, push subscriptions, OIDC groups and Tesla registration.
-- **3 browser tests:** Real-time chat with two drivers, passenger entry and trip expiry, mobile layout, service workers, offline caching and notification consent.
+- **Browser tests:** Real-time chat with two drivers, passenger entry and trip expiry, mobile layout, service workers, offline caching, notification consent, microphone permissions and profile photos on the map.
 - **TypeScript and the production build** pass. GitHub Actions also verifies concurrent microphones with tap controls and builds and starts the production container.
 
 Server Push delivery is tested with mocked push services; the browser consent test uses a mocked subscription. Real Tesla sign-in and end-to-end delivery on iOS/Android have not yet been confirmed here.

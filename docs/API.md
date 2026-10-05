@@ -11,6 +11,7 @@ The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign
 | GET | `/auth/admin` | Begin separate administrator OIDC flow |
 | POST | `/auth/logout` | Revoke browser sessions and their push subscriptions |
 | GET / PATCH | `/api/me` | Own profile: username, display name, optional plate |
+| POST | `/api/me/tesla-profile` | Refresh the current driver's optional Tesla account photo; at most three requests per minute |
 | GET | `/api/vehicles` | Own cached vehicles |
 | POST | `/api/vehicles/sync` | Retrieve account vehicles from Tesla |
 | POST | `/api/vehicles/{vehicle_id}/select` | Select default vehicle |
@@ -45,6 +46,8 @@ The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign
 | GET | `/api/admin` | OIDC administrator's instance overview |
 | POST | `/api/admin/push/test` | OIDC admin queues a test for all active opted-in devices on the server; at most three broadcasts per minute |
 | WebSocket | `/api/ws/trips/{trip_id}` | Authorized trip presence, messages and participant updates |
+
+Own profiles and authorized trip participants include an optional `avatar_url`. The server accepts HTTPS image URLs from the Tesla account response; only the account owner can refresh their photo. Initials appear when Tesla supplies no image or the image fails to load. Public trip summaries omit these photos and participant identities.
 
 The push test returns `accepted_by_provider: true` when the push service accepts the message. Display still depends on the device's notification settings. Expired device subscriptions return HTTP 410 and require reactivation. API keys cannot send push tests; passenger access ends with the trip.
 

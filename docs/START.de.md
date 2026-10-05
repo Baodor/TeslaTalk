@@ -2,6 +2,8 @@
 
 Diese Anleitung richtet TeslaTalk unter **https://teslatalk.glockb.de** mit deinem vorhandenen Traefik und dem Docker-Netzwerk **proxy** ein. Für den Sprechfunk wird zusätzlich **teslatalk-voice.glockb.de** verwendet.
 
+Wenn dein Heimserver hinter CGNAT hängt und über einen öffentlichen VPS mit WireGuard erreichbar ist, ergänze die [CGNAT-Anleitung](CGNAT.de.md). HTTPS allein reicht für Audio nicht; LiveKit benötigt eine passende öffentliche IP und direkte Weiterleitungen für die Medienports.
+
 Die vollständige [compose.traefik.yaml](../compose.traefik.yaml) enthält die Webanwendung samt API, den LiveKit-Sprachserver, einen persistenten Datenspeicher und beide Traefik-Router. Du verwendest sie **allein**, ohne eine zweite Compose-Datei. TeslaTalk nutzt SQLite; ein zusätzlicher Datenbankcontainer ist für diese Version nicht erforderlich.
 
 TeslaTalk 0.1 ist eine Preview. Die Weboberfläche kann jetzt gestartet werden; echte Tesla-Anmeldung und Fahrzeugdaten brauchen deine eigene Tesla-Fleet-Anwendung. Ladeplanung, Routenabgleich und Immich folgen später und sind für den Start nicht erforderlich. Tests im echten Fahrzeug und Push-Zustellung auf physischen Handys stehen noch aus.
@@ -179,7 +181,7 @@ OIDC_GROUPS_CLAIM=groups
 OIDC_SCOPES=openid email profile
 ```
 
-TeslaTalk prüft den signierten ID-Token und fragt zusätzlich den UserInfo-Endpunkt des Anbieters ab, wenn dieser vorhanden ist. Beide Antworten müssen dieselbe Nutzer-ID (`sub`) haben. Der konfigurierte Gruppen-Claim darf in einer dieser Antworten stehen. Der Gruppenname muss exakt passen, einschließlich Groß-/Kleinschreibung. Die Zuordnung zum OIDC-Client allein garantiert noch nicht, dass der Anbieter die Gruppe übermittelt.
+TeslaTalk prüft den signierten ID-Token. Bestätigt dieser bereits die Administratorrechte, ist keine zusätzliche UserInfo-Abfrage nötig. Andernfalls wird der UserInfo-Endpunkt abgefragt, wenn er vorhanden ist; beide Antworten müssen dieselbe Nutzer-ID (`sub`) haben. Der konfigurierte Gruppen-Claim darf in einer dieser Antworten stehen. Der Gruppenname muss exakt passen, einschließlich Groß-/Kleinschreibung. Die Zuordnung zum OIDC-Client allein garantiert noch nicht, dass der Anbieter die Gruppe übermittelt.
 
 - **Authelia:** Für Gruppen normalerweise `OIDC_SCOPES=openid email profile groups` setzen und den `groups`-Scope am Client erlauben.
 - **Pocket ID:** Ebenfalls `OIDC_SCOPES=openid email profile groups` verwenden, `OIDC_GROUPS_CLAIM=groups` und bei dir `ADMIN_GROUP=admin`. Dein Benutzer muss Mitglied dieser Gruppe sein. Pocket ID übermittelt den tatsächlichen **Gruppennamen**, nicht den Anzeigenamen; prüfe ihn bei Bedarf mit „OIDC Data Preview“ am Client. „Allowed User Groups“ erlaubt die Client-Anmeldung und ersetzt nicht die Administratorprüfung in TeslaTalk. Siehe [Pocket-ID-Scopes und Claims](https://pocket-id.org/docs/guides/scopes-and-claims).
@@ -187,6 +189,10 @@ TeslaTalk prüft den signierten ID-Token und fragt zusätzlich den UserInfo-Endp
 - **Keycloak:** Gruppen über einen Mapper als `groups` ausgeben. Für Realm-Rollen den Mapper so konfigurieren, dass die Rollen im ID-Token oder in UserInfo stehen, und `OIDC_GROUPS_CLAIM=realm_access.roles` setzen. Client-Rollen benötigen ihren tatsächlichen Claim-Pfad.
 
 Wende `.env`-Änderungen mit `docker compose -f compose.traefik.yaml up -d` an und starte anschließend eine neue Anmeldung über `/auth/admin`. Wenn du zugleich den Code aktualisiert hast, verwende `up -d --build`. Die Administration liegt unter **https://teslatalk.glockb.de/admin** und bietet in V1 eine Statusübersicht.
+
+Für Pocket ID ergänze außerdem `OIDC_TOKEN_AUTH_METHOD=client_secret_post`. Diese Einstellung übermittelt Client-ID und Client-Secret beim Tokenaustausch im POST-Body. Andere Anbieter können `client_secret_basic` verlangen. Signaturprüfung, PKCE, Nonce und Administratorgruppen werden weiterhin geprüft. Bei Verifikationsfehlern nennt `OIDC verification failed` im Container-Log nur den betroffenen Schritt, bekannte Fehlercodes, Fehlerklasse und gegebenenfalls HTTP-Status. Provider-Fehlermeldungen und Tokenwerte werden nicht protokolliert.
+
+Das Tesla-Profilbild wird bei der Tesla-Anmeldung übernommen. Für ein bereits angemeldetes Konto kannst du es unter **Mein Profil → Tesla-Profilbild laden** aktualisieren. TeslaTalk zeigt es im Profil, in der Teilnehmerliste und für Personenmarker auf der Karte. Fahrzeugmarker bleiben separat. Liefert Tesla kein Bild oder ist das Bild nicht erreichbar, werden Initialen angezeigt.
 
 Bei `Keine Administrator-Berechtigung.` prüfst du zuerst, welche Einstellungen im laufenden Container angekommen sind:
 

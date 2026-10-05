@@ -21,6 +21,64 @@ async function login(page: Page, name: string) {
   await expect(page.getByRole('heading', { name: 'Deine Fahrten.' })).toBeVisible();
 }
 
+test('microphone permission precedes the voice request and failures release the device', async ({page}) => {
+  await page.addInitScript(()=>{
+    const real=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    const state={deny:true,calls:0,tracks:[] as MediaStreamTrack[]};
+    (window as any).radioPermissionTest=state;
+    navigator.mediaDevices.getUserMedia=async constraints=>{
+      state.calls++;
+      if(state.deny) throw new DOMException('Test permission denied','NotAllowedError');
+      const stream=await real(constraints); state.tracks.push(...stream.getAudioTracks()); return stream;
+    };
+  });
+  let voiceRequests=0;
+  await page.route('**/voice-token',async route=>{
+    voiceRequests++;
+    expect(await page.evaluate(()=>{const s=(window as any).radioPermissionTest;return {calls:s.calls,enabled:s.tracks[0]?.enabled};})).toEqual({calls:2,enabled:false});
+    return route.fulfill({status:503,json:{detail:'Test voice server unavailable'}});
+  });
+  await login(page,'Microphone permission '+Date.now());
+  const created=await (await page.request.post('/api/trips',{headers:{origin:'http://localhost:8780'},data:{title:'Permission test',starts_at:new Date(Date.now()-60000).toISOString(),ends_at:new Date(Date.now()+600000).toISOString()}})).json();
+  await page.goto('/trip/'+created.id);
+  const activate=page.getByRole('button',{name:'Mikrofon erlauben & Funk verbinden',exact:true});
+  await activate.click();
+  await expect(page.locator('.radio-panel .error')).toContainText('Mikrofonzugriff wurde nicht erlaubt');
+  expect(voiceRequests).toBe(0);
+  await page.evaluate(()=>{(window as any).radioPermissionTest.deny=false;});
+  await activate.click();
+  await expect(page.locator('.radio-panel .error')).toContainText('Test voice server unavailable');
+  expect(voiceRequests).toBe(1);
+  expect(await page.evaluate(()=>(window as any).radioPermissionTest.tracks.every((track:MediaStreamTrack)=>track.readyState==='ended'))).toBe(true);
+  await expect(page.locator('.radio-status')).toHaveText('FUNK AUS');
+  await expect(page.getByRole('button',{name:'Mikrofon einschalten',exact:true})).toBeDisabled();
+});
+
+test('Tesla avatars appear on person markers and fall back to initials without changing vehicle markers',async({page})=>{
+  const picture='https://images.example.test/tesla-profile.png'; let fails=false;
+  const image=await (await page.request.get('/apple-touch-icon.png')).body();
+  await page.route(picture,route=>route.fulfill({status:fails?404:200,contentType:'image/png',body:fails?'':image,headers:{'cache-control':'no-store'}}));
+  await page.route('**/api/me',async route=>{const response=await route.fetch();return route.fulfill({response,json:{...(await response.json()),avatar_url:picture}});});
+  await page.route('**/api/trips/*',async route=>{
+    const response=await route.fetch(),data=await response.json();
+    if(data.participants_detail) data.participants_detail=data.participants_detail.map((p:any)=>({...p,avatar_url:picture}));
+    return route.fulfill({response,json:data});
+  });
+  await login(page,'Avatar Driver '+Date.now());
+  const headers={origin:'http://localhost:8780'};
+  const created=await (await page.request.post('/api/trips',{headers,data:{title:'Avatar trip',starts_at:new Date(Date.now()-60000).toISOString(),ends_at:new Date(Date.now()+600000).toISOString()}})).json();
+  await page.request.post(`/api/trips/${created.id}/samples`,{headers,data:{source:'telemetry',latitude:49.871,longitude:8.65}});
+  await page.request.post(`/api/trips/${created.id}/samples`,{headers,data:{source:'browser',latitude:49.872,longitude:8.651}});
+  await page.goto('/trip/'+created.id);
+  await expect(page.locator('.person-marker img')).toHaveAttribute('src',picture);
+  await expect.poll(()=>page.locator('.person-marker img').evaluate((image:HTMLImageElement)=>image.naturalWidth)).toBeGreaterThan(0);
+  await expect(page.locator('.car-marker')).toHaveCount(1);
+  await expect(page.locator('.car-marker img')).toHaveCount(0);
+  fails=true; await page.reload();
+  await expect(page.locator('.person-marker')).toHaveText('AD');
+  await expect(page.locator('.person-marker img')).toHaveCount(0);
+});
+
 async function waitForMapTiles(page: Page) {
   if (process.env.TT_SCREENSHOTS !== 'true') return;
   await expect.poll(() => page.locator('.leaflet-container').evaluate(map => {

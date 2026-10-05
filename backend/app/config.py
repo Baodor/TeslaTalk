@@ -19,6 +19,7 @@ class Settings:
     oidc_issuer: str = field(default_factory=lambda: os.getenv('OIDC_ISSUER', '').rstrip('/'))
     oidc_client_id: str = field(default_factory=lambda: os.getenv('OIDC_CLIENT_ID', ''))
     oidc_client_secret: str = field(default_factory=lambda: os.getenv('OIDC_CLIENT_SECRET', ''))
+    oidc_token_auth_method: str = field(default_factory=lambda: os.getenv('OIDC_TOKEN_AUTH_METHOD', 'client_secret_basic').strip() or 'client_secret_basic')
     oidc_scopes: str = field(default_factory=lambda: ' '.join(dict.fromkeys(['openid', *os.getenv('OIDC_SCOPES', 'openid email profile').split()])))
     oidc_groups_claim: str = field(default_factory=lambda: os.getenv('OIDC_GROUPS_CLAIM', 'groups').strip() or 'groups')
     admin_emails: set = field(default_factory=lambda: {x.strip().lower() for x in os.getenv('ADMIN_EMAILS', '').split(',') if x.strip()})

@@ -19,6 +19,8 @@ test('two microphones can publish concurrently in a real LiveKit room', async ({
     expect(result.status(),result.ok()?'Authorized voice token issued.':await result.text()).toBe(200);
     try { await expect(client.getByText('Verbunden · mehrere Sprecher möglich',{exact:true})).toBeVisible({timeout:20000}); }
     catch(error){console.log('Audio UI: '+await client.locator('.radio-panel').innerText());throw error;}
+    await expect(client.locator('.radio-status')).toContainText('FUNK AN · MIKROFON AUS');
+    await expect(client.getByRole('button',{name:'Funk trennen',exact:true})).toHaveAttribute('aria-pressed','true');
   }
   await page.getByRole('button',{name:'Mikrofon einschalten',exact:true}).click();
   await second.getByRole('button',{name:'Mikrofon einschalten',exact:true}).press('Space');
@@ -26,6 +28,8 @@ test('two microphones can publish concurrently in a real LiveKit room', async ({
   for(const client of [page,second]) {
     await expect(client.getByRole('button',{name:'Mikrofon ausschalten',exact:true})).toHaveAttribute('aria-pressed','true');
     await expect(client.getByText('Mikrofon an · Du sendest',{exact:true})).toBeVisible();
+    await expect(client.locator('.radio-status')).toContainText('DU SENDEST · MIKROFON AN');
+    await expect(client.locator('.radio-panel')).toHaveClass(/radio-sending/);
   }
   await expect.poll(()=>page.locator('audio').count()).toBeGreaterThan(0);
   await expect.poll(()=>second.locator('audio').count()).toBeGreaterThan(0);

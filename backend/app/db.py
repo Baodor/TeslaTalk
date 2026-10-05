@@ -8,7 +8,7 @@ PRAGMA journal_mode=WAL;
 CREATE TABLE IF NOT EXISTS users (
  id TEXT PRIMARY KEY, provider TEXT NOT NULL, subject TEXT UNIQUE NOT NULL,
  username TEXT UNIQUE COLLATE NOCASE NOT NULL, display_name TEXT NOT NULL,
- email TEXT, plate TEXT UNIQUE, favorite_vehicle TEXT, created_at REAL NOT NULL
+ email TEXT, plate TEXT UNIQUE, favorite_vehicle TEXT, created_at REAL NOT NULL, avatar_url TEXT
 );
 CREATE TABLE IF NOT EXISTS credentials (user_id TEXT PRIMARY KEY REFERENCES users(id), encrypted_token TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT, kind TEXT NOT NULL, expires_at REAL NOT NULL);
@@ -71,6 +71,8 @@ def initialize():
     Path(settings.db_path).parent.mkdir(parents=True, exist_ok=True)
     with connect() as db:
         db.executescript(SCHEMA)
+        if 'avatar_url' not in {row['name'] for row in db.execute('PRAGMA table_info(users)')}:
+            db.execute('ALTER TABLE users ADD COLUMN avatar_url TEXT')
 
 
 def one(sql, args=()):

@@ -36,7 +36,7 @@ TeslaTalk verbindet Freunde, die gemeinsam mit ihren Teslas unterwegs sind. Eine
 | Fahrzeuge | Fahrzeuge des Kontos abrufen, Fahrzeug auswählen und Favoriten festlegen |
 | Freunde | Anfragen, Annahme und Einladungen über Benutzername, Kennzeichen oder vorhandene E-Mail-Adresse |
 | Fahrten | Name, Ziel, Beginn und Ende; Beitritt per PIN oder Einladung |
-| Karte | Personenmarker für Browser-Standorte, separate Fahrzeugmarker; auch Mitfahrer können ihren Standort teilen |
+| Karte | Personenmarker mit Tesla-Profilbild und Browser-Standort, separate Fahrzeugmarker; auch Mitfahrer können ihren Standort teilen |
 | Sprachfunk | Mehrere Sprecher gleichzeitig; Mikrofon per Antippen an/aus und Sprachaktivierung; selbst gehosteter LiveKit-Server |
 | Chat | Persistenter Fahrt-Chat mit Echtzeit-Updates, auch in der mobilen PWA |
 | PWA & Push | Installation auf dem Home-Bildschirm; dauerhaft gespeicherte Benachrichtigungsauswahl im persönlichen Profil |
@@ -128,6 +128,22 @@ Traefik spricht TeslaTalk intern auf **8780** und LiveKit auf **7880** an. Für 
 
 [Einrichtung, Tesla Fleet API, OIDC und Backup](docs/SETUP.md) · [API-Dokumentation](docs/API.md)
 
+## Ports für den Sprachfunk
+
+| Port | Aufgabe | Erreichbarkeit |
+| --- | --- | --- |
+| **443/TCP** | Webseite und LiveKit-Signalisierung über HTTPS/WebSocket | Öffentlich über den vorhandenen HTTPS-Proxy |
+| **7882/UDP** | Direkte WebRTC-Audiodaten | Öffentlich bis zum LiveKit-Container weiterleiten |
+| **7881/TCP** | Direkter WebRTC-Ausweichweg, wenn UDP nicht funktioniert | Öffentlich bis zum LiveKit-Container weiterleiten |
+| 7880/TCP | LiveKit HTTP/API intern | Nur für TeslaTalk und den HTTPS-Proxy; nicht direkt öffentlich freigeben |
+| 8780/TCP | TeslaTalk HTTP intern | Traefik leitet die Webseite hierhin weiter |
+
+**CGNAT mit VPS und WireGuard:** Auf dem öffentlichen VPS **7882/UDP und 7881/TCP** auf dieselben Ports der WireGuard-IP des Heimservers weiterleiten und im Forwarding erlauben. Auch der Rückweg muss durch den Tunnel laufen. Ein funktionierender HTTPS-Zugang oder ein ausgehender VPN-Tunnel reicht dafür nicht.
+
+In `.env` `LIVEKIT_PUBLIC_IP` auf die **öffentliche IPv4 des VPS** setzen. Danach `python3 scripts/configure_voice.py` ausführen und LiveKit neu erstellen. Der normale Cloudflare-HTTPS-Proxy ersetzt die direkte Weiterleitung der Audio-Ports nicht. Die Konfiguration verwendet UDP-Mux auf 7882; ein zusätzlicher UDP-Bereich 50000–60000 ist dafür nicht erforderlich.
+
+Die [CGNAT-Anleitung](docs/CGNAT.de.md) enthält Diagnose, die dauerhafte VPS-Weiterleitung und einen Sprachtest mit Mobilfunk. Die [Startanleitung](docs/START.de.md) beschreibt die vollständige Docker-/Traefik-Einrichtung.
+
 ## Auf den Home-Bildschirm
 
 **iPhone/iPad:** In Safari öffnen → Teilen → **Zum Home-Bildschirm**. Anschließend über das neue Symbol starten und unter **Mein Profil → Benachrichtigungen & Web-App** aktivieren. Web-Push setzt hier iOS/iPadOS 16.4 oder neuer voraus. [Apple/WebKit erklärt die Unterstützung](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
@@ -139,7 +155,7 @@ Benachrichtigungen verraten keine Chattexte, Kennzeichen oder Standorte. Mitfahr
 ## Was schon geprüft ist
 
 - **Backend-Tests:** Rechte innerhalb einer Fahrt, PINs, Zeitgrenzen, private Freigaben, OAuth-Zustand, API-Schlüssel, Ranglisten, Push-Abonnements, OIDC-Gruppen und Tesla-Registrierung.
-- **3 Browser-Tests:** Echtzeit-Chat mit zwei Fahrern, Mitfahrerzugang und Fahrtende, mobile Darstellung, Service Worker, Offline-Cache und Push-Einwilligung.
+- **Browser-Tests:** Echtzeit-Chat mit zwei Fahrern, Mitfahrerzugang und Fahrtende, mobile Darstellung, Service Worker, Offline-Cache, Push-Einwilligung, Mikrofonfreigabe und Profilbilder auf der Karte.
 - **TypeScript und Produktionsbuild** erfolgreich. GitHub Actions prüft zusätzlich zwei gleichzeitige Mikrofone mit Antippbedienung sowie Build und Start des Produktionscontainers.
 
 Push-Versand wird im Backend mit simulierten Push-Diensten geprüft; der Browser-Test prüft die Einwilligung mit einem simulierten Abonnement. Eine echte Tesla-Anmeldung und echte Push-Zustellung auf iOS/Android wurden hier noch nicht bestätigt.
