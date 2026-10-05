@@ -113,7 +113,7 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
         ? 'Mikrofonzugriff wurde nicht erlaubt. Erlaube TeslaTalk den Mikrofonzugriff in den Website-Einstellungen deines Browsers und versuche es erneut.'
         : step === 'permission' && /NotFoundError|DevicesNotFoundError|NotReadableError/.test(name)
         ? 'Kein nutzbares Mikrofon gefunden. Prüfe dein Mikrofon und ob es von einer anderen Anwendung blockiert wird.'
-        : /pc connection|ICE|PeerConnection/i.test(message)
+        : /\bpc connection\b|\bICE\b|\bPeerConnection\b/i.test(message)
         ? `Die Audioverbindung zu ${voiceHost || 'deinem Sprachserver'} ist gescheitert. Der Betreiber muss die direkten Audio-Ports, NAT und gegebenenfalls TURN prüfen.`
         : /signal connection|Load failed|Failed to fetch|NetworkError/i.test(message) && voiceHost
         ? `Sprachserver ${voiceHost} nicht erreichbar. Der Betreiber muss das HTTPS-Zertifikat, die öffentliche LiveKit-Adresse und den WebSocket-Router prüfen.`

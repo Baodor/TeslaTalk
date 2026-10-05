@@ -67,8 +67,13 @@ test('Tesla avatars appear on person markers and fall back to initials without c
   await login(page,'Avatar Driver '+Date.now());
   const headers={origin:'http://localhost:8780'};
   const created=await (await page.request.post('/api/trips',{headers,data:{title:'Avatar trip',starts_at:new Date(Date.now()-60000).toISOString(),ends_at:new Date(Date.now()+600000).toISOString()}})).json();
-  await page.request.post(`/api/trips/${created.id}/samples`,{headers,data:{source:'telemetry',latitude:49.871,longitude:8.65}});
-  await page.request.post(`/api/trips/${created.id}/samples`,{headers,data:{source:'browser',latitude:49.872,longitude:8.651}});
+  const keyResponse=await page.request.post('/api/keys',{headers,data:{label:'Avatar telemetry test',days:1}});
+  expect(keyResponse.ok()).toBe(true);
+  const {token}=await keyResponse.json();
+  const vehicleSample=await page.request.post(`/api/trips/${created.id}/samples`,{headers:{authorization:`Bearer ${token}`},data:{source:'telemetry',latitude:49.871,longitude:8.65}});
+  expect(vehicleSample.ok()).toBe(true);
+  const personSample=await page.request.post(`/api/trips/${created.id}/samples`,{headers,data:{source:'browser',latitude:49.872,longitude:8.651}});
+  expect(personSample.ok()).toBe(true);
   await page.goto('/trip/'+created.id);
   await expect(page.locator('.person-marker img')).toHaveAttribute('src',picture);
   await expect.poll(()=>page.locator('.person-marker img').evaluate((image:HTMLImageElement)=>image.naturalWidth)).toBeGreaterThan(0);
