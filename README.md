@@ -194,7 +194,7 @@ Push-Versand wird im Backend mit simulierten Push-Diensten geprüft; der Browser
 
 ## Bekannte Grenzen
 
-- Fahrzeugabfragen laufen standardmäßig alle **120 Sekunden** bei verbundenen Fahrern einer aktiven Fahrt. Persönliche Browser-Standorte werden bei aktiver Freigabe höchstens alle zehn Sekunden übertragen. Das ist noch kein Fleet-Telemetry-Streaming und kann Tesla-API-Kosten verursachen.
+- Fahrzeugabfragen laufen standardmäßig alle **120 Sekunden** für alle Fahrerfahrzeuge einer aktiven Fahrt, solange mindestens ein Teilnehmer die Gruppe geöffnet hat. Die Browser der Fahrzeugbesitzer dürfen geschlossen sein. Ohne verbundenen Teilnehmer erfolgen keine neuen Gruppenabfragen. Alle Teilnehmer sehen die bekannten Fahrzeugpositionen auf der gemeinsamen Karte; fehlende GPS-Daten werden angezeigt. Persönliche Browser-Standorte werden bei aktiver Freigabe höchstens alle zehn Sekunden übertragen. Das ist noch kein Fleet-Telemetry-Streaming und kann Tesla-API-Kosten verursachen.
 - Verbrauchswerte erscheinen nur mit gemessenen Energie- und Kilometerzählern aus einer passenden Integration. V1 leitet keinen Verbrauch aus dem Akkustand ab.
 - Ladeplanung, Übertragung von Routen an andere Autos, Musiksteuerung und Immich sind **Roadmap-Funktionen**. Routenabruf, Planungsfahrzeugauswahl und automatische Gruppenanzeige sind implementiert; Ziele werden mit Zustimmung übernommen, identische Ladehalte noch nicht. Der QR-Zugang ist bereits nutzbar; Foto-Uploads sind noch nicht angebunden.
 - Ob Mikrofon und Browser während der Fahrt verfügbar sind, muss für Fahrzeug, Region und Firmware geprüft werden. Zielbefehle brauchen eine ausdrücklich aktivierte Tesla-Befehlsanbindung; sonst bleiben Fahrzeugzugriffe lesend.

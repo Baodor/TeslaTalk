@@ -308,7 +308,7 @@ function AdminPage({ config }: { config: any }) {
         <div className="summary-strip"><div><Users size={20} /><strong>{info.users}</strong><span>Konten</span></div><div><Route size={20} /><strong>{info.trips}</strong><span>Fahrten</span></div><div><Navigation size={20} /><strong>{info.samples}</strong><span>Messpunkte</span></div></div>
         <div className="list-row"><span>Tesla Fleet API</span><span className="badge">{info.tesla_ready ? 'KONFIGURIERT' : 'EINRICHTUNG FEHLT'}</span></div>
         <div className="list-row"><span>Sprachfunk</span><span className="badge">{info.voice_ready ? 'KONFIGURIERT' : 'EINRICHTUNG FEHLT'}</span></div>
-        <div className="list-row"><span>Abfrageintervall bei verbundenen Fahrern</span><strong>{info.poll_interval} Sekunden</strong></div>
+        <div className="list-row"><span>Abfrageintervall bei geöffneter Gruppenfahrt</span><strong>{info.poll_interval} Sekunden</strong></div>
         <div className="list-row"><span>Speicherung</span><strong>{info.storage}</strong></div>
         <section aria-label="Server-Benachrichtigungen">
           <h2>Benachrichtigungen testen</h2>
