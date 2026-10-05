@@ -6,13 +6,16 @@ test('two microphones can publish concurrently in a real LiveKit room', async ({
   for(const client of [page]) client.on('console',message=>{if(message.type()==='error'||message.type()==='warning')console.log('Audio browser: '+message.text());});
   const origin={origin:'http://localhost:8780'};
   await page.goto('/');
-  await page.request.post('/api/demo/login',{headers:origin,data:{query:'Voice leader '+Date.now()}});
+  const leaderLogin=await page.request.post('/api/demo/login',{headers:origin,data:{query:'Voice leader '+Date.now()}});
+  expect(leaderLogin.status()).toBe(200);
   const trip=await (await page.request.post('/api/trips',{headers:origin,data:{title:'Voice test',starts_at:new Date(Date.now()-60000).toISOString(),ends_at:new Date(Date.now()+600000).toISOString()}})).json();
   const secondContext=await browser.newContext();
   const second=await secondContext.newPage();
   await second.goto('/');
-  await second.request.post('/api/demo/login',{headers:origin,data:{query:'Voice friend '+Date.now()}});
-  await second.request.post('/api/trips/join',{headers:origin,data:{pin:trip.pin}});
+  const friendLogin=await second.request.post('/api/demo/login',{headers:origin,data:{query:'Voice friend '+Date.now()}});
+  expect(friendLogin.status()).toBe(200);
+  const joined=await second.request.post('/api/trips/join',{headers:origin,data:{pin:trip.pin}});
+  expect(joined.status()).toBe(200);
   await Promise.all([page.goto('/trip/'+trip.id),second.goto('/trip/'+trip.id)]);
   for(const client of [page,second]) {
     const tokenResponse=client.waitForResponse(response=>response.url().endsWith('/voice-token'));

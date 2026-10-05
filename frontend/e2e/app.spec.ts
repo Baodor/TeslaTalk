@@ -22,8 +22,14 @@ async function login(page: Page, name: string) {
 }
 
 test('a failed vehicle request preserves the signed-in dashboard and profile', async ({page}) => {
+  // Isolate the partial-load failure from the shared demo-login rate limit.
+  await page.route('**/api/me',route=>route.fulfill({json:{id:'dashboard-recovery',username:'driver',display_name:'Driver',provider:'demo',plate:null,favorite_vehicle:null}}));
+  for (const path of ['/api/trips','/api/invites','/api/keys']) {
+    await page.route('**'+path,route=>route.fulfill({json:[]}));
+  }
   await page.route('**/api/vehicles', route => route.fulfill({status:503,json:{detail:'Test vehicle data unavailable'}}));
-  await login(page,'Dashboard recovery '+Date.now());
+  await page.goto('/');
+  await expect(page.getByRole('heading',{name:'Deine Fahrten.'})).toBeVisible();
   await expect(page.getByRole('status')).toContainText('Test vehicle data unavailable');
   await page.getByRole('button',{name:'Mein Profil',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Startklar.'})).toBeVisible();
