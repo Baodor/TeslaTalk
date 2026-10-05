@@ -2,8 +2,8 @@ export class ApiError extends Error {
   readonly status: number;
   constructor(message: string, status: number) { super(message); this.status = status; }
 }
-export async function api<T = any>(path: string, method = 'GET', body?: unknown): Promise<T> {
-  const response = await fetch(path, { method, credentials: 'same-origin',
+export async function api<T = any>(path: string, method = 'GET', body?: unknown, options: Pick<RequestInit, 'keepalive'> = {}): Promise<T> {
+  const response = await fetch(path, { ...options, method, credentials: 'same-origin',
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body) });
   if (!response.ok) {

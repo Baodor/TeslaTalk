@@ -261,11 +261,22 @@ test('notification consent subscribes this device and can be revoked', async ({p
   await expect(page.getByRole('button',{name:'Benachrichtigungen an',exact:true})).toHaveAttribute('aria-pressed','true');
   expect(requests).toHaveLength(1);
   expect(requests[0].endpoint).toBe('https://fcm.googleapis.com/fcm/send/browser-test');
+  await page.evaluate(()=>{
+    // Simulate an IPC lookup that cannot finish once the page is suspended.
+    // Sending must use the subscription loaded during activation instead.
+    PushManager.prototype.getSubscription=()=>new Promise(()=>{});
+    const fetch=window.fetch;
+    window.fetch=(input,options)=>{
+      if(input==='/api/push/test') (window as any).testPushKeepalive=options?.keepalive;
+      return fetch(input,options);
+    };
+  });
   await page.getByRole('button',{name:'Testnachricht an dieses Gerät',exact:true}).click();
   await expect(page.locator('.notification-status')).toContainText('Testnachricht an den Push-Dienst übergeben');
   await expect(page.locator('.notification-status')).toContainText('Angenommen um');
   await expect(page.locator('.notification-status')).toContainText('(0.25 s)');
   expect(testMessages).toEqual([requests[0]]);
+  expect(await page.evaluate(()=>(window as any).testPushKeepalive)).toBe(true);
   // The test must not depend on finishing another registration request first.
   expect(requests).toHaveLength(1);
   syncFails=true;

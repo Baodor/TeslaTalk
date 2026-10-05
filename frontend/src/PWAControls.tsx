@@ -23,6 +23,7 @@ export function usePWAControls(config: any, userId: string | undefined, notify: 
   const [help, setHelp] = useState(false), [enabled, setEnabled] = useState(false), [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(false), [needsRepair, setNeedsRepair] = useState(false), [status, setStatus] = useState('');
   const busyRef = useRef(false), revision = useRef(0), retryRef = useRef<() => void>(() => {});
+  const subscriptionRef = useRef<PushSubscription | null>(null);
   useEffect(() => {
     const before = (event: Event) => { event.preventDefault(); setPrompt(event as InstallPrompt); };
     const done = () => { setInstalled(true); setPrompt(null); };
@@ -31,6 +32,7 @@ export function usePWAControls(config: any, userId: string | undefined, notify: 
   }, []);
   useEffect(() => {
     revision.current++;
+    subscriptionRef.current = null;
     setEnabled(Boolean(userId && preference(userId) === 'on')); setStatus(''); setNeedsRepair(false);
     if (!userId || !supported() || !config.push_ready) {
       if (userId) {
@@ -48,6 +50,7 @@ export function usePWAControls(config: any, userId: string | undefined, notify: 
       try {
         if (Notification.permission !== 'granted') {
           if (current()) {
+            subscriptionRef.current = null;
             const wanted = preference(userId!) === 'on';
             setEnabled(wanted); setNeedsRepair(wanted);
             setStatus(Notification.permission === 'denied' ? 'Im Browser blockiert. Erlaube Benachrichtigungen in den Geräte- oder Browser-Einstellungen.' : 'Auf diesem Gerät noch nicht freigegeben.');
@@ -57,7 +60,9 @@ export function usePWAControls(config: any, userId: string | undefined, notify: 
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
         if (!current()) return;
+        subscriptionRef.current = subscription;
         if (preference(userId!) === 'off') {
+          subscriptionRef.current = null;
           setEnabled(false);
           if (subscription) {
             await subscription.unsubscribe();
@@ -123,11 +128,13 @@ export function usePWAControls(config: any, userId: string | undefined, notify: 
       let subscription = await registration.pushManager.getSubscription();
       if (turnOff) {
         if (subscription && !await subscription.unsubscribe()) throw new Error('Das Browser-Abonnement konnte nicht deaktiviert werden. Bitte erneut versuchen.');
+        subscriptionRef.current = null;
         remember(userId, false); setEnabled(false); setNeedsRepair(false); setStatus('Auf diesem Gerät ausgeschaltet.');
         if (subscription) await api('/api/push/unsubscribe', 'POST', { endpoint: subscription.endpoint });
         notify('Benachrichtigungen auf diesem Gerät deaktiviert.');
       } else {
         subscription ??= await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: applicationKey(config.vapid_public_key) });
+        subscriptionRef.current = subscription;
         remember(userId, true); setEnabled(true); setNeedsRepair(false);
         setStatus('Browser freigegeben. Serverabgleich läuft …');
         await api('/api/push/subscribe', 'POST', subscription.toJSON());
@@ -142,22 +149,22 @@ export function usePWAControls(config: any, userId: string | undefined, notify: 
   async function sendTest() {
     if (busyRef.current || !supported() || !enabled || needsRepair) return;
     busyRef.current = true; revision.current++; setBusy(true);
-    let subscription: PushSubscription | null = null;
+    const subscription = subscriptionRef.current;
     try {
-      subscription = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
       if (!subscription || Notification.permission !== 'granted') {
         setNeedsRepair(true); setStatus('Das Browser-Abonnement fehlt oder die Freigabe wurde entzogen. Benachrichtigungen erneut aktivieren.');
         return;
       }
-      // Rebind and send in one server request. iOS may suspend this page when
-      // the user switches away to check the notification.
-      const result = await api('/api/push/test', 'POST', subscription.toJSON());
+      // Start from the tap without another asynchronous browser lookup. Keep
+      // this small request alive if the user closes the page to check the alert.
+      const result = await api('/api/push/test', 'POST', subscription.toJSON(), { keepalive: true });
       const acceptedAt = Number.isFinite(result.provider_accepted_at) ? new Date(result.provider_accepted_at * 1000).toLocaleTimeString('de-DE') : '';
       const duration = Number.isFinite(result.provider_elapsed_ms) ? ` (${(result.provider_elapsed_ms / 1000).toFixed(2)} s)` : '';
       setStatus(`Testnachricht an den Push-Dienst übergeben.${acceptedAt ? ` Angenommen um ${acceptedAt}${duration}.` : ''} Prüfe die Mitteilungszentrale dieses Geräts.`);
       notify('Testnachricht an dieses Gerät gesendet.');
     } catch (error) {
       if (error instanceof ApiError && error.status === 410) {
+        subscriptionRef.current = null;
         await subscription?.unsubscribe().catch(() => {}); setNeedsRepair(true);
       }
       setStatus((error as Error).message || 'Die Testnachricht konnte nicht gesendet werden.');
