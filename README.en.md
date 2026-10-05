@@ -52,6 +52,7 @@ TeslaTalk connects friends travelling together in their Teslas. Each trip brings
 
 - Adopt the trip leader's route and send it to every vehicle.
 - Account for different battery levels so that the group can charge at the same Superchargers.
+- **Live availability at charging stops:** show how many charging points at planned stops are available or occupied, with the last update time. This requires live data from the respective operator.
 - Notify participants when a change is needed, then automatically update the shared route for everyone.
 - Verify Tesla interfaces for route adoption, waypoints and music control with a real vehicle.
 

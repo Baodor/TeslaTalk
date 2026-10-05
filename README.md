@@ -54,6 +54,7 @@ TeslaTalk verbindet Freunde, die gemeinsam mit ihren Teslas unterwegs sind. Eine
 
 - Die vollständige Ladehaltefolge des ausgewählten Planungsfahrzeugs als gemeinsame Zwischenstopps übertragen; bislang sind nur Zielbefehle implementiert.
 - Unterschiedliche Akkustände berücksichtigen, damit die Gruppe an denselben Superchargern laden kann.
+- **Live-Belegung an Ladestopps:** anzeigen, wie viele Ladepunkte an den geplanten Stopps frei oder belegt sind, mit Zeitpunkt der letzten Aktualisierung. Voraussetzung sind verfügbare Live-Daten des jeweiligen Betreibers.
 - Auf nötige Änderungen hinweisen und danach die gemeinsame Route automatisch bei allen anpassen.
 - Tesla-Schnittstellen für Routenübernahme, Zwischenstopps und Musiksteuerung am echten Fahrzeug prüfen.
 
