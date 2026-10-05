@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { mockMapTiles } from './map-tiles';
+test.beforeEach(async({context})=>{await mockMapTiles(context);});
 test('two microphones can publish concurrently in a real LiveKit room', async ({ page, browser }) => {
   test.skip(process.env.TT_VOICE_TEST!=='true','Needs the configured local LiveKit server.');
   const errors:string[]=[];
@@ -10,6 +12,7 @@ test('two microphones can publish concurrently in a real LiveKit room', async ({
   expect(leaderLogin.status()).toBe(200);
   const trip=await (await page.request.post('/api/trips',{headers:origin,data:{title:'Voice test',starts_at:new Date(Date.now()-60000).toISOString(),ends_at:new Date(Date.now()+600000).toISOString()}})).json();
   const secondContext=await browser.newContext();
+  await mockMapTiles(secondContext);
   const second=await secondContext.newPage();
   await second.goto('/');
   const friendLogin=await second.request.post('/api/demo/login',{headers:origin,data:{query:'Voice friend '+Date.now()}});

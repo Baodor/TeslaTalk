@@ -2,6 +2,14 @@
 
 Stand: 5. Oktober 2026. Dies ist ein Integrationsentwurf; TeslaTalk implementiert derzeit Fahrzeugauswahl, Navigationsabruf und zustimmungsgebundene Zielbefehle. ABRP-Anbindung und Übertragung einer vollständigen Ladehaltefolge sind noch nicht implementiert.
 
+## Gewünschter Rückimport eines Teilen-Links
+
+TeslaTalk soll den tatsächlich gespeicherten Plan einschließlich geordneter Ladestopps abrufen. Ein abgelegter Link, ein ausgehender Deep Link oder eine neue Berechnung gilt dafür nicht als Import.
+
+Die geprüfte [offizielle Iternio-v2-Spezifikation](https://api.iternio.com/swagger-ui/) dokumentiert `GET /abrp/plan/{planId}/request` für die ursprünglichen **Planungsparameter**, mit API-Schlüssel und ABRP-Sitzung. Dieser Aufruf liefert nicht die vollständig berechnete Route eines beliebigen öffentlichen Teilen-Links. `POST /plan` erstellt dagegen einen neuen, gegebenenfalls kostenpflichtigen Plan. Die [ABRP-API-Seite](https://abetterrouteplanner.com/resources/api) nennt OAuth `get_plan`, verweist für die genauen Planinhalte jedoch auf den Anbieter.
+
+Ein öffentlich dokumentierter, hier verifizierter Abrufvertrag für gewöhnliche gespeicherte Teilen-Links liegt noch nicht vor. Deshalb ist der Rückimport offen und wird in TeslaTalk nicht als verfügbar dargestellt. Der nächste Schritt braucht einen konkreten Beispiel-Link zum Prüfen des Linkformats und einen freigegebenen Abruf samt Antwortschema. API-Geheimnisse gehören nur in die lokale Serverkonfiguration, nicht in einen Chat oder einen öffentlich geteilten Link.
+
 ## Tesla-App: Lesen und Senden sind zwei getrennte Funktionen
 
 Tesla dokumentiert [`navigation_waypoints_request`](https://developer.tesla.com/docs/fleet-api/endpoints/vehicle-commands) zum Senden einer Zwischenzielliste und `navigation_gps_request` mit Reihenfolgeoption. Das bedeutet noch nicht, dass TeslaTalk die geplanten Ladehalte lesen kann: Die [öffentlichen Fahrzeug-/Telemetriefelder](https://developer.tesla.com/docs/fleet-api/fleet-telemetry/available-data) dokumentieren Navigationsziel und Kennzahlen sowie die Routenlinie, keine vollständige geordnete Ladestoppliste. Aus der Linie können weder sichere Stationszuordnung noch nötige Ladeziele abgeleitet werden. Dass die Tesla-App diese Angaben anzeigt, belegt keine freigegebene Leseschnittstelle für Drittanbieter.

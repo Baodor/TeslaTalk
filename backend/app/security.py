@@ -91,7 +91,10 @@ def set_session(response, user_id, expires_at=None, admin=False):
 
 
 def user_public(user):
-    return {key: user.get(key) for key in ('id', 'username', 'display_name', 'plate', 'favorite_vehicle', 'provider', 'avatar_url')} | {'needs_username':user.get('provider') == 'tesla' and not user.get('username_chosen',1)}
+    return {key: user.get(key) for key in ('id', 'username', 'display_name', 'plate', 'favorite_vehicle', 'provider', 'avatar_url')} | {
+        'needs_username':user.get('provider') == 'tesla' and not user.get('username_chosen',1),
+        'tesla_profile_linked':bool(db.one('SELECT user_id FROM tesla_profile_links WHERE user_id=?',(user['id'],))),
+    }
 
 
 class RateLimiter:

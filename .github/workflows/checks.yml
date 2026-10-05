@@ -40,6 +40,14 @@ jobs:
                       labels = configuration['services'][service]['labels']
                       assert labels[f'traefik.http.routers.{router}.tls.certresolver'] == resolver
                       assert labels[f'traefik.http.routers.{router}.tls'] == 'true'
+              environment = dict(os.environ, TESLA_COMMAND_PROXY_USER='1000:1000', TESLA_GROUP_CONTROLS='true')
+              command = ['docker','compose','-f','compose.traefik.yaml','-f','compose.vehicle-controls.yaml','config','--format','json']
+              configuration = json.loads(subprocess.check_output(command,env=environment))
+              proxy = configuration['services']['tesla-command-proxy']
+              assert proxy['user'] == '1000:1000' and not proxy.get('ports') and not proxy.get('labels')
+              application = configuration['services']['teslatalk']['environment']
+              assert application['TESLA_COMMAND_PROXY_URL'] == 'https://tesla-command-proxy:4443'
+              assert application['TESLA_COMMAND_PROXY_CA'] == '/app/keys/vehicle-command-tls.pem'
           finally:
               path.unlink()
           print('Traefik TLS labels render correctly for both resolver settings.')
@@ -48,6 +56,37 @@ jobs:
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
+      - name: Start and verify the private signed-command proxy without accessing cars
+        run: |
+          python - <<'PY'
+          import importlib.util, os, pathlib, socket, ssl, subprocess, time
+          root=pathlib.Path('/tmp/teslatalk-command-ci')
+          keys=root/'deploy/keys'
+          keys.mkdir(parents=True)
+          subprocess.run(['openssl','ecparam','-name','prime256v1','-genkey','-noout','-out',str(keys/'tesla-private-key.pem')],check=True,capture_output=True)
+          (keys/'tesla-private-key.pem').chmod(0o600)
+          spec=importlib.util.spec_from_file_location('control_setup','scripts/configure_vehicle_controls.py')
+          setup=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(setup)
+          assert setup.prepare(root)
+          context=ssl.create_default_context(cafile=str(keys/'vehicle-command-tls.pem'))
+          subprocess.run(['docker','run','-d','--name','tt-command','--read-only','--security-opt=no-new-privileges:true',
+                          '--user',f'{os.getuid()}:{os.getgid()}', '-v',f'{keys}:/keys:ro','-p','127.0.0.1:14443:4443',
+                          'tesla/vehicle-command:latest','-tls-key','/keys/vehicle-command-tls-key.pem','-cert','/keys/vehicle-command-tls.pem',
+                          '-key-file','/keys/tesla-private-key.pem','-host','0.0.0.0','-port','4443'],check=True)
+          for attempt in range(30):
+              try:
+                  with socket.create_connection(('127.0.0.1',14443),timeout=2) as plain:
+                      with context.wrap_socket(plain,server_hostname='tesla-command-proxy') as secure:
+                          secure.sendall(b'GET /ci-health HTTP/1.1\r\nHost: tesla-command-proxy\r\nConnection: close\r\n\r\n')
+                          response=secure.recv(1024)
+                  assert response.startswith(b'HTTP/1.1 '), response[:100]
+                  break
+              except OSError:
+                  time.sleep(1)
+          else:raise SystemExit('Command proxy did not serve verified TLS')
+          print('Private command proxy starts with the key owner UID and verified TLS; no OAuth token or vehicle command used.')
+          PY
       - name: Start isolated audio server
         run: |
           python - <<'PY'
@@ -98,7 +137,7 @@ jobs:
           assert 'TeslaTalk' in page
           assets = re.findall(r'(?:src|href)="(/assets/[^\"]+)"', page)
           assert assets, 'Frontend assets missing from index.html'
-          for path in assets + ['/favicon.svg']:
+          for path in assets + ['/favicon.svg','/favicon.ico','/favicon-32-v6.png','/favicon-64-v6.png']:
               with urllib.request.urlopen(base + path, timeout=5) as response:
                   assert response.status == 200 and response.read(), path
           print('Production HTTP, SQLite volume and frontend assets are accessible.')
@@ -109,4 +148,5 @@ jobs:
         run: |
           docker logs tt-audio || true
           docker logs tt-app || true
+          docker logs tt-command || true
           find frontend/test-results -name error-context.md -exec cat {} \; || true

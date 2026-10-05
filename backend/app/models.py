@@ -25,6 +25,11 @@ class AdminUser(BaseModel):
     last_login_at: float | None = Field(description='Last successful user sign-in, Unix seconds. Older logins not recorded by the installation remain null.')
 
 
+class AdminUserDelete(BaseModel):
+    model_config = {'extra': 'forbid'}
+    username: str = Field(min_length=1, max_length=30, description='Exact current username, entered to confirm irreversible deletion of the account and its led trips.')
+
+
 class TripCreate(BaseModel):
     title: str = Field(min_length=1, max_length=100)
     destination: str = Field(default='', max_length=200)

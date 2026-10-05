@@ -8,11 +8,12 @@ import { VehicleNavigation } from './NavigationPanel';
 import RoutePlanning from './RoutePlanning';
 import UsernameSetup from './UsernameSetup';
 import AdminUsers from './AdminUsers';
+import VehicleControls from './VehicleControls';
 const TripMap = lazy(() => import('./TripMap'));
 const Radio = lazy(() => import('./Radio'));
 const ApiDocs = lazy(() => import('./ApiDocs'));
 
-function Brand() { return <div className="brand"><img className="brand-symbol" src="/favicon.svg" alt="" /><span>Tesla<span className="accent">Talk</span><small>GEMEINSAM UNTERWEGS</small></span></div>; }
+function Brand() { return <a className="brand" href="/" aria-label="TeslaTalk – Startseite"><img className="brand-symbol" src="/favicon.svg" alt="" /><span>Tesla<span className="accent">Talk</span><small>GEMEINSAM UNTERWEGS</small></span></a>; }
 function Empty({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) { return <div className="empty-state">{icon}<h3>{title}</h3><p>{children}</p></div>; }
 function CopyValue({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
@@ -96,7 +97,7 @@ function Dashboard({ config }: { config: any }) {
   </nav><div className="sidebar-bottom"><div className="server-pill"><span className="status-dot" /> {config.demo ? 'Demo-Server' : 'Privater Server'}</div><div className="user-block"><Avatar name={user.display_name} url={user.avatar_url} /><div><strong>{user.display_name}</strong><small>{guest ? 'Mitfahrer · Zugang auf Zeit' : '@' + user.username}</small></div><button className="icon-button" aria-label="Abmelden" onClick={() => void api('/auth/logout', 'POST').then(() => location.assign('/'))}><LogOut size={18} /></button></div></div></aside>
     <main className="main-content"><div className="utility-bar"><button className="mobile-logout icon-button" aria-label="Abmelden" onClick={() => void api('/auth/logout', 'POST').then(() => location.assign('/'))}><LogOut size={18} /></button></div>{config.demo && <div className="demo-bar">DEMO-MODUS · Fahrzeugwerte sind Beispieldaten</div>}
       {notice && <div className="toast" role="status"><AlertCircle size={18} />{notice}<button aria-label="Hinweis schließen" onClick={() => setNotice('')}><X size={16} /></button></div>}
-      <Suspense fallback={<p className="hint">Fahrt wird geladen …</p>}>{selected ? <TripPage key={selected} tripId={selected} user={user} vehicles={vehicles} back={() => goHome()} reload={() => void load()} notify={setNotice} /> : view === 'friends' ? <Friends notify={setNotice} /> : view === 'settings' ? <ProfilePage user={user} vehicles={vehicles} reload={load} notify={setNotice} pwa={pwa} /> : <>
+      <Suspense fallback={<p className="hint">Fahrt wird geladen …</p>}>{selected ? <TripPage key={selected} tripId={selected} user={user} vehicles={vehicles} back={() => goHome()} reload={() => void load()} notify={setNotice} /> : view === 'friends' ? <Friends notify={setNotice} /> : view === 'settings' ? <ProfilePage user={user} vehicles={vehicles} reload={load} notify={setNotice} pwa={pwa} teslaReady={config.tesla_ready} guestTripId={trips[0]?.id} /> : <>
         <header className="page-header"><div><span className="eyebrow">GEMEINSAM WEITER</span><h1>Deine Fahrten<span className="accent">.</span></h1><p>Ein Ziel. Deine Leute. Alles an einem Ort.</p></div>{!guest && <div className="header-actions"><button onClick={() => setModal('join')}>Mit PIN beitreten</button><button className="primary" onClick={() => setModal('create')}><Plus size={18} /> Fahrt erstellen</button></div>}</header>
         {!guest && !vehicles.length && <div className="notice"><Car size={24} /><span>Verbinde zuerst dein Fahrzeug.<small>Öffne dein Profil und rufe deine Tesla-Fahrzeuge ab.</small></span><button onClick={() => goHome('settings')}>Zum Profil<ChevronRight size={17} /></button></div>}
         {invites.length > 0 && <section className="panel"><h3>Du bist eingeladen</h3>{invites.map(trip => <div className="list-row" key={trip.id}><div><strong>{trip.title}</strong><small>{date(trip.starts_at)}</small></div><button className="primary" onClick={() => void api(`/api/trips/${trip.id}/accept`, 'POST').then(() => { void load(); openTrip(trip.id); }).catch(e => setNotice(e.message))}>Mitfahren</button></div>)}</section>}
@@ -141,6 +142,7 @@ function TripPage({ tripId, user, vehicles, back, reload, notify }: { tripId: st
         if (data.type === 'participants') setTrip((current: any) => current ? { ...current, participants_detail: data.participants } : current);
         if (data.type === 'message') addMessage(data.message);
         if (data.type === 'navigation') setTrip((current: any) => current ? { ...current, navigation: data.navigation, ...(data.route_overview ? {route_overview:data.route_overview} : {}) } : current);
+        if (data.type === 'controls') setTrip((current:any)=>current?{...current,vehicle_controls:data.vehicle_controls}:current);
         if (data.type === 'ended') { void refresh(); setGps(false); }
       };
       socket.onclose = () => { setConnected(false); if (!stopped) timer = window.setTimeout(connect, 5000); };
@@ -182,6 +184,7 @@ function TripPage({ tripId, user, vehicles, back, reload, notify }: { tripId: st
   const ranked = [...rank].sort((a, b) => a[rankBy] == null ? 1 : b[rankBy] == null ? -1 : rankBy === 'average_speed_kmh' ? b[rankBy] - a[rankBy] : a[rankBy] - b[rankBy]);
   return <div className="trip-page"><header className="page-header compact"><div><button className="back-button" onClick={back}><ArrowLeft size={16} /> Alle Fahrten</button><h1>{trip.title}</h1><p><MapPin size={15} />{trip.destination || 'Gemeinsam unterwegs'}<span>·</span>{date(trip.starts_at)} – {date(trip.ends_at)}</p></div><div className="header-actions"><span className={`badge ${active ? 'accent-badge' : ''}`}>{active ? '● UNTERWEGS' : trip.status === 'planned' ? 'GEPLANT' : 'ABGESCHLOSSEN'}</span>{leader && trip.status !== 'finished' && <button onClick={() => setInvite(true)}><UserPlus size={17} />Einladen</button>}</div></header>
     <div className="trip-tabs">{[['map', MapPin, 'Karte'], ['chat', MessageSquare, 'Chat'], ['photos', Images, 'Fotos & Mitfahrer'], ['history', Trophy, 'Verlauf']].map(([id, Icon, label]) => { const I = Icon as typeof MapPin; return <button key={String(id)} className={tab === id ? 'active' : ''} onClick={() => setTab(String(id))}><I size={18} />{String(label)}</button>; })}<span className="socket-state"><span className={`status-dot ${connected ? '' : 'offline'}`} />{connected ? 'Live verbunden' : 'Verbindung wird aufgebaut'}</span></div>
+    <VehicleControls tripId={tripId} userId={user.id} leader={leader} active={active} driver={trip.my_role==='driver'&&user.provider!=='guest'} overview={trip.vehicle_controls} update={value=>setTrip((current:any)=>({...current,vehicle_controls:value}))}/>
     <div className="trip-workspace"><section className="trip-stage">
       {tab === 'map' && <RoutePlanning tripId={tripId} userId={user.id} leader={leader} active={active} finished={trip.status === 'finished'} destination={trip.destination} navigation={trip.navigation || null} overview={trip.route_overview}
         update={(navigation, overview) => setTrip((current: any) => ({...current,...(navigation !== undefined ? {navigation} : {}),...(overview ? {route_overview:overview} : {})}))} />}
@@ -201,7 +204,7 @@ function Friends({ notify }: { notify: (value: string) => void }) {
   return <><header className="page-header"><div><span className="eyebrow">DEINE LEUTE</span><h1>Freunde<span className="accent">.</span></h1><p>Einmal verbinden. Beim nächsten Roadtrip leichter zusammenfinden.</p></div></header><div className="settings-grid"><section className="panel"><h3>Freund hinzufügen</h3><p>Suche ein bereits registriertes Fahrer-Konto.</p><ActionForm label="Freundschaft anfragen" onSubmit={async data => { await api('/api/friends', 'POST', { query: data.get('query') }); await load(); notify('Freundschaft angefragt.'); }}><Field label="Benutzername, Kennzeichen oder E-Mail" name="query" placeholder="Exakte Angabe" /></ActionForm></section><section className="panel"><h3>Deine Verbindungen</h3>{rows.length ? rows.map(row => <div className="list-row" key={row.user.id}><Avatar name={row.user.display_name} url={row.user.avatar_url} /><div className="grow"><strong>{row.user.display_name}</strong><small>@{row.user.username} · {row.status === 'accepted' ? 'Befreundet' : row.incoming ? 'Möchte sich verbinden' : 'Anfrage gesendet'}</small></div>{row.status === 'pending' && row.incoming && <button className="primary" onClick={() => void api(`/api/friends/${row.user.id}/accept`, 'POST').then(load).catch(e => notify(e.message))}><Check size={17} />Annehmen</button>}<button className="icon-button" aria-label="Verbindung entfernen" onClick={() => void api(`/api/friends/${row.user.id}`, 'DELETE').then(load).catch(e => notify(e.message))}><X size={17} /></button></div>) : <Empty icon={<Users size={34} />} title="Deine Gruppe beginnt hier.">Frage deine Freunde nach ihrem Benutzernamen.</Empty>}</section></div></>;
 }
 
-function ProfilePage({ user, vehicles, reload, notify, pwa }: { user: User; vehicles: any[]; reload: () => Promise<void>; notify: (value: string) => void; pwa: PWAState }) {
+function ProfilePage({ user, vehicles, reload, notify, pwa, teslaReady, guestTripId }: { user: User; vehicles: any[]; reload: () => Promise<void>; notify: (value: string) => void; pwa: PWAState; teslaReady: boolean; guestTripId?: string }) {
   const [keys, setKeys] = useState<any[]>([]), [newKey, setNewKey] = useState(''), [unlimited, setUnlimited] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const guest = user.provider === 'guest';
@@ -220,6 +223,13 @@ function ProfilePage({ user, vehicles, reload, notify, pwa }: { user: User; vehi
     <header className="page-header"><div><span className="eyebrow">DEIN PROFIL</span><h1>Startklar<span className="accent">.</span></h1><p>{guest ? 'Deine persönlichen Einstellungen für diese Fahrt.' : 'Dein Name für die Gruppe. Dein Fahrzeug für die Fahrt.'}</p></div></header>
     <div className="settings-grid">
       <PWAControls controls={pwa} />
+      {guest && <section className="panel" aria-label="Tesla-Profil für Mitfahrer">
+        <h3>Dein Tesla-Profil als Mitfahrer</h3>
+        <div className="profile-identity"><Avatar name={user.display_name} url={user.avatar_url} className="profile-avatar" /><div><strong>{user.display_name}</strong><small>{user.tesla_profile_linked ? 'Tesla-Profil verknüpft · Mitfahrer' : 'Mitfahrer mit eigenem Namen und PIN'}</small></div></div>
+        <p>Verknüpfe dein Tesla-Konto für dein Profilbild. Du bleibst Mitfahrer; dein Auto wird weder abgerufen noch in Reichweite, Akku oder Routenplanung einbezogen.</p>
+        {teslaReady && guestTripId ? <a className="button primary" href={'/auth/tesla/passenger?trip_id='+encodeURIComponent(guestTripId)}>{user.tesla_profile_linked ? 'Tesla-Profil erneut laden' : 'Mit Tesla verknüpfen'}<ArrowUpRight size={17}/></a> : <p className="hint">Die Verknüpfung benötigt eine aktive Fahrt und eine eingerichtete Tesla-Anmeldung.</p>}
+        {user.tesla_profile_linked && <button disabled={avatarBusy} onClick={async()=>{setAvatarBusy(true);try {await api('/api/me/tesla-profile-link','DELETE');await reload();notify('Tesla-Profilverknüpfung entfernt.');}catch(error){notify((error as Error).message);}finally{setAvatarBusy(false);}}}>Tesla-Verknüpfung entfernen</button>}
+      </section>}
       {!guest && <>
         <section className="panel">
           <h3>So finden dich deine Freunde</h3>

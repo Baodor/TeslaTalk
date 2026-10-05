@@ -15,7 +15,7 @@ export async function api<T = any>(path: string, method = 'GET', body?: unknown,
 export const date = (value: number) => new Date(value * 1000).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
 export const duration = (value: number) => `${Math.floor(value / 3600)} h ${Math.floor(value % 3600 / 60)} min`;
 export const localDate = (value: Date) => new Date(value.getTime() - value.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-export type User = { id: string; username: string; display_name: string; plate: string | null; favorite_vehicle: string | null; provider: string; avatar_url?: string | null; needs_username?: boolean };
+export type User = { id: string; username: string; display_name: string; plate: string | null; favorite_vehicle: string | null; provider: string; avatar_url?: string | null; needs_username?: boolean; tesla_profile_linked?: boolean };
 export type Trip = { id: string; leader_id: string; title: string; destination: string; starts_at: number; ends_at: number; finished_at: number | null; status: string; participants: number };
 export type NavigationData = {
   status: 'active' | 'inactive' | 'unavailable'; destination: string | null;

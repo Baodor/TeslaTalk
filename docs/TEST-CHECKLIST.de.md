@@ -2,6 +2,19 @@
 
 Nach dem Update mit einem Fahrer-Konto testen. Die automatisierten Tests verwenden isolierte Daten, simulierte Tesla-Antworten und Demo-Fahrzeuge. Der tatsächliche Abruf aus einem physischen Tesla muss an der eigenen Installation geprüft werden.
 
+## Komfortsteuerung, Karten und neue Kontofunktionen
+
+- [ ] [Signierten Proxy einrichten](VEHICLE-CONTROLS.de.md), Tesla-Konten mit `vehicle_cmds` erneut verbinden und virtuellen Schlüssel installieren. Ohne Aktivierung sind die Komfortknöpfe gesperrt; reine Fahrzeugdaten bleiben nutzbar.
+- [ ] In einer aktiven Fahrt erlaubt jeder Fahrer **Komfortsteuerung für mein Auto** separat. Routenübernahme allein erlaubt keine Komfortsteuerung. Der Fahrtleiter öffnet **Fahrzeuge steuern** und sieht die freigegebenen Autos.
+- [ ] **Klima an** und **Klima aus** getrennt bestätigen: Empfängerliste stimmt, alle freigegebenen Fahrzeuge reagieren, nicht freigegebene Autos bleiben unberührt. Temperatur ist die im jeweiligen Auto eingestellte Temperatur.
+- [ ] Im Stand/Parkstellung bei freien beweglichen Teilen Frunk, Heckklappe sowie Fenster lüften/schließen einzeln testen. Frunk manuell schließen. Unbekannte Parkdaten verhindern Kofferraum-/Fensterbefehle; kein Türverriegeln/Entriegeln vorhanden.
+- [ ] Bestätigungsdialog abbrechen: kein Befehl. Schlafendes/unerreichbares Auto verursacht nur einen eigenen Fehler und wird nicht geweckt. Verbindung unterbrechen: **Auftragsstatus abrufen** sendet keinen zweiten Befehl. Tatsächlichen Zustand am Auto prüfen.
+- [ ] Freigabe widerrufen, Fahrzeug wechseln und Fahrt beenden: keine weiteren Komfortbefehle an das bisher freigegebene Auto. Ein Tesla-verknüpfter Mitfahrer erscheint nicht in der Fahrzeugsteuerung oder Akku-/Reichweitenplanung.
+- [ ] QR-Mitfahrer verbindet in **Mein Profil** sein Tesla-Konto: Bild erscheint, Name/PIN und Mitfahrerrolle bleiben. Nach Abmelden über denselben QR-Link anmelden; Bild bleibt. Verknüpfung entfernen: PIN funktioniert weiter, kein Fahrzeugzugriff.
+- [ ] Im Adminmenü mit einem eigens angelegten Testkonto **Löschen** wählen. Falsche Groß-/Kleinschreibung im Bestätigungsnamen hält den Knopf gesperrt; Abbrechen löscht nichts. Erst mit exaktem Namen bestätigen. Konto und eigene geleitete Testfahrten verschwinden, seine alten Sitzungen/API-Schlüssel funktionieren nicht mehr, fremde Fahrten bleiben bestehen.
+- [ ] Logo aus Profil/Fahrt/Admin anklicken: Startseite. Mac/Safari neu laden und Desktop-Favicon prüfen; gegebenenfalls alten Safari-Favicon-Cache abwarten. Auf dem Arbeitsplatz-PC OSM-Karte prüfen: bei Netzwerksperre verständliche Fehlermeldung und erneutes Laden. Der Referrer enthält nur die Domain, keinen Fahrtpfad.
+- [ ] **ABRP noch nicht als erfolgreichen Import testen:** Für normale Teilen-Links ist der gespeicherte Planabruf noch nicht integriert. Ein konkreter Beispiel-Link und ein verifizierter Abrufvertrag bzw. freigegebener Iternio-Zugang sind für diesen nächsten Schritt nötig.
+
 ## Tesla-Erstanmeldung und Administration
 
 - [ ] Neu mit Tesla anmelden: vor den Fahrerfunktionen erscheint die Benutzernamenwahl. Namen mit 3–30 erlaubten Zeichen wählen; „Max“ und „max“ dürfen nicht getrennt vergeben werden. Ein belegter Name zeigt eine Fehlermeldung und lässt die Auswahl offen.

@@ -12,7 +12,17 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE TABLE IF NOT EXISTS credentials (user_id TEXT PRIMARY KEY REFERENCES users(id), encrypted_token TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT, kind TEXT NOT NULL, expires_at REAL NOT NULL);
-CREATE TABLE IF NOT EXISTS oauth_states (state_hash TEXT PRIMARY KEY, binding_hash TEXT NOT NULL, verifier TEXT NOT NULL, expires_at REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS oauth_states (state_hash TEXT PRIMARY KEY, binding_hash TEXT NOT NULL, verifier TEXT NOT NULL, expires_at REAL NOT NULL, purpose TEXT NOT NULL DEFAULT 'driver');
+CREATE TABLE IF NOT EXISTS passenger_profile_states (
+ state_hash TEXT PRIMARY KEY REFERENCES oauth_states(state_hash) ON DELETE CASCADE,
+ user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+ session_hash TEXT NOT NULL REFERENCES sessions(token_hash) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS tesla_profile_links (
+ user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+ tesla_subject TEXT NOT NULL, linked_at REAL NOT NULL
+);
 CREATE TABLE IF NOT EXISTS vehicles (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), name TEXT NOT NULL, model TEXT NOT NULL, data TEXT NOT NULL DEFAULT '{}');
 CREATE TABLE IF NOT EXISTS friendships (low_id TEXT NOT NULL, high_id TEXT NOT NULL, requester TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', created_at REAL NOT NULL, PRIMARY KEY (low_id, high_id));
 CREATE TABLE IF NOT EXISTS trips (
@@ -35,6 +45,18 @@ CREATE TABLE IF NOT EXISTS route_followers (
  vehicle_id TEXT NOT NULL REFERENCES vehicles(id), accepted_at REAL NOT NULL,
  command_key TEXT, sent_at REAL, status TEXT NOT NULL DEFAULT 'waiting', problem TEXT,
  notified_problem TEXT, PRIMARY KEY(trip_id,user_id)
+);
+CREATE TABLE IF NOT EXISTS control_grants (
+ trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+ user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ vehicle_id TEXT NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+ granted_at REAL NOT NULL, PRIMARY KEY(trip_id,user_id)
+);
+CREATE TABLE IF NOT EXISTS control_batches (
+ trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+ request_id TEXT NOT NULL, leader_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ payload TEXT NOT NULL, result TEXT NOT NULL, status TEXT NOT NULL, created_at REAL NOT NULL,
+ PRIMARY KEY(trip_id,request_id)
 );
 CREATE TABLE IF NOT EXISTS invites (trip_id TEXT NOT NULL REFERENCES trips(id), user_id TEXT NOT NULL REFERENCES users(id), created_at REAL NOT NULL, PRIMARY KEY(trip_id,user_id));
 CREATE TABLE IF NOT EXISTS passengers (id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id), name TEXT NOT NULL, normalized_name TEXT NOT NULL, pin_hash TEXT NOT NULL, user_id TEXT REFERENCES users(id), UNIQUE(trip_id,normalized_name));
@@ -68,6 +90,8 @@ CREATE TABLE IF NOT EXISTS push_deliveries (
  PRIMARY KEY (job_id,endpoint_hash)
 );
 CREATE INDEX IF NOT EXISTS push_due ON push_outbox(next_at);
+CREATE TABLE IF NOT EXISTS voice_removals (trip_id TEXT NOT NULL, user_id TEXT NOT NULL, expires_at REAL NOT NULL, PRIMARY KEY(trip_id,user_id));
+CREATE TABLE IF NOT EXISTS voice_room_deletions (trip_id TEXT PRIMARY KEY, expires_at REAL NOT NULL);
 '''
 
 
@@ -97,6 +121,8 @@ def initialize():
             db.execute("UPDATE users SET username_chosen=0 WHERE provider='tesla' AND username='fahrer-' || substr(id,1,8)")
         if 'last_login_at' not in {row['name'] for row in db.execute('PRAGMA table_info(users)')}:
             db.execute('ALTER TABLE users ADD COLUMN last_login_at REAL')
+        if 'purpose' not in {row['name'] for row in db.execute('PRAGMA table_info(oauth_states)')}:
+            db.execute("ALTER TABLE oauth_states ADD COLUMN purpose TEXT NOT NULL DEFAULT 'driver'")
 
 
 def one(sql, args=()):

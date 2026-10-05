@@ -22,6 +22,19 @@ class Hub:
     def online(self):
         return {uid for sockets in self.rooms.values() for uid in sockets.values()}
 
+    async def disconnect(self, user_id=None, trip_id=None):
+        for room, sockets in list(self.rooms.items()):
+            for socket, uid in list(sockets.items()):
+                if (user_id is not None and uid == user_id) or (trip_id is not None and room == trip_id):
+                    try:
+                        if trip_id is not None:
+                            await asyncio.wait_for(socket.send_json({'type':'ended'}),timeout=3)
+                        await asyncio.wait_for(socket.close(code=1008),timeout=3)
+                    except Exception:
+                        pass
+                    finally:
+                        self.remove(room,socket)
+
     async def broadcast(self, trip_id, message):
         for socket in list(self.rooms.get(trip_id, {})):
             try:
@@ -72,3 +85,18 @@ async def delete_voice_room(trip_id):
     if not settings.voice_ready:
         return True
     return await room_control('DeleteRoom', trip_id)
+
+
+async def remove_voice_participant(trip_id, user_id):
+    if not settings.voice_ready:
+        return True
+    now = int(time.time())
+    token = jwt.encode({'iss':settings.livekit_key,'sub':'teslatalk-server','nbf':now-5,'exp':now+60,
+                        'video':{'roomAdmin':True,'room':'trip-'+trip_id}},settings.livekit_secret,algorithm='HS256')
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            response = await client.post(settings.livekit_internal_url+'/twirp/livekit.RoomService/RemoveParticipant',
+                                         headers={'Authorization':'Bearer '+token},json={'room':'trip-'+trip_id,'identity':user_id})
+        return response.status_code in (200,404)
+    except httpx.HTTPError:
+        return False

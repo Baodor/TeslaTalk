@@ -18,14 +18,14 @@ from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSock
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from . import db, fleet, push, api_documentation, route_planning
+from . import db, fleet, push, api_documentation, route_planning, accounts, vehicle_controls
 from .config import settings
 from .metrics import ranking
 from .middleware import BodyLimitMiddleware, MAX_REQUEST_BYTES
 from .navigation import Navigation, NavigationTelemetry
 from .oidc import admin_access, admin_claims, admin_denial, verification_failure
-from .models import AdminUser, GuestLogin, Join, KeyCreate, Message, PassengerCreate, Profile, Query, Sample, TripCreate, PushSubscription, PushRemove, PushTest
-from .realtime import hub, voice_token, delete_voice_room, ensure_voice_room
+from .models import AdminUser, AdminUserDelete, GuestLogin, Join, KeyCreate, Message, PassengerCreate, Profile, Query, Sample, TripCreate, PushSubscription, PushRemove, PushTest
+from .realtime import hub, voice_token, delete_voice_room, ensure_voice_room, remove_voice_participant
 from .security import Identity, authenticate, current_admin, current_user, digest, driver, limiter, pin_hash, pin_matches, join_pin_hash, set_session, user_public
 
 log = logging.getLogger('teslatalk')
@@ -69,7 +69,9 @@ def trip_summary(trip):
 def participants(trip_id):
     rows = db.all_rows('SELECT u.id,u.display_name,u.username,u.plate,u.avatar_url,m.role,m.vehicle_id,m.left_at,v.name AS vehicle_name,v.model FROM members m JOIN users u ON u.id=m.user_id LEFT JOIN vehicles v ON v.id=m.vehicle_id WHERE m.trip_id=?', (trip_id,))
     for row in rows:
-        row['data'] = db.one("SELECT captured_at AS updated_at,latitude,longitude,speed_kmh,heading,battery_pct,range_km,source FROM samples WHERE trip_id=? AND user_id=? AND source!='browser' ORDER BY id DESC LIMIT 1", (trip_id,row['id'])) or {}
+        if row['role'] != 'driver':
+            row.update(vehicle_id=None,vehicle_name=None,model=None)
+        row['data'] = (db.one("SELECT captured_at AS updated_at,latitude,longitude,speed_kmh,heading,battery_pct,range_km,source FROM samples WHERE trip_id=? AND user_id=? AND source!='browser' ORDER BY id DESC LIMIT 1", (trip_id,row['id'])) or {}) if row['role'] == 'driver' else {}
         row['personal_location'] = db.one('SELECT updated_at,latitude,longitude,speed_kmh,heading FROM personal_locations WHERE trip_id=? AND user_id=? AND updated_at>?', (trip_id,row['id'],time.time()-300))
         row['online'] = row['id'] in hub.online()
     return rows
@@ -91,6 +93,9 @@ async def store_sample(trip_id, user_id, data):
         return
     data = dict(data)
     personal = data.get('source') == 'browser'
+    member = db.one('SELECT role,left_at FROM members WHERE trip_id=? AND user_id=?',(trip_id,user_id))
+    if not member or member['left_at'] is not None or not personal and member['role'] != 'driver':
+        return
     if personal:
         # A person's browser position must never inherit vehicle position or metrics.
         if data.get('latitude') is None or data.get('longitude') is None:
@@ -114,10 +119,21 @@ async def store_sample(trip_id, user_id, data):
     await hub.broadcast(trip_id, {'type':'participants','participants':participants(trip_id)})
 
 
+async def clean_deleted_voice():
+    now = time.time()
+    for row in db.all_rows('SELECT * FROM voice_removals'):
+        if await remove_voice_participant(row['trip_id'],row['user_id']) and now >= row['expires_at']:
+            db.execute('DELETE FROM voice_removals WHERE trip_id=? AND user_id=?',(row['trip_id'],row['user_id']))
+    for row in db.all_rows('SELECT * FROM voice_room_deletions'):
+        if await delete_voice_room(row['trip_id']) and now >= row['expires_at']:
+            db.execute('DELETE FROM voice_room_deletions WHERE trip_id=?',(row['trip_id'],))
+
+
 async def background_cycle(next_poll):
     now = time.time()
     db.execute('DELETE FROM sessions WHERE expires_at<?', (now,))
     db.execute('DELETE FROM oauth_states WHERE expires_at<?', (now,))
+    await clean_deleted_voice()
     db.execute('DELETE FROM personal_locations WHERE updated_at<=? OR trip_id IN (SELECT id FROM trips WHERE ends_at<=? OR finished_at IS NOT NULL)', (now-300,now))
     for trip in db.all_rows('SELECT * FROM trips WHERE (ends_at<=? OR finished_at IS NOT NULL) AND voice_cleaned=0', (now,)):
         if await delete_voice_room(trip['id']):
@@ -126,7 +142,7 @@ async def background_cycle(next_poll):
     if now>=next_poll:
         next_poll = now+settings.poll_interval
         online = hub.online()
-        members = db.all_rows('SELECT m.trip_id,m.user_id,m.vehicle_id FROM members m JOIN trips t ON t.id=m.trip_id WHERE m.left_at IS NULL AND m.vehicle_id IS NOT NULL AND t.starts_at<=? AND t.ends_at>? AND t.finished_at IS NULL', (now,now))
+        members = db.all_rows("SELECT m.trip_id,m.user_id,m.vehicle_id FROM members m JOIN trips t ON t.id=m.trip_id WHERE m.role='driver' AND m.left_at IS NULL AND m.vehicle_id IS NOT NULL AND t.starts_at<=? AND t.ends_at>? AND t.finished_at IS NULL", (now,now))
         cache = {}
         for member in members:
             if member['user_id'] not in online:
@@ -164,6 +180,7 @@ async def lifespan(app):
         raise RuntimeError('LIVEKIT_URL muss bei HTTPS mit wss:// beginnen.')
     ZoneInfo(settings.timezone)
     db.initialize()
+    vehicle_controls.recover_interrupted()
     tasks = [asyncio.create_task(background()), asyncio.create_task(push.worker())]
     yield
     for task in tasks:
@@ -222,7 +239,7 @@ def health():
 def config():
     return {'version':'0.1.0','demo':settings.demo,'tesla_ready':settings.tesla_ready,'voice_ready':settings.voice_ready,
             'admin_ready':bool(settings.oidc_issuer and settings.oidc_client_id), 'app_url':settings.app_url,
-            'navigation_commands':settings.navigation_commands or settings.demo,'push_ready':settings.push_ready,'vapid_public_key':settings.vapid_public_key if settings.push_ready else ''}
+            'navigation_commands':settings.navigation_commands or settings.demo,'group_controls':settings.group_controls_ready or settings.demo,'push_ready':settings.push_ready,'vapid_public_key':settings.vapid_public_key if settings.push_ready else ''}
 
 
 @app.post('/api/push/subscribe')
@@ -258,13 +275,41 @@ async def push_test(body:PushTest,request:Request,identity:Identity=Depends(curr
 
 @app.get('/auth/tesla')
 def tesla_login():
+    return start_tesla_auth('openid offline_access user_data vehicle_device_data vehicle_location'+(' vehicle_cmds' if settings.navigation_commands or settings.group_controls_ready else ''))
+
+
+def passenger_profile_access(request, trip_id, expected_user_id=None, expected_session=None):
+    if request.headers.get('authorization'):
+        raise HTTPException(403,'Tesla-Profilverknüpfung benötigt eine Mitfahrer-Browsersitzung.')
+    identity = current_user(request)
+    if identity.user['provider'] != 'guest':
+        raise HTTPException(403,'Diese Verknüpfung ist nur für QR-Mitfahrer vorgesehen.')
+    if expected_user_id and (identity.user['id'] != expected_user_id or digest(request.cookies.get('tt_session','')) != expected_session):
+        raise HTTPException(400,'Mitfahrer-Anmeldung hat sich geändert. Verknüpfung bitte neu starten.')
+    trip,member = access(trip_id,identity,active=True)
+    if member['role'] != 'passenger':
+        raise HTTPException(403,'Dieser Zugang ist kein Mitfahrer-Zugang.')
+    return identity,trip
+
+
+@app.get('/auth/tesla/passenger')
+def tesla_passenger_login(trip_id:str, request:Request):
+    identity,trip = passenger_profile_access(request,trip_id)
+    limiter.check(('tesla-profile-link',identity.user['id']),5,60)
+    return start_tesla_auth('openid user_data',identity.user['id'],trip['id'],digest(request.cookies['tt_session']))
+
+
+def start_tesla_auth(scope, user_id=None, trip_id=None, session_hash=None):
     if not settings.tesla_ready:
         raise HTTPException(503, 'Tesla-Anmeldung ist noch nicht konfiguriert.')
     state, binding, verifier = (secrets.token_urlsafe(32) for _ in range(3))
-    db.execute('INSERT INTO oauth_states VALUES (?,?,?,?)', (digest(state),digest(binding),verifier,time.time()+600))
+    with db.connect() as connection:
+        connection.execute('INSERT INTO oauth_states(state_hash,binding_hash,verifier,expires_at,purpose) VALUES (?,?,?,?,?)',(digest(state),digest(binding),verifier,time.time()+600,'passenger_profile' if user_id else 'driver'))
+        if user_id:
+            connection.execute('INSERT INTO passenger_profile_states VALUES (?,?,?,?)',(digest(state),user_id,trip_id,session_hash))
     challenge = base64.urlsafe_b64encode(__import__('hashlib').sha256(verifier.encode()).digest()).decode().rstrip('=')
     parameters = {'client_id':settings.tesla_client_id,'response_type':'code','redirect_uri':settings.app_url+'/auth/tesla/callback',
-                  'scope':'openid offline_access user_data vehicle_device_data vehicle_location'+(' vehicle_cmds' if settings.navigation_commands else ''),'state':state,'nonce':secrets.token_urlsafe(24),
+                  'scope':scope,'state':state,'nonce':secrets.token_urlsafe(24),
                   'code_challenge':challenge,'code_challenge_method':'S256','locale':'de-DE','require_requested_scopes':'true'}
     response = RedirectResponse('https://auth.tesla.com/oauth2/v3/authorize?'+urlencode(parameters))
     response.set_cookie('tt_oauth',binding,max_age=600,httponly=True,secure=settings.secure,samesite='lax')
@@ -277,9 +322,16 @@ async def tesla_callback(request:Request, state:str='', code:str=''):
         pending = connection.execute('SELECT * FROM oauth_states WHERE state_hash=?', (digest(state),)).fetchone()
         if not pending or pending['expires_at']<time.time() or pending['binding_hash']!=digest(request.cookies.get('tt_oauth','')):
             raise HTTPException(400, 'Anmeldung abgelaufen oder ungültig. Bitte neu starten.')
+        passenger_state = connection.execute('SELECT * FROM passenger_profile_states WHERE state_hash=?',(digest(state),)).fetchone()
         connection.execute('DELETE FROM oauth_states WHERE state_hash=?', (digest(state),))
+    if pending['purpose'] == 'passenger_profile' and not passenger_state:
+        raise HTTPException(400,'Mitfahrer-Zugang wurde beendet. Verknüpfung bitte neu starten.')
+    if passenger_state:
+        passenger_profile_access(request,passenger_state['trip_id'],passenger_state['user_id'],passenger_state['session_hash'])
     if not code:
-        return RedirectResponse('/?error=tesla_cancelled')
+        response = RedirectResponse(('/trip/'+passenger_state['trip_id'] if passenger_state else '/')+'?error=tesla_cancelled')
+        response.delete_cookie('tt_oauth')
+        return response
     async with httpx.AsyncClient(timeout=25) as client:
         result = await client.post(fleet.TOKEN_URL, data={'grant_type':'authorization_code','client_id':settings.tesla_client_id,
                                     'client_secret':settings.tesla_client_secret,'code':code,'code_verifier':pending['verifier'],
@@ -291,9 +343,21 @@ async def tesla_callback(request:Request, state:str='', code:str=''):
         if account.status_code!=200:
             raise HTTPException(502, 'Tesla-Konto konnte nicht gelesen werden.')
         profile = account.json().get('response') or {}
-    if not profile.get('email') and not profile.get('id'):
+    if not isinstance(profile,dict) or not profile.get('email') and not profile.get('id'):
         raise HTTPException(502, 'Tesla lieferte keine eindeutige Kontoidentität.')
     subject = str(profile.get('id') or profile['email'].lower())
+    if passenger_state:
+        identity,trip = passenger_profile_access(request,passenger_state['trip_id'],passenger_state['user_id'],passenger_state['session_hash'])
+        with db.connect() as connection:
+            connection.execute('BEGIN IMMEDIATE')
+            passenger_profile_access(request,trip['id'],identity.user['id'],passenger_state['session_hash'])
+            connection.execute('INSERT INTO tesla_profile_links VALUES (?,?,?) ON CONFLICT(user_id) DO UPDATE SET tesla_subject=excluded.tesla_subject,linked_at=excluded.linked_at',(identity.user['id'],subject,time.time()))
+            connection.execute('UPDATE users SET avatar_url=?,email=?,last_login_at=? WHERE id=?',(fleet.profile_avatar(profile),profile.get('email'),time.time(),identity.user['id']))
+        # Profile-only tokens are discarded. The original PIN session and deadline stay.
+        response = RedirectResponse('/trip/'+trip['id'],status_code=303)
+        response.delete_cookie('tt_oauth')
+        await hub.broadcast(trip['id'],{'type':'participants','participants':participants(trip['id'])})
+        return response
     user = db.one('SELECT * FROM users WHERE subject=?', ('tesla:'+subject,))
     if not user:
         uid = str(uuid.uuid4())
@@ -307,6 +371,19 @@ async def tesla_callback(request:Request, state:str='', code:str=''):
     response.delete_cookie('tt_oauth')
     set_session(response,uid)
     return response
+
+
+@app.delete('/api/me/tesla-profile-link')
+async def unlink_passenger_tesla(request:Request,identity:Identity=Depends(current_user)):
+    member = db.one("SELECT trip_id FROM members WHERE user_id=? AND role='passenger'",(identity.user['id'],))
+    if not member:
+        raise HTTPException(403,'Keine Mitfahrer-Verknüpfung vorhanden.')
+    passenger_profile_access(request,member['trip_id'])
+    with db.connect() as connection:
+        connection.execute('DELETE FROM tesla_profile_links WHERE user_id=?',(identity.user['id'],))
+        connection.execute('UPDATE users SET avatar_url=NULL,email=NULL WHERE id=?',(identity.user['id'],))
+    await hub.broadcast(member['trip_id'],{'type':'participants','participants':participants(member['trip_id'])})
+    return {'ok':True}
 
 
 @app.get('/auth/admin')
@@ -427,13 +504,15 @@ async def select_vehicle(vehicle_id:str, identity:Identity=Depends(current_user)
     if not db.one('SELECT id FROM vehicles WHERE id=? AND user_id=?',(vehicle_id,identity.user['id'])):
         raise HTTPException(404,'Fahrzeug nicht gefunden.')
     db.execute('UPDATE users SET favorite_vehicle=? WHERE id=?',(vehicle_id,identity.user['id']))
-    db.execute('UPDATE members SET vehicle_id=? WHERE user_id=? AND left_at IS NULL AND trip_id IN (SELECT id FROM trips WHERE ends_at>? AND finished_at IS NULL)',(vehicle_id,identity.user['id'],time.time()))
+    db.execute("UPDATE members SET vehicle_id=? WHERE user_id=? AND role='driver' AND left_at IS NULL AND trip_id IN (SELECT id FROM trips WHERE ends_at>? AND finished_at IS NULL)",(vehicle_id,identity.user['id'],time.time()))
     for row in db.all_rows('SELECT t.* FROM trips t JOIN members m ON m.trip_id=t.id WHERE m.user_id=? AND t.ends_at>? AND t.finished_at IS NULL',(identity.user['id'],time.time())):
+        db.execute('DELETE FROM control_grants WHERE trip_id=? AND user_id=? AND vehicle_id!=?',(row['id'],identity.user['id'],vehicle_id))
         db.execute('DELETE FROM route_followers WHERE trip_id=? AND user_id=? AND vehicle_id!=?',(row['id'],identity.user['id'],vehicle_id))
         if db.one('SELECT user_id FROM trip_planners WHERE trip_id=? AND user_id=? AND vehicle_id!=?',(row['id'],identity.user['id'],vehicle_id)):
             db.execute('DELETE FROM trip_planners WHERE trip_id=?',(row['id'],))
             db.execute('DELETE FROM trip_navigation WHERE trip_id=?',(row['id'],))
         await route_planning.broadcast(row)
+        await hub.broadcast(row['id'],{'type':'controls','vehicle_controls':vehicle_controls.overview(row['id'])})
     return {'ok':True}
 
 
@@ -722,13 +801,61 @@ def accept_invite(trip_id:str,identity:Identity=Depends(current_user)):
 def trip_detail(trip_id:str,identity:Identity=Depends(current_user)):
     trip,member=access(trip_id,identity)
     result=trip_summary(trip) | {'participants_detail':participants(trip_id),'my_role':member['role'],
-        'navigation':shared_navigation(trip_id),'route_overview':route_planning.overview(trip),
+        'navigation':shared_navigation(trip_id),'route_overview':route_planning.overview(trip),'vehicle_controls':vehicle_controls.overview(trip_id) if member['role']=='driver' else None,
         'album':{'status':'planned','name':album_name(trip),'url':None}}
     if trip['leader_id']==identity.user['id']:
         result['guest_url']=settings.app_url+'/guest/'+trip['guest_key']
         result['share_url']=settings.app_url+'/share/'+trip['public_key'] if trip['public_key'] else None
         result['passengers']=db.all_rows('SELECT id,name,user_id FROM passengers WHERE trip_id=?',(trip_id,))
     return result
+
+
+def control_browser(request,trip_id,leader=False):
+    if request.headers.get('authorization'):
+        raise HTTPException(403,'Komfortsteuerung benötigt eine aktuelle Fahrer-Browsersitzung.')
+    identity = current_user(request)
+    driver(identity)
+    _,member = access(trip_id,identity,active=True,leader=leader)
+    if member['role'] != 'driver':
+        raise HTTPException(403,'Komfortsteuerung ist nur für Fahrer verfügbar.')
+    return identity
+
+
+@app.post('/api/trips/{trip_id}/controls/consent')
+async def allow_vehicle_controls(trip_id:str,request:Request):
+    identity = control_browser(request,trip_id)
+    limiter.check(('control-consent',identity.user['id']),10,60)
+    car = vehicle_controls.current_car(trip_id,identity.user['id'])
+    if car['provider'] != 'demo' and not settings.group_controls_ready:
+        raise HTTPException(503,'Die signierte Tesla-Befehlsanbindung ist noch nicht eingerichtet.')
+    db.execute('INSERT INTO control_grants VALUES (?,?,?,?) ON CONFLICT(trip_id,user_id) DO UPDATE SET vehicle_id=excluded.vehicle_id,granted_at=excluded.granted_at',(trip_id,identity.user['id'],car['id'],time.time()))
+    result = vehicle_controls.overview(trip_id)
+    await hub.broadcast(trip_id,{'type':'controls','vehicle_controls':result})
+    return result
+
+
+@app.delete('/api/trips/{trip_id}/controls/consent')
+async def revoke_vehicle_controls(trip_id:str,request:Request):
+    identity = control_browser(request,trip_id)
+    db.execute('DELETE FROM control_grants WHERE trip_id=? AND user_id=?',(trip_id,identity.user['id']))
+    result = vehicle_controls.overview(trip_id)
+    await hub.broadcast(trip_id,{'type':'controls','vehicle_controls':result})
+    return result
+
+
+@app.post('/api/trips/{trip_id}/controls')
+async def send_vehicle_controls(trip_id:str,body:vehicle_controls.ControlBatch,request:Request):
+    identity = control_browser(request,trip_id,leader=True)
+    return await vehicle_controls.execute(trip_id,identity.user['id'],body,lambda:control_browser(request,trip_id,leader=True))
+
+
+@app.get('/api/trips/{trip_id}/controls/{request_id}')
+def vehicle_control_result(trip_id:str,request_id:uuid.UUID,request:Request):
+    identity = control_browser(request,trip_id,leader=True)
+    row = db.one('SELECT result FROM control_batches WHERE trip_id=? AND request_id=? AND leader_id=?',(trip_id,str(request_id),identity.user['id']))
+    if not row:
+        raise HTTPException(404,'Auftrag wurde nicht gefunden. Kein Befehl wird durch diese Abfrage gesendet.')
+    return json.loads(row['result'])
 
 
 def album_name(trip):
@@ -894,7 +1021,7 @@ def export_history(trip_id:str,identity:Identity=Depends(current_user)):
 @app.get('/api/trips/{trip_id}/ranking')
 def trip_ranking(trip_id:str,identity:Identity=Depends(current_user)):
     access(trip_id,identity)
-    return ranking(db.all_rows("SELECT * FROM samples WHERE trip_id=? AND source!='browser' ORDER BY captured_at",(trip_id,)))
+    return ranking(db.all_rows("SELECT s.* FROM samples s JOIN members m ON m.trip_id=s.trip_id AND m.user_id=s.user_id WHERE s.trip_id=? AND m.role='driver' AND s.source!='browser' ORDER BY s.captured_at",(trip_id,)))
 
 
 @app.post('/api/trips/{trip_id}/voice-token')
@@ -904,6 +1031,7 @@ async def voice_access(trip_id:str,identity:Identity=Depends(current_user)):
         raise HTTPException(503,'Sprachfunk ist noch nicht konfiguriert.')
     if not await ensure_voice_room(trip_id):
         raise HTTPException(503,'Audioserver derzeit nicht erreichbar.')
+    trip,_=access(trip_id,identity,active=True)
     return {'token':voice_token(trip_id,identity,min(identity.expires_at,effective_end(trip))),
             'url':settings.livekit_url,'ends_at':effective_end(trip)}
 
@@ -982,6 +1110,22 @@ def admin(identity:Identity=Depends(current_admin)):
 @app.get('/api/admin/users', response_model=list[AdminUser])
 def admin_users(identity:Identity=Depends(current_admin)):
     return db.all_rows('SELECT id,provider,display_name,username,email,plate,avatar_url,created_at,last_login_at FROM users ORDER BY last_login_at DESC,created_at DESC,id')
+
+
+@app.delete('/api/admin/users/{user_id}')
+async def admin_delete_user(user_id:str,body:AdminUserDelete,identity:Identity=Depends(current_admin)):
+    removed = accounts.delete_user(user_id,body.username)
+    for uid in removed['user_ids']:
+        await hub.disconnect(user_id=uid)
+    for trip_id in removed['owned_trip_ids']:
+        await hub.disconnect(trip_id=trip_id)
+    await clean_deleted_voice()
+    for trip_id in removed['remaining_trip_ids']:
+        trip = db.one('SELECT * FROM trips WHERE id=?',(trip_id,))
+        if trip:
+            await hub.broadcast(trip_id,{'type':'participants','participants':participants(trip_id)})
+            await route_planning.broadcast(trip)
+    return {'ok':True,'deleted_user_id':user_id,'deleted_trips':len(removed['owned_trip_ids']),'deleted_qr_accounts':len(removed['user_ids'])-1}
 
 
 @app.post('/api/admin/push/test')

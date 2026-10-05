@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { mockMapTiles } from './map-tiles';
+test.beforeEach(async({context})=>{await mockMapTiles(context);});
 
 test('microphone permission precedes voice networking and a failed connection releases the microphone', async ({ page }) => {
   await page.addInitScript(() => {

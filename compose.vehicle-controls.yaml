@@ -1,0 +1,46 @@
+# Optional overlay: docker compose -f compose.traefik.yaml -f compose.vehicle-controls.yaml up -d --build
+# First run python3 scripts/configure_vehicle_controls.py and enable TESLA_GROUP_CONTROLS in .env.
+services:
+  teslatalk:
+    environment:
+      TESLA_GROUP_CONTROLS: ${TESLA_GROUP_CONTROLS:-false}
+      TESLA_COMMAND_PROXY_URL: https://tesla-command-proxy:4443
+      TESLA_COMMAND_PROXY_CA: /app/keys/vehicle-command-tls.pem
+    volumes:
+      - type: bind
+        source: ./deploy/keys/vehicle-command-tls.pem
+        target: /app/keys/vehicle-command-tls.pem
+        read_only: true
+        bind:
+          create_host_path: false
+
+  tesla-command-proxy:
+    image: tesla/vehicle-command:latest
+    user: ${TESLA_COMMAND_PROXY_USER:?Set TESLA_COMMAND_PROXY_USER to the owner UID:GID printed by configure_vehicle_controls.py}
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    command: ["-tls-key", "/keys/tls-key.pem", "-cert", "/keys/tls-cert.pem", "-key-file", "/keys/fleet-key.pem", "-host", "0.0.0.0", "-port", "4443"]
+    volumes:
+      - type: bind
+        source: ./deploy/keys/vehicle-command-tls-key.pem
+        target: /keys/tls-key.pem
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./deploy/keys/vehicle-command-tls.pem
+        target: /keys/tls-cert.pem
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./deploy/keys/tesla-private-key.pem
+        target: /keys/fleet-key.pem
+        read_only: true
+        bind:
+          create_host_path: false
+    networks:
+      - default
+# No host port or public Traefik router: only the application uses this proxy.

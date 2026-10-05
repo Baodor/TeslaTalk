@@ -9,6 +9,7 @@ The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/auth/tesla` | Begin official Tesla OAuth with bound, single-use state and PKCE |
+| GET | `/auth/tesla/passenger?trip_id=...` | Link only the Tesla profile to the current active QR passenger browser session |
 | GET | `/auth/tesla/callback` | Exchange code, create/find account, set browser session |
 | GET | `/auth/admin` | Begin separate administrator OIDC flow |
 | GET | `/auth/admin/callback` | Validate OIDC identity and authorization; set separate admin session |
@@ -20,6 +21,7 @@ The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign
 | POST | `/api/demo/login` | Demo-only sign-in using `query`; unavailable outside demo mode |
 | GET / PATCH | `/api/me` | Own profile: username, display name, optional plate |
 | POST | `/api/me/tesla-profile` | Refresh the current driver's optional Tesla account photo; at most three requests per minute |
+| DELETE | `/api/me/tesla-profile-link` | Unlink the current active passenger's Tesla picture/email without changing QR identity or role |
 | GET | `/api/vehicles` | Own cached vehicles |
 | POST | `/api/vehicles/sync` | Retrieve account vehicles from Tesla |
 | POST | `/api/vehicles/{vehicle_id}/select` | Select default vehicle |
@@ -37,6 +39,9 @@ The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign
 | POST | `/api/trips/{trip_id}/route/plan` | Leader selects an eligible planning member and sends a destination for initial calculation |
 | POST | `/api/trips/{trip_id}/route/adopt/{user_id}` | Leader adopts a consenting driver's fresh calculated route as new group reference |
 | POST | `/api/trips/{trip_id}/route/problem` | Consenting driver reports `different_route` or `cannot_follow` |
+| POST / DELETE | `/api/trips/{trip_id}/controls/consent` | Active driver grants/revokes separate comfort control for the current own car; browser cookie only |
+| POST | `/api/trips/{trip_id}/controls` | Active leader sends one whitelisted comfort action to explicitly confirmed consenting cars; browser cookie only |
+| GET | `/api/trips/{trip_id}/controls/{request_id}` | Active leader reads saved batch status without resending any vehicle command |
 | GET | `/api/invites` | Incoming trip invitations |
 | POST | `/api/trips/{trip_id}/invite` | Leader invites an existing driver by exact username, plate or email |
 | POST | `/api/trips/{trip_id}/accept` | Accept an invitation |
@@ -61,6 +66,7 @@ The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign
 | POST | `/api/push/test` | Test own device with `endpoint` and optional subscription `keys`; rebind and send in one request; at most three tests per minute per user |
 | GET | `/api/admin` | OIDC administrator's instance overview |
 | GET | `/api/admin/users` | OIDC-admin-only user list including Tesla email, username, plate, picture and recorded last login |
+| DELETE | `/api/admin/users/{user_id}` | OIDC-admin-only permanent account deletion after exact username confirmation |
 | POST | `/api/admin/push/test` | OIDC admin queues a test for all active opted-in devices on the server; at most three broadcasts per minute |
 | WebSocket | `/api/ws/trips/{trip_id}` | Authorized trip presence, messages and participant updates |
 | GET | `/.well-known/appspecific/com.tesla.3p.public-key.pem` | Configured public Tesla vehicle key (PEM), or 404 |
@@ -74,6 +80,24 @@ The trip's QR link opens `/guest/<key>`. A passenger sends `POST /api/guest/{key
 `POST /api/guest/{key}/login` accepts that same name/PIN for subsequent sign-ins and also supports previously invited passengers. Attempts are limited to five per five minutes and IP/link/name, plus 60 per IP/link for a group sharing an IP. Login/registration are closed before trip start and after scheduled or early end. The UI confirms a newly chosen PIN before sending it. PINs are hashed; the PIN is never returned by self-registration or publicly listed.
 
 `GET /api/admin/users` requires the separate OIDC administrator session; driver cookies/Bearer keys do not grant access. It returns every app account with `id`, `provider`, `display_name`, `username`, `email`, `plate`, `avatar_url`, `created_at` and `last_login_at`. Timestamps are Unix seconds. Missing email/plate/picture and older unrecorded login times remain `null`. Last login is updated by a successful Tesla, demo or passenger sign-in/registration, not by ordinary page reads. Tesla email/picture are refreshed on Tesla sign-in. The response excludes tokens, PIN hashes and vehicle locations; the LLM catalog includes its schema, no actual account rows.
+
+### Passenger Tesla profile and account deletion
+
+`GET /api/me` also returns `tesla_profile_linked`. Passenger linking requests only `openid user_data` and binds the single-use PKCE flow to the passenger's existing browser session, account and active trip. Missing or changed context fails closed; it never falls back to creating a driver session. No Tesla access/refresh token is retained and no vehicles are synchronized. QR identity, PIN and session deadline survive linking/unlinking. Linking an account that also belongs to an existing driver does not merge identities or grant driver rights.
+
+`DELETE /api/admin/users/{user_id}` requires `{"username":"<EXACT_CURRENT_USERNAME>"}` and the independent admin cookie. It removes the user's sessions, API keys, tokens, vehicles, personal data and owned trips with their group data and orphan QR identities, atomically. Foreign trips remain, with the removed participant/planning car cleared. Active WebSockets are closed and persisted voice-removal jobs retry through the remaining lifetime of previously issued join tokens. It does not delete the external Tesla account or the separate OIDC administrator identity.
+
+### Group comfort commands
+
+The driver's comfort grant is independent of destination consent and binds one active trip and one own current car. Vehicle changes revoke it. Linked QR passengers and personal API keys cannot grant or send comfort actions. The leader must confirm a recipient list and send a fresh UUID with each deliberate action:
+
+```json
+{"request_id":"00000000-0000-4000-8000-000000000001","action":"climate_on","vehicle_ids":["<CURRENT_CONSENTING_VEHICLE_ID>"]}
+```
+
+Allowed actions are `frunk_open`, `rear_trunk_toggle`, `windows_vent`, `windows_close`, `climate_on`, `climate_off`. No arbitrary command/parameters are accepted. Results contain `request_id`, `action`, `status` (`running`/`completed`) and per-car `status` (`accepted`/`demo`/`skipped`/`error`/`unknown`/`pending`) and `message`. Repeating the same UUID/payload returns stored results; different data with that UUID returns 409. Changed recipients/consent and an already running batch also return 409. At most six new batches per minute. Read-only status retrieval never triggers a command.
+
+Trunks/windows require fresh parked vehicle data; unknown state is skipped. Rear trunk control is an actuation, not an unconditional open/close promise; a frunk is closed manually. Actual commands use a TLS-verified official signed proxy, `vehicle_cmds` and enrolled virtual key. No wake-up or automatic retry after an ambiguous transport failure. See [setup](VEHICLE-CONTROLS.de.md).
 
 ### Vehicle navigation
 

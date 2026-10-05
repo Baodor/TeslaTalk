@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { LocateFixed, MapPin } from 'lucide-react';
@@ -25,6 +25,16 @@ const car = (color: string) => L.divIcon({ className: 'car-marker', iconSize: [4
 
 const destinationIcon = L.divIcon({ className: 'destination-marker', iconSize: [36, 36], iconAnchor: [18, 32],
   html: '<span aria-hidden="true">⚑</span>' });
+
+function MapTiles() {
+  const layer = useRef<L.TileLayer>(null);
+  const [failed,setFailed] = useState(false);
+  return <>
+    {/* OSM requires a Referer. Send the origin only, never private trip paths. */}
+    <TileLayer ref={layer} referrerPolicy="origin" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" eventHandlers={{tileerror:()=>setFailed(true)}} />
+    {failed && <div className="map-load-error" role="status"><strong>Kartenkacheln konnten nicht geladen werden.</strong><span>Prüfe die Internetverbindung und ob dein Netzwerk den Kartendienst blockiert.</span><button onClick={()=>{setFailed(false);layer.current?.redraw();}}>Karte erneut laden</button></div>}
+  </>;
+}
 
 function Controls({ positions, focusKey }: { positions: [number, number][]; focusKey: string }) {
   const map = useMap();
@@ -66,7 +76,7 @@ export default function TripMap({ participants, traces = [], navigation = null }
   return <div className="map-wrap">
     {/* Leaflet's zoom transition timer can outlive map.remove() when changing tabs. */}
     <MapContainer center={[50.1109, 8.6821]} zoom={8} zoomControl={false} zoomAnimation={false} scrollWheelZoom className="trip-map">
-      <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <MapTiles />
       {destination && <Marker position={destination} icon={destinationIcon} title={'Navigationsziel: ' + (route?.destination || 'Ziel')}>
         <Popup><strong>Navigationsziel des Planungsfahrzeugs</strong><br />{route?.destination || 'Ziel aus dem Auto'}</Popup>
       </Marker>}

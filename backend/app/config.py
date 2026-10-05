@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlsplit
 from dataclasses import dataclass, field
 
 
@@ -12,6 +13,9 @@ class Settings:
     tesla_client_secret: str = field(default_factory=lambda: os.getenv('TESLA_CLIENT_SECRET', ''))
     fleet_url: str = field(default_factory=lambda: os.getenv('TESLA_FLEET_URL', 'https://fleet-api.prd.eu.vn.cloud.tesla.com').rstrip('/'))
     navigation_commands: bool = field(default_factory=lambda: os.getenv('TESLA_NAVIGATION_COMMANDS', 'false').lower() == 'true')
+    group_controls: bool = field(default_factory=lambda: os.getenv('TESLA_GROUP_CONTROLS', 'false').lower() == 'true')
+    command_proxy_url: str = field(default_factory=lambda: os.getenv('TESLA_COMMAND_PROXY_URL', '').rstrip('/'))
+    command_proxy_ca: str = field(default_factory=lambda: os.getenv('TESLA_COMMAND_PROXY_CA', ''))
     livekit_url: str = field(default_factory=lambda: os.getenv('LIVEKIT_URL', 'ws://localhost:7880'))
     livekit_internal_url: str = field(default_factory=lambda: os.getenv('LIVEKIT_INTERNAL_URL', 'http://livekit:7880'))
     livekit_key: str = field(default_factory=lambda: os.getenv('LIVEKIT_API_KEY', ''))
@@ -31,6 +35,15 @@ class Settings:
     vapid_private_key: str = field(default_factory=lambda: os.getenv('VAPID_PRIVATE_KEY', ''))
     vapid_public_key: str = field(default_factory=lambda: os.getenv('VAPID_PUBLIC_KEY', ''))
     vapid_subject: str = field(default_factory=lambda: os.getenv('VAPID_SUBJECT', 'mailto:admin@example.com'))
+
+    @property
+    def group_controls_ready(self):
+        try:
+            url = urlsplit(self.command_proxy_url)
+            return bool(self.group_controls and url.scheme == 'https' and url.hostname and
+                        not url.username and not url.password and not url.query and not url.fragment and not url.path)
+        except ValueError:
+            return False
 
     @property
     def tesla_ready(self):
