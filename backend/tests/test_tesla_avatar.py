@@ -50,6 +50,15 @@ def test_tesla_login_saves_account_picture(client, monkeypatch):
     account = client.get('/api/me').json()
     assert account['avatar_url'] == AVATAR
     assert account['display_name'] == 'Tesla Driver'
+    assert account['needs_username'] is True
+    assert client.patch('/api/me',json={'username':'MyTeslaUsername','display_name':account['display_name']}).status_code==200
+    assert client.get('/api/me').json()['needs_username'] is False
+    redirect = client.get('/auth/tesla', follow_redirects=False)
+    state = parse_qs(urlsplit(redirect.headers['location']).query)['state'][0]
+    assert client.get('/auth/tesla/callback',params={'state':state,'code':'another-test-code'},follow_redirects=False).status_code==303
+    again=client.get('/api/me').json()
+    assert again['id']==account['id'] and again['username']=='MyTeslaUsername'
+    assert again['needs_username'] is False
     assert 'profile_image_url' not in account and 'test-access' not in str(account)
 
 

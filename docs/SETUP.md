@@ -13,7 +13,7 @@ python3 scripts/configure.py --demo
 docker compose up -d --build
 ```
 
-Open `http://localhost:8780`. Demo sign-in creates clearly labelled sample vehicles. Use separate browser profiles to try two drivers. Named passengers can enter via the trip QR code and their own name/PIN during the scheduled interval.
+Open `http://localhost:8780`. Demo sign-in creates clearly labelled sample vehicles. Use separate browser profiles to try two drivers. Passengers scan the trip QR, choose their own name and six-digit PIN and register during the active interval. They can sign in again with the same name/PIN.
 
 The bootstrap script creates `.env`, `deploy/livekit.yaml`, VAPID keys and a Tesla EC key pair. It never prints keys, never overwrites an existing `.env` and uses restrictive permissions for secrets. Only the public Tesla key is mounted into the application. The Docker host creates and manages the SQLite data volume.
 
@@ -81,7 +81,7 @@ When using Cloudflare's proxy, check **Network → WebSockets** and rules affect
 ## Tesla Fleet API
 
 1. Create your own application at [Tesla's developer portal](https://developer.tesla.com/). Configure the allowed origin `https://talk.example.com` and exact callback `https://talk.example.com/auth/tesla/callback`.
-2. Enable the account, vehicle data and location permissions used by V1. The authorization request uses `openid offline_access user_data vehicle_device_data vehicle_location`; it does not request vehicle command permissions.
+2. Enable account, vehicle data and location permissions. The default authorization request uses `openid offline_access user_data vehicle_device_data vehicle_location`. Optional destination commands add `vehicle_cmds` when `TESLA_NAVIGATION_COMMANDS=true`; enable that permission in the Tesla application and reconnect existing accounts after changing it. See [group route planning](ROUTES.de.md).
 3. Put the client ID and client secret in `.env`. The default `TESLA_FLEET_URL` is the EU/EMEA endpoint. Use `https://fleet-api.prd.na.vn.cloud.tesla.com` for North America/APAC outside China. This preview uses one configured region per server.
 4. Start the HTTPS server and run `python3 scripts/register_tesla.py --check`. This checks configuration and validates the public secp256r1 EC key served at `https://talk.example.com/.well-known/appspecific/com.tesla.3p.public-key.pem` against your local public key. The check needs Python 3 and OpenSSL but does not register the application or validate the client credentials. The private key is never served.
 5. Register the partner account in your configured region with `python3 scripts/register_tesla.py`. This explicitly sends the domain registration request to Tesla; it does not print or persist the partner token. Follow Tesla's [partner registration](https://developer.tesla.com/docs/fleet-api/endpoints/partner-endpoints) and [partner token](https://developer.tesla.com/docs/fleet-api/authentication/partner-tokens) documentation if your application requires a different onboarding flow.
@@ -89,9 +89,11 @@ When using Cloudflare's proxy, check **Network → WebSockets** and rules affect
 
 TeslaTalk stores encrypted OAuth tokens, not Tesla passwords. The initial driver account is created from Tesla's `/users/me` response. Vehicle access stays scoped to that signed-in account. An account with several vehicles can select a default; the selected vehicle is used for its current and upcoming trips.
 
+The first Tesla sign-in requires choosing a unique username before driver actions. Names are 3–30 ASCII letters/digits/underscores/hyphens and are unique without case distinction. The database migration preserves manually chosen usernames and prompts old Tesla accounts still using their generated name. The OIDC admin area lists all app users with Tesla email, username, plate, account picture and last recorded login. Login timestamps begin with this update; historical unknown values are not guessed. No separate configuration is required for these changes.
+
 V1 polls vehicle data only for connected drivers in active trips, normally every 120 seconds. Manual requests have a 60-second cache and rate limits. Sleeping vehicles are not automatically awakened. Requests may incur Fleet API charges: configure your budget in Tesla's portal. Tesla recommends Fleet Telemetry for frequent updates; a production Fleet Telemetry receiver is on the roadmap, while the existing personal-key sample API accepts normalized telemetry from your own integration.
 
-Fields not supplied by Tesla stay unavailable. Consumption rankings need a measured **cumulative energy counter** and an odometer; battery percentage is not a substitute. Browser location sharing supplies position/speed only. Route mirroring, charging forecasts, waypoint commands, music pause/resume and Immich integration are not implemented in V1.
+Fields not supplied by Tesla stay unavailable. Consumption rankings need a measured **cumulative energy counter** and an odometer; battery percentage is not a substitute. Browser location sharing supplies position/speed only. Vehicle navigation reads the destination, remaining time/distance and reported battery at arrival when present. Selected-car navigation is visible within the group; consented commands send a destination. Full ordered charging-stop transfer, ABRP planning, waypoint commands, music pause/resume and Immich integration remain unimplemented. The [charging-plan design](CHARGING-PLANS.de.md) describes the next steps and integration limits.
 
 ## Home-screen installation and notifications
 

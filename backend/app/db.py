@@ -8,7 +8,7 @@ PRAGMA journal_mode=WAL;
 CREATE TABLE IF NOT EXISTS users (
  id TEXT PRIMARY KEY, provider TEXT NOT NULL, subject TEXT UNIQUE NOT NULL,
  username TEXT UNIQUE COLLATE NOCASE NOT NULL, display_name TEXT NOT NULL,
- email TEXT, plate TEXT UNIQUE, favorite_vehicle TEXT, created_at REAL NOT NULL, avatar_url TEXT
+ email TEXT, plate TEXT UNIQUE, favorite_vehicle TEXT, created_at REAL NOT NULL, avatar_url TEXT, username_chosen INTEGER NOT NULL DEFAULT 1, last_login_at REAL
 );
 CREATE TABLE IF NOT EXISTS credentials (user_id TEXT PRIMARY KEY REFERENCES users(id), encrypted_token TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT, kind TEXT NOT NULL, expires_at REAL NOT NULL);
@@ -22,6 +22,20 @@ CREATE TABLE IF NOT EXISTS trips (
  public_key TEXT UNIQUE, voice_cleaned INTEGER NOT NULL DEFAULT 0, created_at REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS members (trip_id TEXT NOT NULL REFERENCES trips(id), user_id TEXT NOT NULL REFERENCES users(id), role TEXT NOT NULL, vehicle_id TEXT, joined_at REAL NOT NULL, left_at REAL, PRIMARY KEY (trip_id,user_id));
+CREATE TABLE IF NOT EXISTS trip_navigation (
+ trip_id TEXT PRIMARY KEY REFERENCES trips(id), vehicle_id TEXT NOT NULL REFERENCES vehicles(id),
+ data TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS trip_planners (
+ trip_id TEXT PRIMARY KEY REFERENCES trips(id), user_id TEXT NOT NULL REFERENCES users(id),
+ vehicle_id TEXT NOT NULL REFERENCES vehicles(id)
+);
+CREATE TABLE IF NOT EXISTS route_followers (
+ trip_id TEXT NOT NULL REFERENCES trips(id), user_id TEXT NOT NULL REFERENCES users(id),
+ vehicle_id TEXT NOT NULL REFERENCES vehicles(id), accepted_at REAL NOT NULL,
+ command_key TEXT, sent_at REAL, status TEXT NOT NULL DEFAULT 'waiting', problem TEXT,
+ notified_problem TEXT, PRIMARY KEY(trip_id,user_id)
+);
 CREATE TABLE IF NOT EXISTS invites (trip_id TEXT NOT NULL REFERENCES trips(id), user_id TEXT NOT NULL REFERENCES users(id), created_at REAL NOT NULL, PRIMARY KEY(trip_id,user_id));
 CREATE TABLE IF NOT EXISTS passengers (id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id), name TEXT NOT NULL, normalized_name TEXT NOT NULL, pin_hash TEXT NOT NULL, user_id TEXT REFERENCES users(id), UNIQUE(trip_id,normalized_name));
 CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id), user_id TEXT NOT NULL REFERENCES users(id), text TEXT NOT NULL, created_at REAL NOT NULL);
@@ -78,6 +92,11 @@ def initialize():
         db.executescript(SCHEMA)
         if 'avatar_url' not in {row['name'] for row in db.execute('PRAGMA table_info(users)')}:
             db.execute('ALTER TABLE users ADD COLUMN avatar_url TEXT')
+        if 'username_chosen' not in {row['name'] for row in db.execute('PRAGMA table_info(users)')}:
+            db.execute('ALTER TABLE users ADD COLUMN username_chosen INTEGER NOT NULL DEFAULT 1')
+            db.execute("UPDATE users SET username_chosen=0 WHERE provider='tesla' AND username='fahrer-' || substr(id,1,8)")
+        if 'last_login_at' not in {row['name'] for row in db.execute('PRAGMA table_info(users)')}:
+            db.execute('ALTER TABLE users ADD COLUMN last_login_at REAL')
 
 
 def one(sql, args=()):

@@ -8,9 +8,15 @@ from fastapi import HTTPException
 from . import db
 from .config import settings
 from .security import cipher
+from .navigation import from_fleet, demo_navigation, empty_navigation, TELEMETRY_MAX_AGE
 
 TOKEN_URL = 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token'
 locks = {}
+vehicle_locks = {}
+
+
+def vehicle_lock(user_id, vehicle_id):
+    return vehicle_locks.setdefault((user_id, vehicle_id), asyncio.Lock())
 
 
 def profile_avatar(profile):
@@ -135,20 +141,90 @@ def normalize(payload):
         'range_km':None if battery_range is None else round(battery_range*1.609344,1),
         'odometer_km':None if odometer is None else round(odometer*1.609344,3),
         'source':'fleet', 'updated_at':time.time(),
+        'navigation':from_fleet(drive),
     }
 
 
 async def fetch_vehicle(user_id, vehicle):
+    async with vehicle_lock(user_id, vehicle['id']):
+        # Re-read inside the lock: concurrent polling/manual refresh must share
+        # the cache and cannot overwrite a newer telemetry import.
+        vehicle = db.one('SELECT * FROM vehicles WHERE id=? AND user_id=?', (vehicle['id'],user_id)) or vehicle
+        return await _fetch_vehicle(user_id, vehicle)
+
+
+async def _fetch_vehicle(user_id, vehicle):
     cached = json.loads(vehicle['data'])
     if time.time()-cached.get('fleet_fetched_at', 0) < 60:
         return cached
     user = db.one('SELECT * FROM users WHERE id=?', (user_id,))
     if user['provider'] == 'demo':
-        return cached
+        navigation = cached.get('navigation')
+        if not navigation or navigation.get('source') == 'telemetry' and time.time()-navigation['updated_at'] > TELEMETRY_MAX_AGE:
+            navigation = demo_navigation()
+        return cached | {'navigation':navigation}
     vin = vehicle['id'].split(':')[-1]
     payload = await request(user_id, f'/api/1/vehicles/{vin}/vehicle_data', {'endpoints':'charge_state;drive_state;location_data;vehicle_state;vehicle_config'})
     data = normalize(payload)
+    telemetry = cached.get('navigation') or {}
+    if telemetry.get('source') == 'telemetry' and time.time()-telemetry.get('updated_at',0) <= TELEMETRY_MAX_AGE:
+        # A configured stream is more complete than polling (RouteLine). Keep
+        # its recent snapshot while still refreshing the ordinary car metrics.
+        data['navigation'] = telemetry
     data['fleet_fetched_at'] = time.time()
     model = vehicle_model(payload.get('vehicle_config'),vehicle['model'])
     db.execute('UPDATE vehicles SET data=?,model=? WHERE id=?', (json.dumps(data), model, vehicle['id']))
     return data
+
+
+async def fetch_navigation(user_id, vehicle):
+    current = db.one('SELECT * FROM vehicles WHERE id=? AND user_id=?', (vehicle['id'],user_id)) or vehicle
+    cached = json.loads(current['data']).get('navigation')
+    if cached and cached.get('source') == 'telemetry' and time.time()-cached['updated_at'] <= TELEMETRY_MAX_AGE:
+        return cached
+    return (await fetch_vehicle(user_id, current)).get('navigation') or empty_navigation()
+
+
+def navigation_command_access(trip_id,user_id,vehicle_id):
+    row = db.one('SELECT t.*,m.vehicle_id,m.left_at FROM trips t JOIN members m ON m.trip_id=t.id AND m.user_id=? WHERE t.id=?',(user_id,trip_id))
+    if not row or row['left_at'] is not None or row['vehicle_id'] != vehicle_id or row['finished_at'] or not row['starts_at'] <= time.time() < row['ends_at']:
+        raise HTTPException(403,'Fahrt oder Fahrzeugfreigabe ist nicht mehr aktiv.')
+    if row['leader_id'] != user_id and not db.one('SELECT user_id FROM route_followers WHERE trip_id=? AND user_id=? AND vehicle_id=?',(trip_id,user_id,vehicle_id)):
+        raise HTTPException(403,'Dieser Fahrer hat die Zielübernahme nicht erlaubt.')
+
+
+async def send_navigation(user_id, vehicle, destination, trip_id):
+    """Only Tesla's REST navigation_request; no generic vehicle-command API."""
+    if vehicle['user_id'] != user_id:
+        raise HTTPException(404,'Fahrzeug nicht gefunden.')
+    navigation_command_access(trip_id,user_id,vehicle['id'])
+    user = db.one('SELECT * FROM users WHERE id=?',(user_id,))
+    if user['provider'] == 'demo':
+        data = json.loads(vehicle['data'])
+        data['navigation'] = demo_navigation() | {'destination':destination}
+        db.execute('UPDATE vehicles SET data=? WHERE id=?',(json.dumps(data),vehicle['id']))
+        return {'accepted':True,'demo':True}
+    if not settings.navigation_commands:
+        raise HTTPException(503,'Tesla-Navigationsbefehle sind noch nicht aktiviert. TESLA_NAVIGATION_COMMANDS aktivieren und das Tesla-Konto mit vehicle_cmds erneut verbinden.')
+    token = await token_for(user_id)
+    navigation_command_access(trip_id,user_id,vehicle['id'])
+    vin = vehicle['id'].split(':')[-1]
+    body = {'type':'share_ext_content_raw','value':{'android.intent.extra.TEXT':destination},'locale':'de-DE','timestamp_ms':str(int(time.time()*1000))}
+    async with httpx.AsyncClient(timeout=25) as client:
+        navigation_command_access(trip_id,user_id,vehicle['id'])
+        response = await client.post(settings.fleet_url+f'/api/1/vehicles/{vin}/command/navigation_request',headers={'Authorization':'Bearer '+token},json=body)
+    if response.status_code != 200:
+        message = {401:'Tesla-Konto erneut verbinden.',403:'Tesla-Befehlsberechtigung vehicle_cmds fehlt.',408:'Das Fahrzeug schläft oder ist nicht erreichbar.',429:'Tesla-Anfragelimit erreicht.'}.get(response.status_code,'Tesla hat das Navigationsziel nicht angenommen.')
+        raise HTTPException(502,message)
+    try:
+        document = response.json()
+        result = document.get('response') if isinstance(document,dict) else None
+    except ValueError:
+        result = None
+    if not isinstance(result,dict) or result.get('result') is not True:
+        raise HTTPException(502,'Tesla hat das Navigationsziel nicht bestätigt. Bitte das Auto prüfen.')
+    # The received command is not proof the in-car route has been recalculated.
+    data = json.loads(db.one('SELECT data FROM vehicles WHERE id=?',(vehicle['id'],))['data'])
+    data['fleet_fetched_at'] = 0
+    db.execute('UPDATE vehicles SET data=? WHERE id=?',(json.dumps(data),vehicle['id']))
+    return {'accepted':True,'demo':False}

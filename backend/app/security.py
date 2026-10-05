@@ -74,20 +74,24 @@ def current_admin(request: Request):
     return authenticate(request.headers, request.cookies, admin=True)
 
 
-def driver(identity):
+def driver(identity, allow_username_setup=False):
     if identity.user['provider'] == 'guest':
         raise HTTPException(403, 'Diese Funktion ist nur für Fahrer verfügbar.')
+    if not allow_username_setup and identity.user['provider'] == 'tesla' and not identity.user.get('username_chosen',1):
+        raise HTTPException(409, 'Bitte zuerst einen eindeutigen Benutzernamen wählen.')
 
 
 def set_session(response, user_id, expires_at=None, admin=False):
     token = secrets.token_urlsafe(32)
     expiry = expires_at or time.time() + 7 * 86400
     db.execute('INSERT INTO sessions VALUES (?,?,?,?)', (digest(token), user_id, 'admin' if admin else 'user', expiry))
+    if not admin:
+        db.execute('UPDATE users SET last_login_at=? WHERE id=?',(time.time(),user_id))
     response.set_cookie('tt_admin' if admin else 'tt_session', token, max_age=max(0, int(expiry-time.time())), httponly=True, secure=settings.secure, samesite='lax', path='/')
 
 
 def user_public(user):
-    return {key: user.get(key) for key in ('id', 'username', 'display_name', 'plate', 'favorite_vehicle', 'provider', 'avatar_url')}
+    return {key: user.get(key) for key in ('id', 'username', 'display_name', 'plate', 'favorite_vehicle', 'provider', 'avatar_url')} | {'needs_username':user.get('provider') == 'tesla' and not user.get('username_chosen',1)}
 
 
 class RateLimiter:

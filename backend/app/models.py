@@ -13,6 +13,18 @@ class Query(BaseModel):
     query: str = Field(min_length=2, max_length=100)
 
 
+class AdminUser(BaseModel):
+    id: str
+    provider: str
+    display_name: str
+    username: str
+    email: str | None
+    plate: str | None
+    avatar_url: str | None
+    created_at: float
+    last_login_at: float | None = Field(description='Last successful user sign-in, Unix seconds. Older logins not recorded by the installation remain null.')
+
+
 class TripCreate(BaseModel):
     title: str = Field(min_length=1, max_length=100)
     destination: str = Field(default='', max_length=200)
@@ -40,10 +52,17 @@ class Join(BaseModel):
 class PassengerCreate(BaseModel):
     name: str = Field(min_length=1, max_length=60)
 
+    @field_validator('name')
+    @classmethod
+    def nonempty_name(cls, value):
+        value = value.strip()
+        if not value:
+            raise ValueError('Bitte einen Namen angeben.')
+        return value
 
-class GuestLogin(BaseModel):
-    name: str = Field(min_length=1, max_length=60)
-    pin: str = Field(min_length=6, max_length=6, pattern=r'^\d{6}$')
+
+class GuestLogin(PassengerCreate):
+    pin: str = Field(min_length=6, max_length=6, pattern=r'^[0-9]{6}$')
 
 
 class Message(BaseModel):

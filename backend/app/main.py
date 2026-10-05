@@ -18,12 +18,13 @@ from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSock
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from . import db, fleet, push
+from . import db, fleet, push, api_documentation, route_planning
 from .config import settings
 from .metrics import ranking
 from .middleware import BodyLimitMiddleware, MAX_REQUEST_BYTES
+from .navigation import Navigation, NavigationTelemetry
 from .oidc import admin_access, admin_claims, admin_denial, verification_failure
-from .models import GuestLogin, Join, KeyCreate, Message, PassengerCreate, Profile, Query, Sample, TripCreate, PushSubscription, PushRemove, PushTest
+from .models import AdminUser, GuestLogin, Join, KeyCreate, Message, PassengerCreate, Profile, Query, Sample, TripCreate, PushSubscription, PushRemove, PushTest
 from .realtime import hub, voice_token, delete_voice_room, ensure_voice_room
 from .security import Identity, authenticate, current_admin, current_user, digest, driver, limiter, pin_hash, pin_matches, join_pin_hash, set_session, user_public
 
@@ -72,6 +73,15 @@ def participants(trip_id):
         row['personal_location'] = db.one('SELECT updated_at,latitude,longitude,speed_kmh,heading FROM personal_locations WHERE trip_id=? AND user_id=? AND updated_at>?', (trip_id,row['id'],time.time()-300))
         row['online'] = row['id'] in hub.online()
     return rows
+
+
+def shared_navigation(trip_id):
+    trip = db.one('SELECT * FROM trips WHERE id=?',(trip_id,))
+    return route_planning.snapshot(trip) if trip else None
+
+
+async def update_shared_navigation(vehicle_id, user_id, navigation):
+    await route_planning.observe(vehicle_id,user_id,navigation)
 
 
 async def store_sample(trip_id, user_id, data):
@@ -128,6 +138,7 @@ async def background_cycle(next_poll):
                 if vehicle['id'] not in cache:
                     cache[vehicle['id']] = await fleet.fetch_vehicle(member['user_id'], vehicle)
                 await store_sample(member['trip_id'], member['user_id'], cache[vehicle['id']])
+                await update_shared_navigation(vehicle['id'], member['user_id'], await fleet.fetch_navigation(member['user_id'],vehicle))
             except (HTTPException,httpx.HTTPError,ValueError) as error:
                 log.info('Fleet retrieval unavailable: %s', type(error).__name__)
     return next_poll
@@ -211,7 +222,7 @@ def health():
 def config():
     return {'version':'0.1.0','demo':settings.demo,'tesla_ready':settings.tesla_ready,'voice_ready':settings.voice_ready,
             'admin_ready':bool(settings.oidc_issuer and settings.oidc_client_id), 'app_url':settings.app_url,
-            'push_ready':settings.push_ready,'vapid_public_key':settings.vapid_public_key if settings.push_ready else ''}
+            'navigation_commands':settings.navigation_commands or settings.demo,'push_ready':settings.push_ready,'vapid_public_key':settings.vapid_public_key if settings.push_ready else ''}
 
 
 @app.post('/api/push/subscribe')
@@ -253,7 +264,7 @@ def tesla_login():
     db.execute('INSERT INTO oauth_states VALUES (?,?,?,?)', (digest(state),digest(binding),verifier,time.time()+600))
     challenge = base64.urlsafe_b64encode(__import__('hashlib').sha256(verifier.encode()).digest()).decode().rstrip('=')
     parameters = {'client_id':settings.tesla_client_id,'response_type':'code','redirect_uri':settings.app_url+'/auth/tesla/callback',
-                  'scope':'openid offline_access user_data vehicle_device_data vehicle_location','state':state,'nonce':secrets.token_urlsafe(24),
+                  'scope':'openid offline_access user_data vehicle_device_data vehicle_location'+(' vehicle_cmds' if settings.navigation_commands else ''),'state':state,'nonce':secrets.token_urlsafe(24),
                   'code_challenge':challenge,'code_challenge_method':'S256','locale':'de-DE','require_requested_scopes':'true'}
     response = RedirectResponse('https://auth.tesla.com/oauth2/v3/authorize?'+urlencode(parameters))
     response.set_cookie('tt_oauth',binding,max_age=600,httponly=True,secure=settings.secure,samesite='lax')
@@ -286,11 +297,11 @@ async def tesla_callback(request:Request, state:str='', code:str=''):
     user = db.one('SELECT * FROM users WHERE subject=?', ('tesla:'+subject,))
     if not user:
         uid = str(uuid.uuid4())
-        db.execute('INSERT INTO users(id,provider,subject,username,display_name,email,created_at) VALUES (?,?,?,?,?,?,?)',
+        db.execute('INSERT INTO users(id,provider,subject,username,display_name,email,created_at,username_chosen) VALUES (?,?,?,?,?,?,?,0)',
                    (uid,'tesla','tesla:'+subject,'fahrer-'+uid[:8],profile.get('full_name') or 'Tesla-Fahrer',profile.get('email'),time.time()))
     else:
         uid=user['id']
-    db.execute('UPDATE users SET avatar_url=? WHERE id=?', (fleet.profile_avatar(profile),uid))
+    db.execute('UPDATE users SET avatar_url=?,email=COALESCE(?,email) WHERE id=?', (fleet.profile_avatar(profile),profile.get('email'),uid))
     fleet.save_token(uid,token)
     response=RedirectResponse('/',status_code=303)
     response.delete_cookie('tt_oauth')
@@ -374,8 +385,10 @@ def me(identity:Identity=Depends(current_user)):
 
 @app.patch('/api/me')
 def profile(body:Profile, identity:Identity=Depends(current_user)):
-    driver(identity)
-    db.execute('UPDATE users SET username=?,display_name=?,plate=? WHERE id=?',
+    driver(identity,allow_username_setup=True)
+    if db.one('SELECT id FROM users WHERE username=? COLLATE NOCASE AND id!=?',(body.username,identity.user['id'])):
+        raise HTTPException(409,'Dieser Benutzername ist bereits vergeben. Bitte einen anderen wählen.')
+    db.execute('UPDATE users SET username=?,display_name=?,plate=?,username_chosen=1 WHERE id=?',
                (body.username.strip(),body.display_name.strip(),''.join(body.plate.upper().split()) or None,identity.user['id']))
     return user_public(db.one('SELECT * FROM users WHERE id=?',(identity.user['id'],)))
 
@@ -409,12 +422,18 @@ async def sync_vehicles(identity:Identity=Depends(current_user)):
 
 
 @app.post('/api/vehicles/{vehicle_id}/select')
-def select_vehicle(vehicle_id:str, identity:Identity=Depends(current_user)):
+async def select_vehicle(vehicle_id:str, identity:Identity=Depends(current_user)):
     driver(identity)
     if not db.one('SELECT id FROM vehicles WHERE id=? AND user_id=?',(vehicle_id,identity.user['id'])):
         raise HTTPException(404,'Fahrzeug nicht gefunden.')
     db.execute('UPDATE users SET favorite_vehicle=? WHERE id=?',(vehicle_id,identity.user['id']))
     db.execute('UPDATE members SET vehicle_id=? WHERE user_id=? AND left_at IS NULL AND trip_id IN (SELECT id FROM trips WHERE ends_at>? AND finished_at IS NULL)',(vehicle_id,identity.user['id'],time.time()))
+    for row in db.all_rows('SELECT t.* FROM trips t JOIN members m ON m.trip_id=t.id WHERE m.user_id=? AND t.ends_at>? AND t.finished_at IS NULL',(identity.user['id'],time.time())):
+        db.execute('DELETE FROM route_followers WHERE trip_id=? AND user_id=? AND vehicle_id!=?',(row['id'],identity.user['id'],vehicle_id))
+        if db.one('SELECT user_id FROM trip_planners WHERE trip_id=? AND user_id=? AND vehicle_id!=?',(row['id'],identity.user['id'],vehicle_id)):
+            db.execute('DELETE FROM trip_planners WHERE trip_id=?',(row['id'],))
+            db.execute('DELETE FROM trip_navigation WHERE trip_id=?',(row['id'],))
+        await route_planning.broadcast(row)
     return {'ok':True}
 
 
@@ -428,7 +447,153 @@ async def refresh_vehicle(vehicle_id:str,identity:Identity=Depends(current_user)
     data=await fleet.fetch_vehicle(identity.user['id'],vehicle)
     for member in db.all_rows('SELECT t.id FROM trips t JOIN members m ON t.id=m.trip_id WHERE m.user_id=? AND m.left_at IS NULL AND t.starts_at<=? AND t.ends_at>? AND t.finished_at IS NULL',(identity.user['id'],time.time(),time.time())):
         await store_sample(member['id'],identity.user['id'],data)
+    await update_shared_navigation(vehicle_id,identity.user['id'],await fleet.fetch_navigation(identity.user['id'],vehicle))
     return data
+
+
+def own_vehicle(vehicle_id, identity):
+    driver(identity)
+    vehicle = db.one('SELECT * FROM vehicles WHERE id=? AND user_id=?', (vehicle_id,identity.user['id']))
+    if not vehicle:
+        raise HTTPException(404,'Fahrzeug nicht gefunden.')
+    return vehicle
+
+
+@app.post('/api/vehicles/{vehicle_id}/navigation/refresh', response_model=Navigation)
+async def refresh_navigation(vehicle_id:str,identity:Identity=Depends(current_user)):
+    vehicle = own_vehicle(vehicle_id,identity)
+    limiter.check(('refresh',identity.user['id']),5,60)
+    navigation = await fleet.fetch_navigation(identity.user['id'],vehicle)
+    await update_shared_navigation(vehicle_id,identity.user['id'],navigation)
+    return navigation
+
+
+@app.put('/api/vehicles/{vehicle_id}/navigation', response_model=Navigation)
+async def import_navigation_telemetry(vehicle_id:str,body:NavigationTelemetry,request:Request,identity:Identity=Depends(current_user)):
+    own_vehicle(vehicle_id,identity)
+    if not request.headers.get('authorization'):
+        raise HTTPException(403,'Navigations-Import benötigt einen persönlichen API-Schlüssel.')
+    limiter.check(('navigation-import',identity.user['id']),30,60)
+    navigation = body.snapshot()
+    async with fleet.vehicle_lock(identity.user['id'],vehicle_id):
+        data = json.loads(own_vehicle(vehicle_id,identity)['data'])
+        previous = data.get('navigation') or {}
+        if previous.get('updated_at',0) >= body.captured_at:
+            raise HTTPException(409,'Neuere Navigationsdaten sind bereits vorhanden.')
+        data['navigation'] = navigation
+        db.execute('UPDATE vehicles SET data=? WHERE id=? AND user_id=?', (json.dumps(data),vehicle_id,identity.user['id']))
+    await update_shared_navigation(vehicle_id,identity.user['id'],navigation)
+    return navigation
+
+
+@app.post('/api/trips/{trip_id}/navigation', response_model=Navigation)
+async def import_trip_navigation(trip_id:str,identity:Identity=Depends(current_user)):
+    driver(identity)
+    trip,_ = access(trip_id,identity,active=True,leader=True)
+    user_id = route_planning.planner_id(trip)
+    vehicle = route_planning.car(trip_id,user_id)
+    limiter.check(('refresh',identity.user['id']),5,60)
+    navigation = await fleet.fetch_navigation(user_id,vehicle)
+    access(trip_id,identity,active=True,leader=True)
+    await update_shared_navigation(vehicle['id'],user_id,navigation)
+    return navigation
+
+
+@app.post('/api/trips/{trip_id}/route/accept')
+async def accept_route(trip_id:str,identity:Identity=Depends(current_user)):
+    driver(identity)
+    access(trip_id,identity,active=True)
+    limiter.check(('route-command',identity.user['id']),3,60)
+    async with route_planning.lock(trip_id):
+        trip = route_planning.active(trip_id)
+        vehicle = route_planning.car(trip_id,identity.user['id'])
+        db.execute("INSERT INTO route_followers(trip_id,user_id,vehicle_id,accepted_at) VALUES (?,?,?,?) ON CONFLICT(trip_id,user_id) DO UPDATE SET vehicle_id=excluded.vehicle_id,accepted_at=excluded.accepted_at,command_key=NULL,sent_at=NULL,status='waiting',problem=NULL,notified_problem=NULL",(trip_id,identity.user['id'],vehicle['id'],time.time()))
+        await route_planning.distribute(trip)
+    return route_planning.overview(trip)
+
+
+@app.delete('/api/trips/{trip_id}/route/accept')
+async def stop_following_route(trip_id:str,identity:Identity=Depends(current_user)):
+    driver(identity)
+    trip,_ = access(trip_id,identity)
+    async with route_planning.lock(trip_id):
+        db.execute('DELETE FROM route_followers WHERE trip_id=? AND user_id=?',(trip_id,identity.user['id']))
+        if route_planning.planner_id(trip) == identity.user['id'] and identity.user['id'] != trip['leader_id']:
+            db.execute('DELETE FROM trip_planners WHERE trip_id=?',(trip_id,))
+            db.execute('DELETE FROM trip_navigation WHERE trip_id=?',(trip_id,))
+        await route_planning.broadcast(trip)
+    return {'ok':True}
+
+
+@app.post('/api/trips/{trip_id}/route/plan')
+async def plan_route(trip_id:str,body:route_planning.RoutePlan,identity:Identity=Depends(current_user)):
+    driver(identity)
+    access(trip_id,identity,active=True,leader=True)
+    limiter.check(('route-command',identity.user['id']),3,60)
+    async with route_planning.lock(trip_id):
+        trip = route_planning.active(trip_id)
+        vehicle = route_planning.car(trip_id,body.planner_user_id)
+        if body.planner_user_id != trip['leader_id'] and not route_planning.consent(trip_id,body.planner_user_id,vehicle['id']):
+            raise HTTPException(403,'Der Fahrer muss die Routenübernahme für sein Auto zuerst erlauben.')
+        destination = body.destination.strip()
+        if not destination:
+            raise HTTPException(422,'Bitte eine Zieladresse angeben.')
+        sent_at = time.time()
+        command = await fleet.send_navigation(body.planner_user_id,vehicle,destination,trip_id)
+        access(trip_id,identity,active=True,leader=True)
+        if route_planning.car(trip_id,body.planner_user_id)['id'] != vehicle['id']:
+            raise HTTPException(409,'Planungsfahrzeug wurde gewechselt. Bitte erneut planen.')
+        db.execute('INSERT INTO trip_planners VALUES (?,?,?) ON CONFLICT(trip_id) DO UPDATE SET user_id=excluded.user_id,vehicle_id=excluded.vehicle_id',(trip_id,body.planner_user_id,vehicle['id']))
+        leader_car = route_planning.car(trip_id,trip['leader_id'])
+        db.execute('INSERT INTO route_followers(trip_id,user_id,vehicle_id,accepted_at) VALUES (?,?,?,?) ON CONFLICT(trip_id,user_id) DO NOTHING',(trip_id,trip['leader_id'],leader_car['id'],sent_at))
+        db.execute('DELETE FROM trip_navigation WHERE trip_id=?',(trip_id,))
+        db.execute("INSERT INTO route_followers(trip_id,user_id,vehicle_id,accepted_at,sent_at,status) VALUES (?,?,?,?,?,'planning') ON CONFLICT(trip_id,user_id) DO UPDATE SET vehicle_id=excluded.vehicle_id,sent_at=excluded.sent_at,status='planning',problem=NULL,notified_problem=NULL",(trip_id,body.planner_user_id,vehicle['id'],sent_at,sent_at))
+        await route_planning.broadcast(trip)
+    # A successful command is only a pending plan. Poll/telemetry confirms it.
+    try:
+        navigation = await fleet.fetch_navigation(body.planner_user_id,vehicle)
+        await update_shared_navigation(vehicle['id'],body.planner_user_id,navigation)
+    except (HTTPException,httpx.HTTPError):
+        pass
+    return {'command_accepted':True,'demo':command['demo'],'route_overview':route_planning.overview(trip),'navigation':route_planning.snapshot(trip)}
+
+
+@app.post('/api/trips/{trip_id}/route/adopt/{user_id}')
+async def adopt_vehicle_route(trip_id:str,user_id:str,identity:Identity=Depends(current_user)):
+    driver(identity)
+    access(trip_id,identity,active=True,leader=True)
+    limiter.check(('route-command',identity.user['id']),3,60)
+    async with route_planning.lock(trip_id):
+        trip = route_planning.active(trip_id)
+        vehicle = route_planning.car(trip_id,user_id)
+        if user_id != trip['leader_id'] and not route_planning.consent(trip_id,user_id,vehicle['id']):
+            raise HTTPException(403,'Der Fahrer muss die Routenübernahme zuerst erlauben.')
+        navigation = await fleet.fetch_navigation(user_id,vehicle)
+        access(trip_id,identity,active=True,leader=True)
+        if route_planning.car(trip_id,user_id)['id'] != vehicle['id']:
+            raise HTTPException(409,'Planungsfahrzeug wurde gewechselt. Bitte erneut auswählen.')
+        if navigation['status'] != 'active' or time.time()-navigation['updated_at'] > 300:
+            raise HTTPException(409,'Dieses Auto liefert derzeit keine aktuelle aktive Navigation.')
+        db.execute('INSERT INTO trip_planners VALUES (?,?,?) ON CONFLICT(trip_id) DO UPDATE SET user_id=excluded.user_id,vehicle_id=excluded.vehicle_id',(trip_id,user_id,vehicle['id']))
+        db.execute('INSERT INTO trip_navigation VALUES (?,?,?) ON CONFLICT(trip_id) DO UPDATE SET vehicle_id=excluded.vehicle_id,data=excluded.data',(trip_id,vehicle['id'],json.dumps(navigation)))
+        await route_planning.distribute(trip)
+    return {'navigation':navigation,'route_overview':route_planning.overview(trip)}
+
+
+@app.post('/api/trips/{trip_id}/route/problem')
+async def report_route_problem(trip_id:str,body:route_planning.RouteProblem,identity:Identity=Depends(current_user)):
+    driver(identity)
+    access(trip_id,identity,active=True)
+    limiter.check(('route-problem',identity.user['id']),5,60)
+    async with route_planning.lock(trip_id):
+        trip = route_planning.active(trip_id)
+        vehicle = route_planning.car(trip_id,identity.user['id'])
+        if not route_planning.consent(trip_id,identity.user['id'],vehicle['id']):
+            raise HTTPException(409,'Bitte zuerst die Routenübernahme aktivieren.')
+        db.execute("UPDATE route_followers SET status='different',problem=? WHERE trip_id=? AND user_id=?",(body.reason,trip_id,identity.user['id']))
+        route_planning.notify_problem(trip,identity.user['id'],body.reason)
+        await route_planning.broadcast(trip)
+    return {'ok':True}
 
 
 def lookup(query):
@@ -557,6 +722,7 @@ def accept_invite(trip_id:str,identity:Identity=Depends(current_user)):
 def trip_detail(trip_id:str,identity:Identity=Depends(current_user)):
     trip,member=access(trip_id,identity)
     result=trip_summary(trip) | {'participants_detail':participants(trip_id),'my_role':member['role'],
+        'navigation':shared_navigation(trip_id),'route_overview':route_planning.overview(trip),
         'album':{'status':'planned','name':album_name(trip),'url':None}}
     if trip['leader_id']==identity.user['id']:
         result['guest_url']=settings.app_url+'/guest/'+trip['guest_key']
@@ -592,16 +758,54 @@ def guest_info(key:str):
             'active':trip['starts_at']<=time.time()<effective_end(trip)}
 
 
-@app.post('/api/guest/{key}/login')
-def guest_login(key:str,body:GuestLogin,request:Request):
-    limiter.check(('guest',request.client.host,key),5,300)
-    trip=db.one('SELECT * FROM trips WHERE guest_key=?',(key,))
+def active_guest_trip(key,connection=None):
+    row = connection.execute('SELECT * FROM trips WHERE guest_key=?',(key,)).fetchone() if connection else db.one('SELECT * FROM trips WHERE guest_key=?',(key,))
+    trip = dict(row) if row else None
     if not trip or not trip['starts_at']<=time.time()<effective_end(trip):
         raise HTTPException(403,'Mitfahrer-Zugang ist außerhalb des Fahrtzeitraums gesperrt.')
-    passenger=db.one('SELECT * FROM passengers WHERE trip_id=? AND normalized_name=?',(trip['id'],body.name.strip().casefold()))
-    if not passenger or not pin_matches(body.pin,passenger['pin_hash']):
+    return trip
+
+
+def guest_session(trip,uid):
+    response=JSONResponse({'trip_id':trip['id']})
+    set_session(response,uid,expires_at=effective_end(trip))
+    return response
+
+
+@app.post('/api/guest/{key}/register')
+async def guest_register(key:str,body:GuestLogin,request:Request):
+    limiter.check(('guest-register',request.client.host,key),20,300)
+    trip = active_guest_trip(key)
+    normalized = body.name.casefold()
+    if db.one('SELECT id FROM passengers WHERE trip_id=? AND normalized_name=?',(trip['id'],normalized)):
+        raise HTTPException(409,'Dieser Name ist für die Fahrt bereits registriert. Bitte anmelden oder einen anderen Namen wählen.')
+    hashed = await asyncio.to_thread(pin_hash,body.pin)
+    pid,uid = str(uuid.uuid4()),str(uuid.uuid4())
+    with db.connect() as connection:
+        connection.execute('BEGIN IMMEDIATE')
+        trip = active_guest_trip(key,connection)
+        if connection.execute('SELECT id FROM passengers WHERE trip_id=? AND normalized_name=?',(trip['id'],normalized)).fetchone():
+            raise HTTPException(409,'Dieser Name ist für die Fahrt bereits registriert. Bitte anmelden oder einen anderen Namen wählen.')
+        connection.execute('INSERT INTO users(id,provider,subject,username,display_name,created_at) VALUES (?,?,?,?,?,?)',
+                           (uid,'guest','guest:'+pid,'gast-'+uid[:8],body.name,time.time()))
+        connection.execute('INSERT INTO passengers VALUES (?,?,?,?,?,?)',(pid,trip['id'],body.name,normalized,hashed,uid))
+        connection.execute('INSERT INTO members VALUES (?,?,?,NULL,?,NULL)',(trip['id'],uid,'passenger',time.time()))
+    response = guest_session(trip,uid)
+    await hub.broadcast(trip['id'],{'type':'participants','participants':participants(trip['id'])})
+    return response
+
+
+@app.post('/api/guest/{key}/login')
+async def guest_login(key:str,body:GuestLogin,request:Request):
+    limiter.check(('guest-ip',request.client.host,key),60,300)
+    limiter.check(('guest',request.client.host,key,body.name.casefold()),5,300)
+    trip = active_guest_trip(key)
+    passenger=db.one('SELECT * FROM passengers WHERE trip_id=? AND normalized_name=?',(trip['id'],body.name.casefold()))
+    if not passenger or not await asyncio.to_thread(pin_matches,body.pin,passenger['pin_hash']):
         raise HTTPException(401,'Name oder PIN ungültig.')
     with db.connect() as connection:
+        connection.execute('BEGIN IMMEDIATE')
+        trip = active_guest_trip(key,connection)
         current=connection.execute('SELECT * FROM passengers WHERE id=?',(passenger['id'],)).fetchone()
         uid=current['user_id']
         if not uid:
@@ -610,8 +814,8 @@ def guest_login(key:str,body:GuestLogin,request:Request):
                                (uid,'guest','guest:'+passenger['id'],'gast-'+uid[:8],passenger['name'],time.time()))
             connection.execute('UPDATE passengers SET user_id=? WHERE id=?',(uid,passenger['id']))
             connection.execute('INSERT INTO members VALUES (?,?,?,NULL,?,NULL)',(trip['id'],uid,'passenger',time.time()))
-    response=JSONResponse({'trip_id':trip['id']})
-    set_session(response,uid,expires_at=effective_end(trip))
+    response=guest_session(trip,uid)
+    await hub.broadcast(trip['id'],{'type':'participants','participants':participants(trip['id'])})
     return response
 
 
@@ -775,6 +979,11 @@ def admin(identity:Identity=Depends(current_admin)):
             'storage':'SQLite / persistentes Volume'}
 
 
+@app.get('/api/admin/users', response_model=list[AdminUser])
+def admin_users(identity:Identity=Depends(current_admin)):
+    return db.all_rows('SELECT id,provider,display_name,username,email,plate,avatar_url,created_at,last_login_at FROM users ORDER BY last_login_at DESC,created_at DESC,id')
+
+
 @app.post('/api/admin/push/test')
 def admin_push_test(identity:Identity=Depends(current_admin)):
     limiter.check(('admin-push-test',),3,60)
@@ -784,6 +993,11 @@ def admin_push_test(identity:Identity=Depends(current_admin)):
 @app.get('/api/openapi.json')
 def openapi(identity:Identity=Depends(current_user)):
     return app.openapi()
+
+
+@app.get('/api/docs')
+def documentation(identity:Identity=Depends(current_user)):
+    return api_documentation.catalog(app)
 
 
 @app.websocket('/api/ws/trips/{trip_id}')
@@ -851,3 +1065,6 @@ def frontend(path:str):
     if (root/'index.html').is_file():
         return FileResponse(root/'index.html')
     raise HTTPException(503,'Frontend noch nicht gebaut.')
+
+
+app.openapi = lambda: api_documentation.enriched_openapi(app)
