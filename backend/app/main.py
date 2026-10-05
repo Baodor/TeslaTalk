@@ -141,11 +141,12 @@ async def background_cycle(next_poll):
         await hub.broadcast(trip['id'], {'type':'ended'})
     if now>=next_poll:
         next_poll = now+settings.poll_interval
-        online = hub.online()
         members = db.all_rows("SELECT m.trip_id,m.user_id,m.vehicle_id FROM members m JOIN trips t ON t.id=m.trip_id WHERE m.role='driver' AND m.left_at IS NULL AND m.vehicle_id IS NOT NULL AND t.starts_at<=? AND t.ends_at>? AND t.finished_at IS NULL", (now,now))
         cache = {}
         for member in members:
-            if member['user_id'] not in online:
+            # A connected group member needs every driver's car, even when
+            # that driver's browser is closed. Do not poll unobserved trips.
+            if not hub.rooms.get(member['trip_id']):
                 continue
             try:
                 vehicle = db.one('SELECT * FROM vehicles WHERE id=? AND user_id=?', (member['vehicle_id'],member['user_id']))

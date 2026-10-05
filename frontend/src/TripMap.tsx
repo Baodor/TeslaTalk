@@ -56,7 +56,9 @@ function Controls({ positions, focusKey }: { positions: [number, number][]; focu
 
 export default function TripMap({ participants, traces = [], navigation = null }: { participants: Participant[]; traces?: any[]; navigation?: NavigationData | null }) {
   const present = participants.filter(p => p.left_at === null);
-  const vehicles = present.filter(p => p.vehicle_id && Number.isFinite(p.data.latitude) && Number.isFinite(p.data.longitude));
+  const driverVehicles = present.filter(p => p.role === 'driver' && p.vehicle_id);
+  const vehicles = driverVehicles.filter(p => Number.isFinite(p.data.latitude) && Number.isFinite(p.data.longitude));
+  const missingVehicles = driverVehicles.filter(p => !vehicles.includes(p));
   const people = present.filter(p => p.personal_location && Number.isFinite(p.personal_location.latitude) && Number.isFinite(p.personal_location.longitude));
   const color = (id: string) => colors[Math.max(0, participants.findIndex(p => p.id === id)) % colors.length];
   const route = navigation?.status === 'active' ? navigation : null;
@@ -73,7 +75,8 @@ export default function TripMap({ participants, traces = [], navigation = null }
     const personal = row.source === 'browser', key = row.user_id + (personal ? ':person' : ':vehicle');
     (grouped[key] ??= { userId: row.user_id, personal, points: [] }).points.push([row.latitude, row.longitude]);
   });
-  return <div className="map-wrap">
+  const markerKey = [...vehicles.map(p => 'vehicle:'+p.id), ...people.map(p => 'person:'+p.id)].sort().join(',');
+  return <><div className="map-wrap">
     {/* Leaflet's zoom transition timer can outlive map.remove() when changing tabs. */}
     <MapContainer center={[50.1109, 8.6821]} zoom={8} zoomControl={false} zoomAnimation={false} scrollWheelZoom className="trip-map">
       <MapTiles />
@@ -88,10 +91,10 @@ export default function TripMap({ participants, traces = [], navigation = null }
         <Popup><strong>Person · {p.display_name}</strong><br />{p.role === 'passenger' ? 'Mitfahrer' : 'Fahrer'} · geteilter Browser-Standort<br />Aktualisiert: {new Date(p.personal_location!.updated_at * 1000).toLocaleTimeString('de-DE')}</Popup>
       </Marker>)}
       {Object.entries(grouped).map(([key, trace]) => <Polyline key={key} positions={trace.points} pathOptions={{ color: color(trace.userId), weight: 3, dashArray: trace.personal ? '5 7' : undefined }} />)}
-      <Controls positions={positions} focusKey={route ? `${route.destination}:${destination}:${route.route_points.length}` : 'group'} />
+      <Controls positions={positions} focusKey={markerKey+':'+(route ? `${route.destination}:${destination}:${route.route_points.length}` : 'group')} />
     </MapContainer>
     <div className="map-label"><span className="status-dot" /> NUR DEINE FAHRT</div>
     {(positions.length > 0 || traces.length > 0) && <div className="map-legend"><span className="legend-person" />Person<span className="legend-car" />Fahrzeug{destination && <><span className="legend-destination" />Ziel</>}{route && route.route_points.length > 1 && <><span className="legend-route" />Route</>}</div>}
     {!positions.length && !traces.length && <div className="map-empty"><MapPin size={22} /><span>Noch keine Standortdaten.<small>Fahrzeugdaten abrufen oder deinen persönlichen Standort teilen. Das geht auch als Mitfahrer.</small></span></div>}
-  </div>;
+  </div>{driverVehicles.length > 0 && <p className="hint" aria-live="polite">Fahrzeugpositionen: {vehicles.length} von {driverVehicles.length}.{missingVehicles.length > 0 && <> Position fehlt für {missingVehicles.map(p => p.vehicle_name || p.display_name).join(', ')}. Tesla muss Standortdaten liefern; ein geteilter Handy-Standort ersetzt keine Fahrzeugposition.</>}</p>}</>;
 }

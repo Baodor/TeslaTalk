@@ -91,10 +91,10 @@ async def send_one(trip_id,leader_id,row,action,authorize):
         if not settings.group_controls_ready:
             raise HTTPException(503,'Die signierte Tesla-Befehlsanbindung ist noch nicht eingerichtet.')
         vin = quote(vehicle_id.split(':')[-1],safe='')
-        payload = fleet.object_data(await fleet.request(user_id,f'/api/1/vehicles/{vin}/vehicle_data',{'endpoints':'drive_state;vehicle_state;location_data'}))
-        authorize()
-        command_access(trip_id,leader_id,user_id,vehicle_id)
         if action in ('frunk_open','rear_trunk_toggle','windows_vent','windows_close'):
+            payload = fleet.object_data(await fleet.request(user_id,f'/api/1/vehicles/{vin}/vehicle_data',{'endpoints':'drive_state;vehicle_state;location_data'}))
+            authorize()
+            command_access(trip_id,leader_id,user_id,vehicle_id)
             if not parked(payload):
                 return 'skipped','Parkstellung und Stillstand konnten nicht aktuell bestätigt werden.'
             state = fleet.object_data(payload.get('vehicle_state'))
@@ -117,7 +117,7 @@ async def send_one(trip_id,leader_id,row,action,authorize):
             response = await client.post(settings.command_proxy_url+f'/api/1/vehicles/{vin}/command/{name}',headers={'Authorization':'Bearer '+token},json=body)
         if response.status_code != 200:
             message = {401:'Tesla-Konto erneut verbinden.',403:'vehicle_cmds oder der virtuelle Fahrzeugschlüssel fehlt.',408:'Fahrzeug nicht erreichbar; Ergebnis bitte am Auto prüfen.',429:'Tesla-Anfragelimit erreicht.'}.get(response.status_code,'Tesla hat den Befehl nicht bestätigt; Ergebnis bitte am Auto prüfen.')
-            return 'unknown' if response.status_code >= 500 or response.status_code == 408 else 'error',message
+            return 'unknown' if response.status_code >= 500 or response.status_code == 408 else 'error',f'Tesla/Proxy HTTP {response.status_code}: {message}'
         try:
             document = response.json()
             result = document.get('response') if isinstance(document,dict) else None

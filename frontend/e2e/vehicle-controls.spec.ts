@@ -93,3 +93,24 @@ test('OSM tiles receive only the origin Referer; failed tiles can be reloaded an
     const response=await page.request.get(asset);expect(response.ok()).toBe(true);expect(response.headers()['content-type']).not.toContain('text/html');expect((await response.body()).length).toBeGreaterThan(100);
   }
 });
+
+for(const viewer of ['leader','driver','passenger'])test(`${viewer} sees every driver car and late positions are fitted into the map`,async({page})=>{
+  const {trip,user}=await mockTrip(page,{leader:viewer==='leader',guest:viewer==='passenger'});
+  const base=trip.participants_detail[0];
+  const max={...base,id:viewer==='passenger'?'map-driver-max':user.id,display_name:'Max',role:'driver',vehicle_id:'car-max',online:false};
+  const anna={...base,id:'map-driver-anna',display_name:'Anna',role:'driver',vehicle_id:'car-anna',vehicle_name:'Anna Tesla',online:false,data:{} as Record<string,number>};
+  trip.participants_detail=[max,anna,...(viewer==='passenger'?[{...base,data:{},vehicle_id:null}]:[])] as typeof trip.participants_detail;
+  await page.clock.install();await page.goto('/trip/control-trip');
+  await expect(page.locator('.car-marker')).toHaveCount(1);
+  await expect(page.getByText('Fahrzeugpositionen: 1 von 2.',{exact:false})).toContainText('Position fehlt für Anna Tesla');
+  anna.data={latitude:53.55,longitude:9.99,battery_pct:45,range_km:210};
+  await page.clock.fastForward(30000);
+  await expect(page.locator('.car-marker')).toHaveCount(2);
+  await expect(page.getByText('Fahrzeugpositionen: 2 von 2.',{exact:true})).toBeVisible();
+  const map=await page.locator('.leaflet-container').boundingBox();expect(map).not.toBeNull();
+  for(const marker of await page.locator('.car-marker').all()) {
+    const box=await marker.boundingBox();expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(map!.x);expect(box!.x+box!.width).toBeLessThanOrEqual(map!.x+map!.width);
+    expect(box!.y).toBeGreaterThanOrEqual(map!.y);expect(box!.y+box!.height).toBeLessThanOrEqual(map!.y+map!.height);
+  }
+});

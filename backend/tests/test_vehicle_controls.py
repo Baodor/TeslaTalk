@@ -150,9 +150,34 @@ def test_rights_rechecked_after_upstream_waits(owner,monkeypatch,when):
         if when=='token': db.execute('DELETE FROM control_grants WHERE trip_id=?',(ride['id'],))
         return 'token'
     monkeypatch.setattr(fleet,'request',data);monkeypatch.setattr(fleet,'token_for',token)
-    result=owner.post(path+'/controls',json=batch(user))
+    result=owner.post(path+'/controls',json=batch(user,action='windows_vent'))
     assert result.status_code == 200 and result.json()['vehicles'][0]['status'] == 'error'
     assert calls == []
+
+
+@pytest.mark.parametrize('action',['climate_on','climate_off'])
+def test_climate_does_not_require_location_or_park_data(owner,monkeypatch,action):
+    ride=trip(owner);user=owner.get('/api/me').json();path=f'/api/trips/{ride["id"]}'
+    calls=fake_cars(monkeypatch,[user]);owner.post(path+'/controls/consent')
+    async def unavailable_data(*args):
+        pytest.fail('Climate commands must not fetch location or park data')
+    monkeypatch.setattr(fleet,'request',unavailable_data)
+    result=owner.post(path+'/controls',json=batch(user,action=action))
+    assert result.status_code==200 and result.json()['vehicles'][0]['status']=='accepted'
+    assert len(calls)==1
+
+
+def test_proxy_error_reports_http_status_without_provider_secrets(owner,monkeypatch):
+    ride=trip(owner);user=owner.get('/api/me').json();path=f'/api/trips/{ride["id"]}'
+    fake_cars(monkeypatch,[user]);owner.post(path+'/controls/consent')
+    original=vehicle_controls.httpx.AsyncClient
+    class Client(original):
+        async def post(self,*args,**kwargs):
+            return httpx.Response(403,json={'error':'Bearer private-token and private VIN'})
+    monkeypatch.setattr(vehicle_controls.httpx,'AsyncClient',Client)
+    result=owner.post(path+'/controls',json=batch(user)).json()['vehicles'][0]
+    assert result['status']=='error' and 'HTTP 403' in result['message']
+    assert 'private-token' not in result['message'] and 'private VIN' not in result['message']
 
 
 def test_group_failure_is_isolated_and_timeout_is_not_retried(owner,monkeypatch):

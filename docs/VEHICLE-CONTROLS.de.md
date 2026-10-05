@@ -13,6 +13,8 @@ Der Fahrtleiter findet die Fahrzeugsteuerung im Tab **Fahrzeugsteuerung** direkt
 
 Der Bestätigungsdialog nennt die betroffenen Fahrzeuge. Das Ergebnis erscheint für jedes Auto einzeln. Kofferraum- und Fensterbefehle benötigen frisch abgerufene Parkdaten; fehlende oder ältere Daten werden nicht als Stillstand interpretiert. Eine Tesla-Bestätigung ist kein Nachweis der mechanischen Endposition. Es gibt keine Türverriegelung oder Entriegelung, kein automatisches Aufwecken und keine automatische Wiederholung eines Befehls.
 
+Klima an/aus benötigt keinen vorgeschalteten Standort- oder Parkdatenabruf. Fehler des Proxys zeigen den HTTP-Code und eine feste verständliche Meldung; Providerantworten mit möglichen Zugangsdaten werden nicht ausgegeben. Aktivierte Schalter und funktionierendes Proxy-TLS allein bestätigen weder Fahrzeugberechtigung noch Schlüsselinstallation oder eine ausgeführte Klimaaktion.
+
 ## Signierte Fahrzeugbefehle einrichten
 
 Die Funktion ist standardmäßig deaktiviert. Für echte Autos braucht sie Teslas [Vehicle Command Proxy](https://github.com/teslamotors/vehicle-command), die OAuth-Berechtigung `vehicle_cmds` und den [virtuellen Fahrzeugschlüssel](https://developer.tesla.com/docs/fleet-api/virtual-keys/developer-guide). Der öffentliche Schlüssel muss zu dem privaten Schlüssel des Proxys passen. Bei der vorhandenen Installation verwenden beide das mit `scripts/configure.py` erzeugte Schlüsselpaar.

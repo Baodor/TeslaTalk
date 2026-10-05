@@ -69,6 +69,8 @@ Ohne diese Integration zeigt `vehicle_data` Ziel und Kennzahlen, keinen vollstä
 
 ## Kurzer Regressionstest
 
+- [ ] Fahrtleiter, weiterer Fahrer und QR-Mitfahrer sehen auf der gemeinsamen Karte alle Fahrerfahrzeuge mit bekannter GPS-Position. Browser eines Fahrers schließen: dessen Auto wird weiterhin im bisherigen Poll-Intervall aktualisiert, solange jemand die Gruppe geöffnet hat. Ohne Zuschauer erfolgen keine neuen Gruppenabfragen. Neu eintreffende Fahrzeugpositionen werden automatisch in den Kartenausschnitt aufgenommen; fehlende GPS-Daten werden benannt statt erfunden.
+- [ ] **Klima an/aus** funktioniert unabhängig vom Standort-/Parkdatenabruf. Falls der Befehl weiterhin scheitert, das Ergebnis pro Fahrzeug prüfen: Demo, HTTP-Code/Berechtigung, schlafendes Auto oder unklarer Ausgang. TLS-Verbindung und aktivierte Flags allein bestätigen keinen Fahrzeugbefehl. Kein automatischer Wiederholungsversuch.
 - [ ] Chat und gemeinsame Karte mit zwei Fahrern; persönlicher Standort bleibt von der Fahrzeugposition getrennt.
 - [ ] Sprachfunk mit zwei gleichzeitig geöffneten Mikrofonen über Mobilfunk; bei CGNAT die vorhandenen VPS-Weiterleitungen 7881/TCP und 7882/UDP weiter nutzen.
 - [ ] Persönlichen Benachrichtigungstest aus der installierten Handy-PWA senden, PWA schließen/Handy sperren und Eingang prüfen. Providerannahme und tatsächliche Geräteanzeige getrennt beurteilen.
