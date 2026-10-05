@@ -73,9 +73,12 @@ test('deleting a user requires exact typed confirmation and a deliberate final a
 
 test('a passenger can link and unlink a Tesla picture while staying a passenger without cars',async({page})=>{
   let linked=false;const calls:string[]=[];
+  const picture='https://images.example.test/passenger-tesla-picture.png';
+  const image=await (await page.request.get('/apple-touch-icon.png')).body();
+  await page.route(picture,route=>route.fulfill({contentType:'image/png',body:image}));
   const trip={id:'passenger-profile-trip',title:'Passenger trip',status:'active',leader_id:'other',starts_at:Date.now()/1000-60,ends_at:Date.now()/1000+3600,finished_at:null,participants:2,destination:''};
   await page.route('**/api/config',route=>route.fulfill({json:{tesla_ready:true,demo:false}}));
-  await page.route('**/api/me',route=>route.fulfill({json:{id:'guest-profile',username:'gast-profile',display_name:'Anna',provider:'guest',plate:null,favorite_vehicle:null,tesla_profile_linked:linked,avatar_url:linked?'/apple-touch-icon.png':null}}));
+  await page.route('**/api/me',route=>route.fulfill({json:{id:'guest-profile',username:'gast-profile',display_name:'Anna',provider:'guest',plate:null,favorite_vehicle:null,tesla_profile_linked:linked,avatar_url:linked?picture:null}}));
   await page.route('**/api/trips',route=>route.fulfill({json:[trip]}));await page.route('**/api/invites',route=>route.fulfill({json:[]}));
   await page.route('**/api/vehicles**',route=>{calls.push(route.request().url());return route.fulfill({json:[]});});
   await page.route('**/api/me/tesla-profile-link',route=>{calls.push(route.request().method());linked=false;return route.fulfill({json:{ok:true}});});
@@ -85,7 +88,8 @@ test('a passenger can link and unlink a Tesla picture while staying a passenger 
   await expect(page.getByRole('button',{name:'Fahrzeuge abrufen',exact:true})).toHaveCount(0);
   await expect(page.getByRole('region',{name:'Persönliche API-Schlüssel'})).toHaveCount(0);
   linked=true;await page.reload();await page.getByRole('button',{name:'Mein Profil',exact:true}).click();
-  await expect(profile).toContainText('Tesla-Profil verknüpft · Mitfahrer');await expect(profile.locator('img')).toHaveAttribute('src','/apple-touch-icon.png');
+  await expect(profile).toContainText('Tesla-Profil verknüpft · Mitfahrer');await expect(profile.locator('img')).toHaveAttribute('src',picture);
+  await expect.poll(()=>profile.locator('img').evaluate((image:HTMLImageElement)=>image.naturalWidth)).toBeGreaterThan(0);
   await profile.getByRole('button',{name:'Tesla-Verknüpfung entfernen',exact:true}).click();
-  await expect(profile.getByRole('link',{name:'Mit Tesla verknüpfen'})).toBeVisible();expect(calls).toEqual(['DELETE']);
+  await expect(profile.getByRole('link',{name:'Mit Tesla verknüpfen'})).toBeVisible();await expect(profile.locator('img')).toHaveCount(0);expect(calls).toEqual(['DELETE']);
 });
