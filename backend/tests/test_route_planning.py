@@ -153,12 +153,23 @@ def test_line_comparison_handles_sampling_different_roads_and_approaches():
     assert route_planning.compare(reference,actual,None)==('unconfirmed',None)
 
 
-def test_live_navigation_command_is_limited_to_specific_rest_endpoint(owner,monkeypatch):
+@pytest.mark.parametrize('proxy_url,ca',[('',''),('https://tesla-command-proxy.test',''),('https://tesla-command-proxy.test','/isolated-test/ca.pem')])
+def test_live_navigation_command_is_limited_to_specific_rest_endpoint(owner,monkeypatch,proxy_url,ca):
     ride=trip(owner)
     me=owner.get('/api/me').json()
     vehicle=db.one('SELECT * FROM vehicles WHERE id=?',(me['favorite_vehicle'],))
     db.execute("UPDATE users SET provider='tesla' WHERE id=?",(me['id'],))
     monkeypatch.setattr(settings,'navigation_commands',True)
+    monkeypatch.setattr(settings,'group_controls',False)
+    monkeypatch.setattr(settings,'command_proxy_url',proxy_url)
+    monkeypatch.setattr(settings,'command_proxy_ca',ca)
+    import ssl
+    context=ssl.create_default_context()
+    certificates=[]
+    def certificate_context(*,cafile):
+        certificates.append(cafile)
+        return context
+    monkeypatch.setattr(fleet.ssl,'create_default_context',certificate_context)
     async def token(user_id):
         return 'isolated-test-only-token'
     monkeypatch.setattr(fleet,'token_for',token)
@@ -167,16 +178,41 @@ def test_live_navigation_command_is_limited_to_specific_rest_endpoint(owner,monk
         requests.append(request)
         return httpx.Response(200,json={'response':{'result':True}})
     client_class=httpx.AsyncClient
-    monkeypatch.setattr(fleet.httpx,'AsyncClient',lambda **kwargs:client_class(transport=httpx.MockTransport(respond),**kwargs))
+    clients=[]
+    def make_client(**kwargs):
+        clients.append(kwargs)
+        return client_class(transport=httpx.MockTransport(respond),**kwargs)
+    monkeypatch.setattr(fleet.httpx,'AsyncClient',make_client)
     import asyncio
     result=asyncio.run(fleet.send_navigation(me['id'],vehicle,'Darmstadt Hauptbahnhof',ride['id']))
     assert result=={'accepted':True,'demo':False}
     assert len(requests)==1
     assert requests[0].method=='POST' and requests[0].url.path.endswith('/command/navigation_request')
+    assert str(requests[0].url).startswith(proxy_url or settings.fleet_url)
+    assert clients[0]['verify'] is (context if ca else True)
+    assert clients[0]['follow_redirects'] is False
+    assert certificates==([ca] if ca else [])
     body=json.loads(requests[0].content)
     assert body['value']=={'android.intent.extra.TEXT':'Darmstadt Hauptbahnhof'}
     assert body['type']=='share_ext_content_raw'
     assert body['locale']=='de-DE'
+
+
+@pytest.mark.parametrize('proxy_url',['http://proxy.test','https://user:password@proxy.test','https://proxy.test/command'])
+def test_navigation_rejects_invalid_configured_proxy_before_contacting_tesla(owner,monkeypatch,proxy_url):
+    ride=trip(owner)
+    me=owner.get('/api/me').json()
+    vehicle=db.one('SELECT * FROM vehicles WHERE id=?',(me['favorite_vehicle'],))
+    db.execute("UPDATE users SET provider='tesla' WHERE id=?",(me['id'],))
+    monkeypatch.setattr(settings,'navigation_commands',True)
+    monkeypatch.setattr(settings,'command_proxy_url',proxy_url)
+    async def token(user_id):
+        pytest.fail('An invalid proxy must not contact Tesla or fall back to the Fleet API')
+    monkeypatch.setattr(fleet,'token_for',token)
+    import asyncio
+    with pytest.raises(Exception) as result:
+        asyncio.run(fleet.send_navigation(me['id'],vehicle,'Station',ride['id']))
+    assert result.value.status_code==503 and 'HTTPS' in result.value.detail
 
 
 def test_command_expiry_is_rechecked_after_token_refresh(owner,monkeypatch):

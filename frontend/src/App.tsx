@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Radio as RadioIcon, Route, Users, Settings, LogOut, Plus, ArrowUpRight, ArrowLeft, Car, Battery, MapPin, Clock, MessageSquare, Send, X, Copy, QrCode, Images, Trophy, Shield, Check, KeyRound, Link as LinkIcon, RefreshCw, Navigation, CalendarDays, ChevronRight, UserPlus, Download, AlertCircle } from 'lucide-react';
+import { Radio as RadioIcon, Route, Users, Settings, LogOut, Plus, ArrowUpRight, ArrowLeft, Car, Battery, MapPin, Clock, MessageSquare, Send, X, Copy, QrCode, Images, Trophy, Shield, Check, KeyRound, Link as LinkIcon, RefreshCw, Navigation, CalendarDays, ChevronRight, UserPlus, Download, AlertCircle, SlidersHorizontal } from 'lucide-react';
 import QRCode from 'qrcode';
 import { api, ApiError, date, duration, localDate, type User, type Trip, type Participant } from './api';
 import PWAControls, { usePWAControls, type PWAState } from './PWAControls';
@@ -8,7 +8,7 @@ import { VehicleNavigation } from './NavigationPanel';
 import RoutePlanning from './RoutePlanning';
 import UsernameSetup from './UsernameSetup';
 import AdminUsers from './AdminUsers';
-import VehicleControls from './VehicleControls';
+import VehicleControls, { VehicleControlConsent } from './VehicleControls';
 const TripMap = lazy(() => import('./TripMap'));
 const Radio = lazy(() => import('./Radio'));
 const ApiDocs = lazy(() => import('./ApiDocs'));
@@ -128,6 +128,7 @@ function TripPage({ tripId, user, vehicles, back, reload, notify }: { tripId: st
   const messageEnd = useRef<HTMLDivElement>(null);
   const leader = trip?.leader_id === user.id;
   const active = trip?.status === 'active';
+  useEffect(() => { if (tab === 'controls' && !leader) setTab('map'); }, [tab, leader]);
   async function refresh() { try { setTrip(await api(`/api/trips/${tripId}`)); } catch (e) { setError((e as Error).message); } }
   function addMessage(message: any) { setMessages(previous => previous.some(item => item.id === message.id) ? previous : [...previous, message].slice(-500)); }
   useEffect(() => {
@@ -183,9 +184,10 @@ function TripPage({ tripId, user, vehicles, back, reload, notify }: { tripId: st
   const mine = vehicles.find(v => v.id === user.favorite_vehicle);
   const ranked = [...rank].sort((a, b) => a[rankBy] == null ? 1 : b[rankBy] == null ? -1 : rankBy === 'average_speed_kmh' ? b[rankBy] - a[rankBy] : a[rankBy] - b[rankBy]);
   return <div className="trip-page"><header className="page-header compact"><div><button className="back-button" onClick={back}><ArrowLeft size={16} /> Alle Fahrten</button><h1>{trip.title}</h1><p><MapPin size={15} />{trip.destination || 'Gemeinsam unterwegs'}<span>·</span>{date(trip.starts_at)} – {date(trip.ends_at)}</p></div><div className="header-actions"><span className={`badge ${active ? 'accent-badge' : ''}`}>{active ? '● UNTERWEGS' : trip.status === 'planned' ? 'GEPLANT' : 'ABGESCHLOSSEN'}</span>{leader && trip.status !== 'finished' && <button onClick={() => setInvite(true)}><UserPlus size={17} />Einladen</button>}</div></header>
-    <div className="trip-tabs">{[['map', MapPin, 'Karte'], ['chat', MessageSquare, 'Chat'], ['photos', Images, 'Fotos & Mitfahrer'], ['history', Trophy, 'Verlauf']].map(([id, Icon, label]) => { const I = Icon as typeof MapPin; return <button key={String(id)} className={tab === id ? 'active' : ''} onClick={() => setTab(String(id))}><I size={18} />{String(label)}</button>; })}<span className="socket-state"><span className={`status-dot ${connected ? '' : 'offline'}`} />{connected ? 'Live verbunden' : 'Verbindung wird aufgebaut'}</span></div>
-    <VehicleControls tripId={tripId} userId={user.id} leader={leader} active={active} driver={trip.my_role==='driver'&&user.provider!=='guest'} overview={trip.vehicle_controls} update={value=>setTrip((current:any)=>({...current,vehicle_controls:value}))}/>
+    <div className="trip-tabs">{[['map', MapPin, 'Karte'], ['chat', MessageSquare, 'Chat'], ['photos', Images, 'Fotos & Mitfahrer'], ['history', Trophy, 'Verlauf'], ...(leader ? [['controls', SlidersHorizontal, 'Fahrzeugsteuerung']] : [])].map(([id, Icon, label]) => { const I = Icon as typeof MapPin; return <button key={String(id)} className={tab === id ? 'active' : ''} onClick={() => setTab(String(id))}><I size={18} />{String(label)}</button>; })}<span className="socket-state"><span className={`status-dot ${connected ? '' : 'offline'}`} />{connected ? 'Live verbunden' : 'Verbindung wird aufgebaut'}</span></div>
     <div className="trip-workspace"><section className="trip-stage">
+      {leader && <div hidden={tab !== 'controls'}><VehicleControls tripId={tripId} userId={user.id} leader={leader} active={active} driver={trip.my_role==='driver'&&user.provider!=='guest'} overview={trip.vehicle_controls} update={value=>setTrip((current:any)=>({...current,vehicle_controls:value}))}/></div>}
+      {tab === 'map' && !leader && trip.my_role === 'driver' && user.provider !== 'guest' && active && <section className="panel"><div className="panel-heading"><Car size={21}/><h3>Freigabe meines Fahrzeugs</h3></div><VehicleControlConsent tripId={tripId} userId={user.id} active={active} driver overview={trip.vehicle_controls} update={value=>setTrip((current:any)=>({...current,vehicle_controls:value}))}/></section>}
       {tab === 'map' && <RoutePlanning tripId={tripId} userId={user.id} leader={leader} active={active} finished={trip.status === 'finished'} destination={trip.destination} navigation={trip.navigation || null} overview={trip.route_overview}
         update={(navigation, overview) => setTrip((current: any) => ({...current,...(navigation !== undefined ? {navigation} : {}),...(overview ? {route_overview:overview} : {})}))} />}
       {tab === 'map' && <><TripMap participants={participants} navigation={trip.navigation || null} /><div className="map-actions"><span><Shield size={16} />Standorte sind nur in dieser Fahrt sichtbar.</span>{active && <button aria-pressed={gps} className={gps ? 'selected' : ''} onClick={() => setGps(!gps)}><Navigation size={17} />{gps ? 'Standortfreigabe stoppen' : 'Standort teilen'}</button>}{mine && <button onClick={() => void api(`/api/vehicles/${encodeURIComponent(mine.id)}/refresh`, 'POST').then(() => { void refresh(); notify('Fahrzeugdaten aktualisiert.'); }).catch(e => notify(e.message))}><RefreshCw size={17} />Daten abrufen</button>}</div></>}

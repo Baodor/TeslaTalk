@@ -71,7 +71,7 @@ jobs:
           assert setup.prepare(root)
           context=ssl.create_default_context(cafile=str(keys/'vehicle-command-tls.pem'))
           subprocess.run(['docker','run','-d','--name','tt-command','--read-only','--security-opt=no-new-privileges:true',
-                          '--user',f'{os.getuid()}:{os.getgid()}', '-v',f'{keys}:/keys:ro','-p','127.0.0.1:14443:4443',
+                          '--user',f'{os.getuid()}:{os.getgid()}', '--workdir','/', '-v',f'{keys}:/keys:ro','-p','127.0.0.1:14443:4443',
                           'tesla/vehicle-command:latest','-tls-key','/keys/vehicle-command-tls-key.pem','-cert','/keys/vehicle-command-tls.pem',
                           '-key-file','/keys/tesla-private-key.pem','-host','0.0.0.0','-port','4443'],check=True)
           for attempt in range(30):
@@ -85,6 +85,8 @@ jobs:
               except OSError:
                   time.sleep(1)
           else:raise SystemExit('Command proxy did not serve verified TLS')
+          logs=subprocess.check_output(['docker','logs','tt-command'],stderr=subprocess.STDOUT,text=True)
+          assert 'Could not get working directory' not in logs, logs
           print('Private command proxy starts with the key owner UID and verified TLS; no OAuth token or vehicle command used.')
           PY
       - name: Start isolated audio server

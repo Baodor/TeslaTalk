@@ -1,6 +1,6 @@
 # Komfortsteuerung für die Gruppe
 
-Während einer aktiven Fahrt hat der Fahrtleiter den Knopf **Fahrzeuge steuern**. Jeder Fahrer gibt sein eigenes aktuelles Auto separat frei; eine Routenfreigabe gilt dafür nicht. Die Freigabe kann jederzeit widerrufen werden und entfällt beim Fahrzeugwechsel. Tesla-verknüpfte Mitfahrer bleiben ausgeschlossen.
+Der Fahrtleiter findet die Fahrzeugsteuerung im Tab **Fahrzeugsteuerung** direkt neben **Verlauf**. Der Tab und die Gruppenknöpfe erscheinen nur für ihn. Andere Fahrer sehen auf der Karte ausschließlich **Freigabe meines Fahrzeugs**; der Leiter gibt sein eigenes Auto im Steuerungs-Tab frei. Die Steuerung ist nur während einer aktiven Fahrt verfügbar. Jeder Fahrer gibt sein eigenes aktuelles Auto separat frei; eine Routenfreigabe gilt dafür nicht. Die Freigabe kann jederzeit widerrufen werden und entfällt beim Fahrzeugwechsel. Tesla-verknüpfte Mitfahrer bleiben ausgeschlossen. Beim Tabwechsel bleiben Ergebnisse und unklare Aufträge erhalten; es wird kein Befehl erneut gesendet.
 
 | Knopf | Verhalten |
 | --- | --- |
@@ -43,9 +43,15 @@ Die Funktion ist standardmäßig deaktiviert. Für echte Autos braucht sie Tesla
 
    Der Proxy veröffentlicht keinen Host-Port und keinen Traefik-Router. TeslaTalk erreicht ihn über das interne Docker-Netzwerk mit geprüftem TLS-Zertifikat. CGNAT, WireGuard und die LiveKit-Medienports benötigen dafür keine zusätzlichen öffentlichen Freigaben. Künftige Aktualisierungen dieses Stacks verwenden wieder **beide** Compose-Dateien.
 
+   Der Proxy verwendet `working_dir: /`, damit sein Arbeitsverzeichnis auch mit der UID des Schlüsselbesitzers erreichbar ist. Die allgemeine Tesla-Warnung bei Bindung an `0.0.0.0` erscheint weiterhin; sie bestätigt weder einen veröffentlichten Port noch einen erfolgreichen Fahrzeugbefehl.
+
 5. Jeder Fahrer meldet sich erneut mit Tesla an, damit `vehicle_cmds` freigegeben wird. Der Fahrzeugschlüssel wird über `https://tesla.com/_ak/DEINE_TESLATALK_DOMAIN` in der Tesla-App für das gewünschte Fahrzeug installiert. Danach erlaubt jeder Fahrer die Komfortsteuerung in der aktiven Fahrt. Ohne Schlüssel/Freigabe erscheint ein Fehler statt einer behaupteten Ausführung.
 
 Ein bereits vorhandener offizieller Proxy kann alternativ über `TESLA_COMMAND_PROXY_URL=https://...` eingebunden werden. Bei eigener CA ist `TESLA_COMMAND_PROXY_CA` der Pfad der eingebundenen Zertifikatdatei **im TeslaTalk-Container**. HTTPS und Zertifikatprüfung sind erforderlich. Das Overlay ist nur für die mitgelieferte interne Proxy-Variante nötig.
+
+## Navigationsbefehle zusätzlich aktivieren
+
+Die Zielübertragung hat einen eigenen Schalter: `TESLA_NAVIGATION_COMMANDS=true` in `.env` ergänzen und den Stack mit beiden Compose-Dateien neu erstellen. Anschließend erneut mit Tesla anmelden, damit `vehicle_cmds` im Konto freigegeben ist. Bei konfiguriertem Proxy geht auch `navigation_request` mit Zertifikatprüfung über diesen Proxy. Eine ungültige Proxy-Adresse wird abgelehnt; nach einem Proxyfehler erfolgt kein Wechsel auf die direkte Fleet API. Ohne eingerichteten Proxy bleibt der direkte Aufruf erhalten. Teslas offizieller Proxy leitet `navigation_request` selbst über REST weiter; dieser Befehl wird dadurch nicht in einen signierten Fahrzeugbefehl umgewandelt. Die Komfortbefehle benötigen weiterhin den virtuellen Fahrzeugschlüssel.
 
 ## Fehler und Auftragsstatus
 

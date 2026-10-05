@@ -37,13 +37,17 @@ class Settings:
     vapid_subject: str = field(default_factory=lambda: os.getenv('VAPID_SUBJECT', 'mailto:admin@example.com'))
 
     @property
-    def group_controls_ready(self):
+    def command_proxy_ready(self):
         try:
             url = urlsplit(self.command_proxy_url)
-            return bool(self.group_controls and url.scheme == 'https' and url.hostname and
+            return bool(url.scheme == 'https' and url.hostname and
                         not url.username and not url.password and not url.query and not url.fragment and not url.path)
         except ValueError:
             return False
+
+    @property
+    def group_controls_ready(self):
+        return self.group_controls and self.command_proxy_ready
 
     @property
     def tesla_ready(self):

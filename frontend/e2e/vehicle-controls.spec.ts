@@ -23,7 +23,9 @@ test('leader confirms separate comfort buttons and only sends the displayed cons
   await page.route('**/api/trips/control-trip/controls',route=>{const body=route.request().postDataJSON();sent.push(body);return route.fulfill({json:{request_id:body.request_id,action:body.action,status:'completed',vehicles:body.vehicle_ids.map((id:string)=>({vehicle_id:id,display_name:id==='car-max'?'Max':'Anna',vehicle_name:id==='car-max'?'Max Tesla':'Anna Tesla',status:id==='car-max'?'demo':'error',message:id==='car-max'?'Nur Demo, kein Fahrzeugbefehl.':'Test: Fahrzeug schläft.'}))}});});
   await page.goto('/trip/control-trip');
   const panel=page.getByRole('region',{name:'Komfortsteuerung der Gruppe'});
-  await panel.getByRole('button',{name:'Fahrzeuge steuern',exact:true}).click();
+  await expect(panel).toHaveCount(0);
+  await expect(page.locator('.trip-tabs button')).toHaveText(['Karte','Chat','Fotos & Mitfahrer','Verlauf','Fahrzeugsteuerung']);
+  await page.getByRole('button',{name:'Fahrzeugsteuerung',exact:true}).click();
   await expect(panel).toContainText('1 von 2 Fahrzeugen freigegeben');
   await expect(panel.getByRole('button',{name:'Klima an',exact:true})).toBeVisible();await expect(panel.getByRole('button',{name:'Klima aus',exact:true})).toBeVisible();
   await expect(panel.getByRole('button',{name:/verriegeln|entriegeln/i})).toHaveCount(0);
@@ -41,15 +43,25 @@ test('leader confirms separate comfort buttons and only sends the displayed cons
   }
   await panel.getByRole('button',{name:'Komfortsteuerung für mein Auto widerrufen',exact:true}).click();await expect(panel).toContainText('1 von 2 Fahrzeugen freigegeben');
   expect(sent).toHaveLength(2);
+  await page.getByRole('button',{name:'Karte',exact:true}).click();await expect(panel).toHaveCount(0);
+  await page.getByRole('button',{name:'Fahrzeugsteuerung',exact:true}).click();await expect(panel.getByRole('status')).toContainText('Max · Max Tesla: Demo');expect(sent).toHaveLength(2);
   await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
 test('a driver sees own consent without leader buttons and a passenger sees no controls',async({page})=>{
   await mockTrip(page,{leader:false});await page.goto('/trip/control-trip');
-  await expect(page.getByRole('button',{name:'Komfortsteuerung für mein Auto erlauben',exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'Fahrzeuge steuern',exact:true})).toHaveCount(0);
+  const consent=page.getByRole('region',{name:'Freigabe meines Fahrzeugs'});
+  await expect(consent.getByRole('button',{name:'Komfortsteuerung für mein Auto erlauben',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Fahrzeugsteuerung',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('region',{name:'Komfortsteuerung der Gruppe'})).toHaveCount(0);
+  await consent.getByRole('button',{name:'Komfortsteuerung für mein Auto erlauben',exact:true}).click();
+  await expect(consent.getByRole('button',{name:'Komfortsteuerung für mein Auto widerrufen',exact:true})).toBeVisible();
+  await consent.getByRole('button',{name:'Komfortsteuerung für mein Auto widerrufen',exact:true}).click();
+  await expect(consent.getByRole('button',{name:'Komfortsteuerung für mein Auto erlauben',exact:true})).toBeVisible();
   await mockTrip(page,{leader:false,guest:true});await page.reload();
   await expect(page.getByRole('heading',{name:'Controls trip',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Fahrzeugsteuerung',exact:true})).toHaveCount(0);
+  await expect(consent).toHaveCount(0);
   await expect(page.getByRole('region',{name:'Komfortsteuerung der Gruppe'})).toHaveCount(0);
 });
 
@@ -57,9 +69,11 @@ test('interrupted comfort request offers read-only status without posting anothe
   await mockTrip(page);let posts=0,reads=0;
   await page.route('**/api/trips/control-trip/controls',route=>{posts++;return route.abort('connectionreset');});
   await page.route('**/api/trips/control-trip/controls/*',route=>{reads++;return route.fulfill({json:{request_id:'test',action:'climate_on',status:'completed',vehicles:[{vehicle_id:'car-anna',display_name:'Anna',vehicle_name:'Anna Tesla',status:'unknown',message:'Ergebnis am Auto prüfen.'}]}});});
-  await page.goto('/trip/control-trip');await page.getByRole('button',{name:'Fahrzeuge steuern',exact:true}).click();await page.getByRole('button',{name:'Klima an',exact:true}).click();
+  await page.goto('/trip/control-trip');await page.getByRole('button',{name:'Fahrzeugsteuerung',exact:true}).click();await page.getByRole('button',{name:'Klima an',exact:true}).click();
   await page.getByRole('dialog').getByRole('button',{name:'Jetzt an diese Fahrzeuge senden',exact:true}).click();
   await expect(page.getByRole('button',{name:'Klima an',exact:true})).toBeDisabled();
+  await page.getByRole('button',{name:'Karte',exact:true}).click();await page.getByRole('button',{name:'Fahrzeugsteuerung',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Klima an',exact:true})).toBeDisabled();expect(posts).toBe(1);
   await page.getByRole('button',{name:'Auftragsstatus abrufen',exact:true}).click();
   await expect(page.getByRole('status',{name:'Ergebnisse der Fahrzeugsteuerung'})).toContainText('Ergebnis unklar');expect(posts).toBe(1);expect(reads).toBe(1);
 });

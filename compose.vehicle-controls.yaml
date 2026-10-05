@@ -17,6 +17,8 @@ services:
   tesla-command-proxy:
     image: tesla/vehicle-command:latest
     user: ${TESLA_COMMAND_PROXY_USER:?Set TESLA_COMMAND_PROXY_USER to the owner UID:GID printed by configure_vehicle_controls.py}
+    # The image's default home belongs to its nonroot UID, not our key owner.
+    working_dir: /
     restart: unless-stopped
     read_only: true
     security_opt:
