@@ -22,7 +22,7 @@ test('API page copies all endpoints and schemas even when filtered', async ({pag
   await expect(page.getByRole('heading',{name:'API-Dokumentation.'})).toBeVisible();
   await expect(page.locator('.api-endpoint')).toHaveCount(3);
   await page.getByLabel('Endpunkte suchen').fill('navigation');
-  await page.getByLabel('Bereich',{exact:true}).selectOption('Navigation');
+  await page.getByRole('combobox',{name:'Bereich',exact:true}).selectOption('Navigation');
   await expect(page.locator('.api-endpoint')).toHaveCount(1);
   await page.getByRole('button',{name:'Alle Informationen für ein LLM kopieren',exact:true}).click();
   await expect(page.getByRole('button',{name:'Alle Informationen kopiert',exact:true})).toBeVisible();

@@ -30,11 +30,17 @@ function Controls({ positions, focusKey }: { positions: [number, number][]; focu
   const map = useMap();
   const fitted = useRef<string | null>(null);
   function center() {
-    if (positions.length === 1) map.setView(positions[0], 13);
-    else if (positions.length > 1) map.fitBounds(positions, { padding: [60, 60], maxZoom: 13 });
+    if (positions.length === 1) map.setView(positions[0], 13, { animate: false });
+    else if (positions.length > 1) map.fitBounds(positions, { padding: [60, 60], maxZoom: 13, animate: false });
   }
   useEffect(() => { if (fitted.current !== focusKey && positions.length) { center(); fitted.current = focusKey; } }, [positions, focusKey]);
-  useEffect(() => { const observer = new ResizeObserver(() => map.invalidateSize()); observer.observe(map.getContainer()); return () => observer.disconnect(); }, [map]);
+  useEffect(() => {
+    let active = true;
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => { if (active && container.isConnected) map.invalidateSize(); });
+    observer.observe(container);
+    return () => { active = false; observer.disconnect(); };
+  }, [map]);
   return <button className="map-center" title="Gruppe zentrieren" aria-label="Gruppe zentrieren" onClick={center}><LocateFixed size={19} /></button>;
 }
 
@@ -58,10 +64,11 @@ export default function TripMap({ participants, traces = [], navigation = null }
     (grouped[key] ??= { userId: row.user_id, personal, points: [] }).points.push([row.latitude, row.longitude]);
   });
   return <div className="map-wrap">
-    <MapContainer center={[50.1109, 8.6821]} zoom={8} zoomControl={false} scrollWheelZoom className="trip-map">
+    {/* Leaflet's zoom transition timer can outlive map.remove() when changing tabs. */}
+    <MapContainer center={[50.1109, 8.6821]} zoom={8} zoomControl={false} zoomAnimation={false} scrollWheelZoom className="trip-map">
       <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       {destination && <Marker position={destination} icon={destinationIcon} title={'Navigationsziel: ' + (route?.destination || 'Ziel')}>
-        <Popup><strong>Navigationsziel des Fahrtleiters</strong><br />{route?.destination || 'Ziel aus dem Auto'}</Popup>
+        <Popup><strong>Navigationsziel des Planungsfahrzeugs</strong><br />{route?.destination || 'Ziel aus dem Auto'}</Popup>
       </Marker>}
       {route && route.route_points.length > 1 && <Polyline positions={route.route_points} pathOptions={{ color: '#76d1b1', weight: 4, opacity: 0.9 }} />}
       {vehicles.map(p => <Marker key={'vehicle:' + p.id} position={[p.data.latitude, p.data.longitude]} icon={car(color(p.id))} title={'Fahrzeug: ' + p.display_name}>
