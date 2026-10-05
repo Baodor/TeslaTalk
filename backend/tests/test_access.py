@@ -111,6 +111,18 @@ def test_csrf_and_invalid_bearer_do_not_fall_back_to_cookie(owner):
     assert owner.get('/openapi.json').status_code in (404,503)
 
 
+def test_request_size_limit_applies_to_chunked_json(owner):
+    import json
+    payload=json.dumps({'label':'Oversized key request','padding':'x'*1_048_576}).encode()
+    # A generator has no Content-Length. Unknown JSON fields still count toward
+    # the limit, even when the request model would otherwise ignore them.
+    response=owner.post('/api/keys',content=iter([payload]),headers={'content-type':'application/json'})
+    assert response.status_code==413
+    assert owner.get('/api/keys').json()==[]
+    small=json.dumps({'label':'Valid streamed request'}).encode()
+    assert owner.post('/api/keys',content=iter([small[:5],small[5:]]),headers={'content-type':'application/json'}).status_code==200
+
+
 def test_api_keys_scoped_to_owner_and_revoked(owner):
     created=trip(owner)
     issued=owner.post('/api/keys',json={'label':'Telemetrie'}).json()

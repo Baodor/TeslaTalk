@@ -21,6 +21,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from . import db, fleet, push
 from .config import settings
 from .metrics import ranking
+from .middleware import BodyLimitMiddleware, MAX_REQUEST_BYTES
 from .oidc import admin_access, admin_claims, admin_denial, verification_failure
 from .models import GuestLogin, Join, KeyCreate, Message, PassengerCreate, Profile, Query, Sample, TripCreate, PushSubscription, PushRemove, PushTest
 from .realtime import hub, voice_token, delete_voice_room, ensure_voice_room
@@ -163,6 +164,7 @@ async def lifespan(app):
 
 app = FastAPI(title='TeslaTalk API', version='0.1.0', lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 app.add_middleware(SessionMiddleware, secret_key=settings.secret, session_cookie='tt_oidc', https_only=settings.secure, same_site='lax')
+app.add_middleware(BodyLimitMiddleware)
 
 
 @app.middleware('http')
@@ -171,7 +173,7 @@ async def security_headers(request, call_next):
         if request.headers.get('origin') != settings.app_url:
             return JSONResponse({'detail':'Ungültiger Ursprung der Anfrage.'}, status_code=403)
     try:
-        too_large = int(request.headers.get('content-length','0') or 0)>1_048_576
+        too_large = int(request.headers.get('content-length','0') or 0)>MAX_REQUEST_BYTES
     except ValueError:
         return JSONResponse({'detail':'Ungültige Anfragegröße.'}, status_code=400)
     if too_large:

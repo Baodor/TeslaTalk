@@ -14,6 +14,7 @@ Die Prüfung umfasst das aktuelle Backend, Frontend, Authentifizierung und Zugri
 | Anmeldung in der Oberfläche | Ein Fehler beim Laden von Fahrzeugen oder Einladungen setzte ein bereits erfolgreich angemeldetes Konto wieder auf den Login-Bildschirm. | Teilanfragen werden getrennt ausgewertet; verfügbare Daten und Anmeldung bleiben bestehen. Der Fehler wird angezeigt. Browsertest mit nicht verfügbaren Fahrzeugdaten. |
 | Sprachaktivierung | Trennen und Effektbereinigung konnten denselben AudioContext zweimal schließen und eine unbehandelte Promise-Ablehnung auslösen. | Referenzen werden vor asynchronem Trennen gelöst; bereits geschlossene Kontexte werden nicht erneut geschlossen. Der reale Zwei-Sprecher-Test umfasst nun Sprachaktivierung und anschließendes Trennen. |
 | Konfigurationsskript | URLs mit leerem Benutzernamen und gesetztem Passwort wurden nicht vollständig als URLs mit Zugangsdaten erkannt. | Passwortfelder werden ebenfalls abgewiesen, bevor Dateien oder Schlüssel angelegt werden. |
+| Anfragegröße | Die Grenze von 1 MiB wurde nur anhand von `Content-Length` geprüft. Eine gestreamte Anfrage ohne diesen Header konnte die Grenze umgehen. | Die tatsächlich gelesenen Bytes werden ebenfalls begrenzt. Regressionstest bestätigt HTTP 413 ohne ausgeführte Aktion und die Annahme einer kleinen gestreamten Anfrage. |
 
 ## Immich: tatsächlich vorhandener Stand
 
@@ -25,7 +26,7 @@ Eine vollständige Immich-Anbindung braucht einen eigenen Implementierungsschrit
 
 ## Verifikation und Praxistest
 
-- 128 Backendtests, einschließlich Zugriffsrechten, OIDC, Gastablauf, API-Schlüsseln, Telemetrie, Push-Zustellung und den neuen Fehlerfällen.
+- 129 Backendtests, einschließlich Zugriffsrechten, OIDC, Gastablauf, API-Schlüsseln, Telemetrie, Push-Zustellung und den neuen Fehlerfällen.
 - TypeScript-Prüfung und Produktionsbuild des Frontends.
 - 12 Browsertests in der CI, einschließlich persönlichem und administrativem Push-Ablauf, Service Worker, privaten Offline-Daten, Gastablauf und zwei gleichzeitig veröffentlichten Mikrofonen mit realem LiveKit.
 - CI prüft die Traefik-Konfiguration mit und ohne Zertifikat-Resolver sowie Build und Start des Produktionscontainers unter seinem Anwendungsbenutzer mit persistentem Datenvolume.
