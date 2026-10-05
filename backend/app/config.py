@@ -11,6 +11,7 @@ class Settings:
     tesla_client_id: str = field(default_factory=lambda: os.getenv('TESLA_CLIENT_ID', ''))
     tesla_client_secret: str = field(default_factory=lambda: os.getenv('TESLA_CLIENT_SECRET', ''))
     fleet_url: str = field(default_factory=lambda: os.getenv('TESLA_FLEET_URL', 'https://fleet-api.prd.eu.vn.cloud.tesla.com').rstrip('/'))
+    navigation_commands: bool = field(default_factory=lambda: os.getenv('TESLA_NAVIGATION_COMMANDS', 'false').lower() == 'true')
     livekit_url: str = field(default_factory=lambda: os.getenv('LIVEKIT_URL', 'ws://localhost:7880'))
     livekit_internal_url: str = field(default_factory=lambda: os.getenv('LIVEKIT_INTERNAL_URL', 'http://livekit:7880'))
     livekit_key: str = field(default_factory=lambda: os.getenv('LIVEKIT_API_KEY', ''))
