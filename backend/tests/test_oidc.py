@@ -97,3 +97,13 @@ def test_oidc_settings_allow_group_scope_and_trim_admin_group(monkeypatch):
     configured = Settings()
     assert configured.oidc_scopes == 'openid email profile groups'
     assert configured.admin_group == 'admin'
+
+
+@pytest.mark.parametrize('groups,expected',[(None,'Gruppen-Claim'),([], 'keine verwertbaren Gruppen'),(['member'],'tatsächliche Gruppenname')])
+def test_admin_denial_explains_configuration_without_revealing_groups(client,monkeypatch,groups,expected):
+    oidc_client(monkeypatch,{'sub':'private-user','groups':groups})
+    result=client.get('/auth/admin/callback')
+    assert result.status_code==403
+    assert expected in result.json()['detail']
+    assert 'private-user' not in result.text
+    assert 'member' not in result.text

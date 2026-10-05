@@ -41,3 +41,5 @@ button,a,input,select,textarea{touch-action:manipulation}
 .map-legend{position:absolute;bottom:15px;left:15px;z-index:500;display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #533b3d;border-radius:8px;background:#261416f2;color:#e7d0d2;font-size:10px;pointer-events:none}
 .map-legend>span{width:10px;height:10px;border:1px solid #fff0f1;background:var(--accent)}
 .map-legend .legend-person{border-radius:50%}.map-legend .legend-car{border-radius:2px;margin-left:8px}
+
+.install-help .install-icon{display:block;margin:0 0 16px;border-radius:16px}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, BellOff, Download, RefreshCw, X } from 'lucide-react';
-import { api } from './api';
+import { Bell, BellOff, Download, RefreshCw, Send, X } from 'lucide-react';
+import { api, ApiError } from './api';
 
 type InstallPrompt = Event & { prompt(): Promise<void>; userChoice: Promise<{ outcome: string }> };
 const standalone = () => matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -139,20 +139,43 @@ export function usePWAControls(config: any, userId: string | undefined, notify: 
       notify((error as Error).message || 'Benachrichtigungen konnten nicht eingerichtet werden.');
     } finally { busyRef.current = false; setBusy(false); setChecking(false); }
   }
-  return { installed, help, setHelp, enabled, busy, checking, needsRepair, status, install, togglePush, retry: () => retryRef.current() };
+  async function sendTest() {
+    if (busyRef.current || !supported() || !enabled || needsRepair) return;
+    busyRef.current = true; revision.current++; setBusy(true);
+    let subscription: PushSubscription | null = null;
+    try {
+      subscription = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
+      if (!subscription || Notification.permission !== 'granted') {
+        setNeedsRepair(true); setStatus('Das Browser-Abonnement fehlt oder die Freigabe wurde entzogen. Benachrichtigungen erneut aktivieren.');
+        return;
+      }
+      await api('/api/push/subscribe', 'POST', subscription.toJSON());
+      await api('/api/push/test', 'POST', { endpoint: subscription.endpoint });
+      setStatus('Testnachricht an den Push-Dienst übergeben. Prüfe die Mitteilungszentrale dieses Geräts.');
+      notify('Testnachricht an dieses Gerät gesendet.');
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 410) {
+        await subscription?.unsubscribe().catch(() => {}); setNeedsRepair(true);
+      }
+      setStatus((error as Error).message || 'Die Testnachricht konnte nicht gesendet werden.');
+      notify((error as Error).message);
+    } finally { busyRef.current = false; setBusy(false); setChecking(false); }
+  }
+  return { installed, help, setHelp, enabled, busy, checking, needsRepair, status, install, togglePush, sendTest, retry: () => retryRef.current() };
 }
 export type PWAState = ReturnType<typeof usePWAControls>;
 
 export default function PWAControls({ controls }: { controls: PWAState }) {
-  const { installed, help, setHelp, enabled, busy, checking, needsRepair, status, install, togglePush, retry } = controls;
+  const { installed, help, setHelp, enabled, busy, checking, needsRepair, status, install, togglePush, sendTest, retry } = controls;
   return <section className="panel personal-notifications" aria-label="Benachrichtigungen und Web-App">
     <div className="panel-heading"><Bell size={21} /><h3>Benachrichtigungen & Web-App</h3></div>
     <p>Deine Einstellung gilt für dieses Gerät. Du erhältst Hinweise zu Nachrichten, Einladungen und Freundschaftsanfragen.</p>
     <div className="pwa-controls">
       <button onClick={() => void togglePush()} disabled={busy || checking} aria-pressed={enabled}>{enabled ? <Bell size={16} /> : <BellOff size={16} />}<span>{busy || checking ? 'Wird geprüft …' : needsRepair ? 'Benachrichtigungen erneut aktivieren' : enabled ? 'Benachrichtigungen an' : 'Benachrichtigungen'}</span></button>
       {needsRepair ? <button onClick={() => void togglePush(true)} disabled={busy}>Deaktivieren</button> : enabled && <button onClick={retry} disabled={busy || checking}><RefreshCw size={16} />Erneut abgleichen</button>}
+      {enabled && !needsRepair && <button onClick={() => void sendTest()} disabled={busy || checking}><Send size={16} />Testnachricht senden</button>}
       {!installed && <button onClick={() => void install()}><Download size={16} /><span>Zum Home-Bildschirm</span></button>}
-      {help && <div className="install-help" role="dialog" aria-label="TeslaTalk installieren"><button className="icon-button" aria-label="Schließen" onClick={() => setHelp(false)}><X size={18} /></button><strong>Dein Roadtrip auf dem Home-Bildschirm</strong><p><b>iPhone / iPad:</b> Öffne TeslaTalk in Safari. Wähle Teilen → Zum Home-Bildschirm. Starte TeslaTalk anschließend über das neue Symbol und aktiviere Benachrichtigungen.</p><p><b>Android / Desktop:</b> Wähle im Browser-Menü „App installieren“ oder „Zum Startbildschirm hinzufügen“.</p><small>Web-Push braucht HTTPS und einen unterstützten Browser. Auf iPhone / iPad wird iOS / iPadOS 16.4 oder neuer benötigt. Sprachfunk braucht eine aktive Internetverbindung.</small></div>}
+      {help && <div className="install-help" role="dialog" aria-label="TeslaTalk installieren"><button className="icon-button" aria-label="Schließen" onClick={() => setHelp(false)}><X size={18} /></button><img className="install-icon" src="/apple-touch-icon-v4.png" width="72" height="72" alt="Rotes TeslaTalk-Icon mit Walkie-Talkie und Tesla-T" /><strong>Dein Roadtrip auf dem Home-Bildschirm</strong><p><b>iPhone / iPad:</b> Öffne die TeslaTalk-Startseite in Safari. Wähle Teilen → Zum Home-Bildschirm. Bei einem alten Buchstabensymbol den bisherigen Eintrag entfernen und neu hinzufügen. Starte TeslaTalk anschließend über das neue Symbol und aktiviere Benachrichtigungen.</p><p><b>Android / Desktop:</b> Wähle im Browser-Menü „App installieren“ oder „Zum Startbildschirm hinzufügen“.</p><small>Web-Push braucht HTTPS und einen unterstützten Browser. Auf iPhone / iPad wird iOS / iPadOS 16.4 oder neuer benötigt. Sprachfunk braucht eine aktive Internetverbindung.</small></div>}
     </div>
     <p className="notification-status hint" role="status">{status || 'Auf diesem Gerät ausgeschaltet.'}</p>
   </section>;

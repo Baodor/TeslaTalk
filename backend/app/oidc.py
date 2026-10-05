@@ -49,3 +49,12 @@ def admin_access(claims):
         'claim_names': sorted(str(key) for key in claims),
     }
     return group_allowed or (email_listed and email_verified), diagnostic
+
+
+def admin_denial(diagnostic):
+    prefix = 'Keine Administrator-Berechtigung. '
+    if not diagnostic['groups_present']:
+        return prefix + f"Der Gruppen-Claim {settings.oidc_groups_claim!r} fehlt. Für Pocket ID OIDC_SCOPES=openid email profile groups setzen, den Container neu erstellen und erneut anmelden."
+    if not diagnostic['group_count']:
+        return prefix + 'Der Gruppen-Claim enthält keine verwertbaren Gruppen. Prüfe die Mitgliedschaft deines Benutzers in Pocket ID.'
+    return prefix + f"Die Anmeldung bestätigt keine Mitgliedschaft in der freigegebenen Gruppe {settings.admin_group!r}. In Pocket ID zählt der tatsächliche Gruppenname, nicht der Anzeigename oder die Client-Freigabe."

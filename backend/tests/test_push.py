@@ -96,3 +96,53 @@ def test_outbox_delivery_calls_webpush_and_clears_job(configured,monkeypatch):
 
 
 real_process=push.process_outbox
+
+
+def test_push_test_targets_only_this_browser_session(configured,monkeypatch):
+    data=subscription()
+    other=subscription('https://web.push.apple.com/other-device')
+    configured.post('/api/push/subscribe',json=data)
+    configured.post('/api/push/subscribe',json=other)
+    sent=[]
+    monkeypatch.setattr(push,'webpush',lambda **kwargs:sent.append(kwargs))
+    result=configured.post('/api/push/test',json={'endpoint':data['endpoint']})
+    assert result.status_code==200 and result.json()['accepted_by_provider'] is True
+    assert len(sent)==1 and sent[0]['subscription_info']['endpoint']==data['endpoint']
+    assert json.loads(sent[0]['data'])['tag']=='teslatalk-test'
+    stranger=new_driver('Not recipient')
+    assert stranger.post('/api/push/test',json={'endpoint':data['endpoint']}).status_code==404
+    # Even the same account must rebind this device after a new browser login.
+    assert configured.post('/api/demo/login',json={'query':'Fahrtleiter'}).status_code==200
+    assert configured.post('/api/push/test',json={'endpoint':data['endpoint']}).status_code==404
+    # A valid key must not substitute for the browser session.
+    key=configured.post('/api/keys',json={'label':'No browser push'}).json()
+    assert configured.post('/api/push/test',headers={'authorization':'Bearer '+key['token']},json={'endpoint':data['endpoint']}).status_code==403
+    assert len(sent)==1
+
+
+@pytest.mark.parametrize('status',[404,410,403])
+def test_push_test_handles_provider_rejection_without_leaking_secrets(configured,monkeypatch,status):
+    from requests import Response
+    data=subscription(); configured.post('/api/push/subscribe',json=data)
+    response=Response(); response.status_code=status
+    def reject(**kwargs):
+        raise push.WebPushException('private-provider-response',response=response)
+    monkeypatch.setattr(push,'webpush',reject)
+    result=configured.post('/api/push/test',json={'endpoint':data['endpoint']})
+    assert result.status_code==(410 if status in (404,410) else 502)
+    assert 'private-provider-response' not in result.text
+    assert bool(db.one('SELECT * FROM push_subscriptions'))==(status==403)
+
+
+def test_push_test_is_rate_limited_and_guest_access_ends_with_trip(configured,monkeypatch):
+    data=subscription(); configured.post('/api/push/subscribe',json=data)
+    monkeypatch.setattr(push,'webpush',lambda **kwargs:None)
+    for _ in range(3):
+        assert configured.post('/api/push/test',json={'endpoint':data['endpoint']}).status_code==200
+    assert configured.post('/api/push/test',json={'endpoint':data['endpoint']}).status_code==429
+    created=trip(configured); guest,_,_=passenger(configured,created)
+    guest_data=subscription('https://web.push.apple.com/guest-test')
+    guest.post('/api/push/subscribe',json=guest_data)
+    assert guest.post('/api/push/test',json={'endpoint':guest_data['endpoint']}).status_code==200
+    configured.post('/api/trips/'+created['id']+'/finish')
+    assert guest.post('/api/push/test',json={'endpoint':guest_data['endpoint']}).status_code==403

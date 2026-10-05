@@ -1,10 +1,14 @@
+export class ApiError extends Error {
+  readonly status: number;
+  constructor(message: string, status: number) { super(message); this.status = status; }
+}
 export async function api<T = any>(path: string, method = 'GET', body?: unknown): Promise<T> {
   const response = await fetch(path, { method, credentials: 'same-origin',
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body) });
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Verbindung fehlgeschlagen.' }));
-    throw new Error(typeof error.detail === 'string' ? error.detail : 'Bitte Eingaben prüfen.');
+    throw new ApiError(typeof error.detail === 'string' ? error.detail : 'Bitte Eingaben prüfen.', response.status);
   }
   return response.json();
 }

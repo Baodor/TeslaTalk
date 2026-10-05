@@ -21,7 +21,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from . import db, fleet, push
 from .config import settings
 from .metrics import ranking
-from .oidc import admin_access, admin_claims
+from .oidc import admin_access, admin_claims, admin_denial
 from .models import GuestLogin, Join, KeyCreate, Message, PassengerCreate, Profile, Query, Sample, TripCreate, PushSubscription, PushRemove
 from .realtime import hub, voice_token, delete_voice_room, ensure_voice_room
 from .security import Identity, authenticate, current_admin, current_user, digest, driver, limiter, pin_hash, pin_matches, join_pin_hash, set_session, user_public
@@ -216,6 +216,20 @@ def push_unsubscribe(body:PushRemove,identity:Identity=Depends(current_user)):
     return {'ok':True}
 
 
+@app.post('/api/push/test')
+async def push_test(body:PushRemove,request:Request,identity:Identity=Depends(current_user)):
+    if request.headers.get('authorization'):
+        raise HTTPException(403,'Push-Test benötigt eine Browser-Anmeldung.')
+    if identity.user['provider']=='guest':
+        member=db.one('SELECT trip_id FROM members WHERE user_id=?',(identity.user['id'],))
+        if not member:
+            raise HTTPException(403,'Mitfahrer-Zugang ist nicht mehr gültig.')
+        access(member['trip_id'],identity,active=True)
+    limiter.check(('push-test',identity.user['id']),3,60)
+    await push.test_message(body.endpoint,identity,request.cookies.get('tt_session',''))
+    return {'ok':True,'accepted_by_provider':True}
+
+
 @app.get('/auth/tesla')
 def tesla_login():
     if not settings.tesla_ready:
@@ -283,7 +297,7 @@ async def admin_callback(request:Request):
         allowed, diagnostic=admin_access(claims)
         if not allowed:
             log.warning('OIDC admin access denied: %s', json.dumps(diagnostic, sort_keys=True))
-            raise HTTPException(403, 'Keine Administrator-Berechtigung.')
+            raise HTTPException(403, admin_denial(diagnostic))
         response=RedirectResponse('/admin',status_code=303)
         set_session(response,str(claims['sub']),expires_at=time.time()+8*3600,admin=True)
         request.session.clear()
@@ -774,7 +788,7 @@ def tesla_public_key():
 @app.get('/apple-touch-icon.png')
 @app.get('/apple-touch-icon-precomposed.png')
 def apple_touch_icon():
-    path=Path(settings.frontend_dir)/'icons/apple-touch-icon.png'
+    path=Path(settings.frontend_dir)/'apple-touch-icon-v4.png'
     if not path.is_file():
         raise HTTPException(404, 'App-Icon noch nicht gebaut.')
     return FileResponse(path, media_type='image/png')

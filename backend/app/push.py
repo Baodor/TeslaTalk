@@ -63,6 +63,27 @@ def subscribe(subscription, identity, session_token):
                (endpoint_hash, identity.user['id'], session_hash, encrypted, identity.expires_at))
 
 
+async def test_message(endpoint, identity, session_token):
+    if not settings.push_ready:
+        raise HTTPException(503, 'Web-Push ist noch nicht eingerichtet.')
+    subscription = db.one('SELECT * FROM push_subscriptions WHERE endpoint_hash=? AND user_id=? AND session_hash=? AND expires_at>?',
+                          (digest(endpoint), identity.user['id'], digest(session_token), time.time()))
+    if not subscription:
+        raise HTTPException(404, 'Dieses Browser-Abonnement ist nicht registriert. Benachrichtigungen im Profil erneut abgleichen.')
+    payload = json.dumps({'title':'TeslaTalk · Testnachricht','body':'Deine Benachrichtigungen erreichen dieses Gerät.', 'url':'/', 'tag':'teslatalk-test'})
+    try:
+        data = json.loads(cipher().decrypt(subscription['encrypted_subscription'].encode()))
+        await asyncio.to_thread(deliver, data, payload)
+    except WebPushException as error:
+        status = error.response.status_code if error.response is not None else 0
+        if status in (404, 410):
+            db.execute('DELETE FROM push_subscriptions WHERE endpoint_hash=?', (subscription['endpoint_hash'],))
+            raise HTTPException(410, 'Das Browser-Abonnement ist abgelaufen. Benachrichtigungen erneut aktivieren.') from None
+        raise HTTPException(502, f'Der Push-Dienst hat die Testnachricht abgelehnt (HTTP {status or "unbekannt"}). VAPID-Konfiguration und Verbindung prüfen.') from None
+    except Exception:
+        raise HTTPException(502, 'Der Push-Dienst ist gerade nicht erreichbar. Bitte erneut versuchen.') from None
+
+
 def enqueue(user_id, body, url='/', tag='teslatalk', trip_id=None):
     if not settings.push_ready or not db.one('SELECT endpoint_hash FROM push_subscriptions WHERE user_id=? AND expires_at>?', (user_id, time.time())):
         return

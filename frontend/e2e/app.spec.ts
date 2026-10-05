@@ -112,11 +112,15 @@ test('PWA activates its service worker and keeps private trip data out of the of
   expect(manifest.icons.some((icon:any)=>icon.purpose==='maskable')).toBeTruthy();
   const appleIcon = page.locator('link[rel="apple-touch-icon"]');
   await expect(appleIcon).toHaveAttribute('sizes','180x180');
+  await expect(appleIcon).toHaveAttribute('href','/apple-touch-icon-v4.png');
   const icon = await page.request.get('/apple-touch-icon.png');
   expect(icon.headers()['content-type']).toContain('image/png');
   const png = await icon.body();
   expect(png.readUInt32BE(16)).toBe(180);
   expect(png.readUInt32BE(20)).toBe(180);
+  expect(png[25]).toBe(2); // Opaque RGB, rather than a transparent icon.
+  const versioned=await (await page.request.get('/apple-touch-icon-v4.png')).body();
+  expect(versioned.equals(png)).toBe(true);
   await page.reload();
   const cached=await page.evaluate(async()=>{
     const keys=await caches.keys();const result:string[]=[];
@@ -141,10 +145,11 @@ test('PWA activates its service worker and keeps private trip data out of the of
 
 test('notification consent subscribes this device and can be revoked', async ({page,context}) => {
   await context.grantPermissions(['notifications']);
-  const requests:any[]=[];
+  const requests:any[]=[],testMessages:any[]=[];
   let syncFails=false;
   await page.route('**/api/config',route=>route.fulfill({json:{demo:true,tesla_ready:false,push_ready:true,vapid_public_key:'BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'}}));
   await page.route('**/api/push/subscribe',route=>{requests.push(route.request().postDataJSON());return route.fulfill({status:syncFails?503:200,json:syncFails?{detail:'Temporarily unavailable'}:{ok:true}});});
+  await page.route('**/api/push/test',route=>{testMessages.push(route.request().postDataJSON());return route.fulfill({json:{ok:true,accepted_by_provider:true}});});
   await page.route('**/api/push/unsubscribe',route=>route.fulfill({json:{ok:true}}));
   await page.addInitScript(()=>{
     // Browser push delivery is mocked; keep consent deterministic across reloads,
@@ -168,6 +173,9 @@ test('notification consent subscribes this device and can be revoked', async ({p
   await expect(page.getByRole('button',{name:'Benachrichtigungen an',exact:true})).toHaveAttribute('aria-pressed','true');
   expect(requests).toHaveLength(1);
   expect(requests[0].endpoint).toBe('https://fcm.googleapis.com/fcm/send/browser-test');
+  await page.getByRole('button',{name:'Testnachricht senden',exact:true}).click();
+  await expect(page.locator('.notification-status')).toContainText('Testnachricht an den Push-Dienst übergeben');
+  expect(testMessages).toEqual([{endpoint:requests[0].endpoint}]);
   syncFails=true;
   await page.reload();
   await page.getByRole('button',{name:'Mein Profil',exact:true}).click();

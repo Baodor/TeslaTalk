@@ -41,8 +41,11 @@ The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign
 | DELETE | `/api/keys/{key_id}` | Revoke own personal key |
 | POST | `/api/push/subscribe` | Opt-in browser Web Push (`endpoint`, `keys.p256dh`, `keys.auth`) |
 | POST | `/api/push/unsubscribe` | Revoke own device subscription by `endpoint` |
+| POST | `/api/push/test` | Test own device by `endpoint`, bound to the current browser session; at most three tests per minute per user |
 | GET | `/api/admin` | OIDC administrator's instance overview |
 | WebSocket | `/api/ws/trips/{trip_id}` | Authorized trip presence, messages and participant updates |
+
+The push test returns `accepted_by_provider: true` when the push service accepts the message. Display still depends on the device's notification settings. Expired device subscriptions return HTTP 410 and require reactivation. API keys cannot send push tests; passenger access ends with the trip.
 
 ### Normalized sample
 
