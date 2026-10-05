@@ -187,7 +187,7 @@ Push-Versand wird im Backend mit simulierten Push-Diensten geprüft; der Browser
 - Verbrauchswerte erscheinen nur mit gemessenen Energie- und Kilometerzählern aus einer passenden Integration. V1 leitet keinen Verbrauch aus dem Akkustand ab.
 - Ladeplanung, Übertragung von Routen an andere Autos, Musiksteuerung und Immich sind **Roadmap-Funktionen**. Routenabruf, Planungsfahrzeugauswahl und automatische Gruppenanzeige sind implementiert; Ziele werden mit Zustimmung übernommen, identische Ladehalte noch nicht. Der QR-Zugang ist bereits nutzbar; Foto-Uploads sind noch nicht angebunden.
 - Ob Mikrofon und Browser während der Fahrt verfügbar sind, muss für Fahrzeug, Region und Firmware geprüft werden. Zielbefehle brauchen eine ausdrücklich aktivierte Tesla-Befehlsanbindung; sonst bleiben Fahrzeugzugriffe lesend.
-- Die Administration bietet zunächst eine Statusübersicht. Serverkonfiguration erfolgt über Umgebungsvariablen.
+- Die Administration bietet eine Statusübersicht und die Benutzerliste mit Tesla-Mail, Benutzername, Kennzeichen, Profilbild und zuletzt erfasstem Login. Serverkonfiguration erfolgt über Umgebungsvariablen.
 - Ein Server nutzt einen FastAPI-Prozess mit SQLite. Mehrere Instanzen und verteilte Skalierung folgen später.
 
 ## Lizenz
