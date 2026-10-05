@@ -1,5 +1,19 @@
 import { test, expect, type Page } from '@playwright/test';
 
+test('admin push test uses the server broadcast endpoint and reports queued devices', async ({page}) => {
+  const requests:string[]=[];
+  await page.route('**/api/config',route=>route.fulfill({json:{demo:true,admin_ready:true,push_ready:true}}));
+  await page.route('**/api/admin',route=>route.fulfill({json:{users:3,trips:2,samples:9,push_ready:true,poll_interval:120,storage:'SQLite'}}));
+  await page.route('**/api/admin/push/test',route=>{
+    requests.push(route.request().method());
+    return route.fulfill({json:{ok:true,queued_accounts:3,queued_devices:4}});
+  });
+  await page.goto('/admin');
+  await page.getByRole('button',{name:'Testnachricht an alle Geräte',exact:true}).click();
+  await expect(page.getByRole('status')).toContainText('4 Geräte in 3 Konten eingeplant');
+  expect(requests).toEqual(['POST']);
+});
+
 async function login(page: Page, name: string) {
   await page.goto('/');
   await page.getByLabel('Dein Demo-Name').fill(name);
@@ -105,8 +119,10 @@ test('two drivers chat live; named guest expires and public sharing stays privat
 
 test('PWA activates its service worker and keeps private trip data out of the offline cache', async ({ page, context }) => {
   await page.goto('/');
-  const worker=await page.evaluate(async()=>{const registration=await navigator.serviceWorker.ready;return registration.active?.state;});
-  expect(worker).toBe('activated');
+  await expect.poll(()=>page.evaluate(async()=>{
+    const registration=await navigator.serviceWorker.ready;
+    return registration.active?.state;
+  })).toBe('activated');
   const manifest=await (await page.request.get('/manifest.webmanifest')).json();
   expect(manifest.display).toBe('standalone');
   expect(manifest.icons.some((icon:any)=>icon.purpose==='maskable')).toBeTruthy();
@@ -173,7 +189,7 @@ test('notification consent subscribes this device and can be revoked', async ({p
   await expect(page.getByRole('button',{name:'Benachrichtigungen an',exact:true})).toHaveAttribute('aria-pressed','true');
   expect(requests).toHaveLength(1);
   expect(requests[0].endpoint).toBe('https://fcm.googleapis.com/fcm/send/browser-test');
-  await page.getByRole('button',{name:'Testnachricht senden',exact:true}).click();
+  await page.getByRole('button',{name:'Testnachricht an dieses Gerät',exact:true}).click();
   await expect(page.locator('.notification-status')).toContainText('Testnachricht an den Push-Dienst übergeben');
   expect(testMessages).toEqual([{endpoint:requests[0].endpoint}]);
   syncFails=true;

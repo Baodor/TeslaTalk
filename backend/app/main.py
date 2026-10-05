@@ -732,7 +732,14 @@ def admin(identity:Identity=Depends(current_admin)):
     return {'version':'0.1.0','users':db.one('SELECT count(*) n FROM users')['n'],
             'trips':db.one('SELECT count(*) n FROM trips')['n'],'samples':db.one('SELECT count(*) n FROM samples')['n'],
             'online':len(hub.online()),'tesla_ready':settings.tesla_ready,'voice_ready':settings.voice_ready,
-            'poll_interval':settings.poll_interval,'demo':settings.demo,'storage':'SQLite / persistentes Volume'}
+            'poll_interval':settings.poll_interval,'demo':settings.demo,'push_ready':settings.push_ready,
+            'storage':'SQLite / persistentes Volume'}
+
+
+@app.post('/api/admin/push/test')
+def admin_push_test(identity:Identity=Depends(current_admin)):
+    limiter.check(('admin-push-test',),3,60)
+    return push.test_all_devices()
 
 
 @app.get('/api/openapi.json')

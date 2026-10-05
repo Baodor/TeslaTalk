@@ -231,6 +231,40 @@ function PublicPage({ shareKey }: { shareKey: string }) {
 
 function AdminPage({ config }: { config: any }) {
   const [info, setInfo] = useState<any>(null), [error, setError] = useState('');
+  const [pushBusy, setPushBusy] = useState(false), [pushStatus, setPushStatus] = useState('');
   useEffect(() => { api('/api/admin').then(setInfo).catch(e => setError(e.message)); }, []);
-  return <main className="admin-layout"><header><Brand /><a href="/" className="button"><ArrowLeft size={16} />Zur Anwendung</a></header><section className="panel"><span className="eyebrow">ADMINISTRATION</span><h1>Dein TeslaTalk-Server.</h1>{info ? <><div className="summary-strip"><div><Users size={20} /><strong>{info.users}</strong><span>Konten</span></div><div><Route size={20} /><strong>{info.trips}</strong><span>Fahrten</span></div><div><Navigation size={20} /><strong>{info.samples}</strong><span>Messpunkte</span></div></div><div className="list-row"><span>Tesla Fleet API</span><span className="badge">{info.tesla_ready ? 'KONFIGURIERT' : 'EINRICHTUNG FEHLT'}</span></div><div className="list-row"><span>Sprachfunk</span><span className="badge">{info.voice_ready ? 'KONFIGURIERT' : 'EINRICHTUNG FEHLT'}</span></div><div className="list-row"><span>Abfrageintervall bei verbundenen Fahrern</span><strong>{info.poll_interval} Sekunden</strong></div><div className="list-row"><span>Speicherung</span><strong>{info.storage}</strong></div><p className="hint">Serverkonfiguration und Integrationsgeheimnisse werden über die Umgebungsvariablen der Installation verwaltet.</p><button onClick={() => void api('/auth/logout', 'POST').then(() => location.reload())}>Abmelden</button></> : <><p>{error || 'Administratorzugang wird geprüft …'}</p>{config.admin_ready ? <a className="button primary" href="/auth/admin">Über OIDC anmelden<ArrowUpRight size={18} /></a> : <div className="notice"><Settings size={22} /><span>OIDC ist noch nicht eingerichtet.<small>Issuer, Client-ID und Administratorgruppe in der Serverkonfiguration hinterlegen.</small></span></div>}</>}</section></main>;
+  async function sendServerTest() {
+    if (pushBusy) return;
+    setPushBusy(true); setPushStatus('');
+    try {
+      const result = await api<{ queued_devices: number; queued_accounts: number }>('/api/admin/push/test', 'POST');
+      setPushStatus(result.queued_devices
+        ? `Testnachricht für ${result.queued_devices} Geräte in ${result.queued_accounts} Konten eingeplant. Die Zustellung erfolgt im Hintergrund.`
+        : 'Keine Geräte mit aktivierten Benachrichtigungen und gültiger Anmeldung vorhanden.');
+    } catch (error) { setPushStatus((error as Error).message); }
+    finally { setPushBusy(false); }
+  }
+  return <main className="admin-layout">
+    <header><Brand /><a href="/" className="button"><ArrowLeft size={16} />Zur Anwendung</a></header>
+    <section className="panel"><span className="eyebrow">ADMINISTRATION</span><h1>Dein TeslaTalk-Server.</h1>
+      {info ? <>
+        <div className="summary-strip"><div><Users size={20} /><strong>{info.users}</strong><span>Konten</span></div><div><Route size={20} /><strong>{info.trips}</strong><span>Fahrten</span></div><div><Navigation size={20} /><strong>{info.samples}</strong><span>Messpunkte</span></div></div>
+        <div className="list-row"><span>Tesla Fleet API</span><span className="badge">{info.tesla_ready ? 'KONFIGURIERT' : 'EINRICHTUNG FEHLT'}</span></div>
+        <div className="list-row"><span>Sprachfunk</span><span className="badge">{info.voice_ready ? 'KONFIGURIERT' : 'EINRICHTUNG FEHLT'}</span></div>
+        <div className="list-row"><span>Abfrageintervall bei verbundenen Fahrern</span><strong>{info.poll_interval} Sekunden</strong></div>
+        <div className="list-row"><span>Speicherung</span><strong>{info.storage}</strong></div>
+        <section aria-label="Server-Benachrichtigungen">
+          <h2>Benachrichtigungen testen</h2>
+          <p>Eine Testnachricht an alle Geräte auf diesem Server mit aktivierten Benachrichtigungen und gültiger Anmeldung senden, einschließlich installierter Web-Apps.</p>
+          <button onClick={() => void sendServerTest()} disabled={pushBusy || !info.push_ready}><Send size={17} />{pushBusy ? 'Versand wird eingeplant …' : 'Testnachricht an alle Geräte'}</button>
+          <p className="hint" role="status">{pushStatus || (info.push_ready ? 'Mitfahrer werden nur während ihrer gültigen Fahrt berücksichtigt.' : 'Web-Push ist noch nicht eingerichtet. VAPID-Schlüssel in der Serverkonfiguration hinterlegen.')}</p>
+        </section>
+        <p className="hint">Serverkonfiguration und Integrationsgeheimnisse werden über die Umgebungsvariablen der Installation verwaltet.</p>
+        <button onClick={() => void api('/auth/logout', 'POST').then(() => location.reload())}>Abmelden</button>
+      </> : <>
+        <p>{error || 'Administratorzugang wird geprüft …'}</p>
+        {config.admin_ready ? <a className="button primary" href="/auth/admin">Über OIDC anmelden<ArrowUpRight size={18} /></a> : <div className="notice"><Settings size={22} /><span>OIDC ist noch nicht eingerichtet.<small>Issuer, Client-ID und Administratorgruppe in der Serverkonfiguration hinterlegen.</small></span></div>}
+      </>}
+    </section>
+  </main>;
 }

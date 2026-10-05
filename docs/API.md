@@ -43,9 +43,12 @@ The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign
 | POST | `/api/push/unsubscribe` | Revoke own device subscription by `endpoint` |
 | POST | `/api/push/test` | Test own device by `endpoint`, bound to the current browser session; at most three tests per minute per user |
 | GET | `/api/admin` | OIDC administrator's instance overview |
+| POST | `/api/admin/push/test` | OIDC admin queues a test for all active opted-in devices on the server; at most three broadcasts per minute |
 | WebSocket | `/api/ws/trips/{trip_id}` | Authorized trip presence, messages and participant updates |
 
 The push test returns `accepted_by_provider: true` when the push service accepts the message. Display still depends on the device's notification settings. Expired device subscriptions return HTTP 410 and require reactivation. API keys cannot send push tests; passenger access ends with the trip.
+
+The separate admin broadcast returns `queued_accounts` and `queued_devices`; delivery runs through the persistent outbox. It targets registered devices with valid browser sessions, including installed web apps. Opted-out and expired devices are excluded; guests must have an active trip and are checked again before delivery. Queued counts do not confirm device delivery.
 
 ### Normalized sample
 

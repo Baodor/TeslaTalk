@@ -84,6 +84,30 @@ async def test_message(endpoint, identity, session_token):
         raise HTTPException(502, 'Der Push-Dienst ist gerade nicht erreichbar. Bitte erneut versuchen.') from None
 
 
+def test_all_devices():
+    if not settings.push_ready:
+        raise HTTPException(503, 'Web-Push ist noch nicht eingerichtet.')
+    now = time.time()
+    payload = json.dumps({'title':'TeslaTalk · Server-Testnachricht',
+                          'body':'Deine TeslaTalk-Administration testet die Benachrichtigungen.',
+                          'url':'/', 'tag':'teslatalk-admin-test'})
+    with db.connect() as connection:
+        recipients = connection.execute('''
+            SELECT p.user_id, m.trip_id, count(DISTINCT p.endpoint_hash) AS devices
+            FROM push_subscriptions p
+            JOIN sessions s ON s.token_hash=p.session_hash AND s.user_id=p.user_id AND s.kind='user'
+            JOIN users u ON u.id=p.user_id
+            LEFT JOIN members m ON u.provider='guest' AND m.user_id=p.user_id AND m.left_at IS NULL
+            LEFT JOIN trips t ON t.id=m.trip_id
+            WHERE p.expires_at>? AND s.expires_at>?
+              AND (u.provider!='guest' OR (t.starts_at<=? AND t.ends_at>? AND t.finished_at IS NULL))
+            GROUP BY p.user_id, m.trip_id
+        ''', (now, now, now, now)).fetchall()
+        connection.executemany('INSERT INTO push_outbox(user_id,trip_id,payload,next_at,expires_at) VALUES (?,?,?,?,?)',
+                               [(row['user_id'],row['trip_id'],payload,now,now+3600) for row in recipients])
+    return {'ok':True, 'queued_accounts':len(recipients), 'queued_devices':sum(row['devices'] for row in recipients)}
+
+
 def enqueue(user_id, body, url='/', tag='teslatalk', trip_id=None):
     if not settings.push_ready or not db.one('SELECT endpoint_hash FROM push_subscriptions WHERE user_id=? AND expires_at>?', (user_id, time.time())):
         return

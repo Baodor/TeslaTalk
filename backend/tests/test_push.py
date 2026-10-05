@@ -146,3 +146,53 @@ def test_push_test_is_rate_limited_and_guest_access_ends_with_trip(configured,mo
     assert guest.post('/api/push/test',json={'endpoint':guest_data['endpoint']}).status_code==200
     configured.post('/api/trips/'+created['id']+'/finish')
     assert guest.post('/api/push/test',json={'endpoint':guest_data['endpoint']}).status_code==403
+
+
+def test_admin_test_broadcast_requires_admin_and_targets_all_active_devices(configured,monkeypatch):
+    from .test_oidc import oidc_client
+    from app.security import digest
+    first=subscription(); second=subscription('https://web.push.apple.com/owner-web-app')
+    configured.post('/api/push/subscribe',json=first)
+    configured.post('/api/push/subscribe',json=second)
+    friend=new_driver('Other push account')
+    friend_data=subscription('https://web.push.apple.com/friend')
+    friend.post('/api/push/subscribe',json=friend_data)
+    active=trip(configured); guest,_,_=passenger(configured,active)
+    guest_data=subscription('https://web.push.apple.com/active-passenger')
+    guest.post('/api/push/subscribe',json=guest_data)
+    ended=trip(configured); ended_guest,_,_=passenger(configured,ended)
+    ended_guest.post('/api/push/subscribe',json=subscription('https://web.push.apple.com/ended-passenger'))
+    configured.post('/api/trips/'+ended['id']+'/finish')
+    expired=subscription('https://web.push.apple.com/expired-device')
+    configured.post('/api/push/subscribe',json=expired)
+    db.execute('UPDATE push_subscriptions SET expires_at=? WHERE endpoint_hash=?',(time.time()-1,digest(expired['endpoint'])))
+    assert configured.post('/api/admin/push/test').status_code==401
+    assert not db.all_rows('SELECT * FROM push_outbox')
+    oidc_client(monkeypatch,{'sub':'operator','groups':['admin']})
+    assert configured.get('/auth/admin/callback',follow_redirects=False).status_code==303
+    result=configured.post('/api/admin/push/test')
+    assert result.status_code==200
+    assert result.json()=={'ok':True,'queued_accounts':3,'queued_devices':4}
+    assert len(db.all_rows('SELECT * FROM push_outbox'))==3
+    sent=[]
+    monkeypatch.setattr(push,'webpush',lambda **kwargs:sent.append(kwargs))
+    # A passenger's trip ending after the broadcast was queued still blocks delivery.
+    configured.post('/api/trips/'+active['id']+'/finish')
+    asyncio.run(real_process())
+    assert {call['subscription_info']['endpoint'] for call in sent}=={first['endpoint'],second['endpoint'],friend_data['endpoint']}
+    assert all(json.loads(call['data'])['tag']=='teslatalk-admin-test' for call in sent)
+    assert not db.all_rows('SELECT * FROM push_outbox')
+
+
+def test_admin_test_skips_expired_sessions_and_is_rate_limited(configured,monkeypatch):
+    from .test_oidc import oidc_client
+    configured.post('/api/push/subscribe',json=subscription())
+    uid=configured.get('/api/me').json()['id']
+    oidc_client(monkeypatch,{'sub':'operator','groups':['admin']})
+    configured.get('/auth/admin/callback',follow_redirects=False)
+    db.execute("UPDATE sessions SET expires_at=? WHERE user_id=? AND kind='user'",(time.time()-1,uid))
+    for _ in range(3):
+        result=configured.post('/api/admin/push/test')
+        assert result.status_code==200 and result.json()['queued_devices']==0
+    assert configured.post('/api/admin/push/test').status_code==429
+    assert not db.all_rows('SELECT * FROM push_outbox')
