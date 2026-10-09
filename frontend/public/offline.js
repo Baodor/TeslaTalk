@@ -31,7 +31,7 @@ languageSelect.addEventListener('change', () => {
   try { localStorage.setItem('teslatalk-language', offlineMode); } catch { /* Use the selection for this session. */ }
   renderLanguage();
 });
-window.addEventListener('languagechange', () => { if (offlineMode === 'auto') renderLanguage(); });
+window.addEventListener('languagechange', renderLanguage);
 window.addEventListener('storage', event => { if (event.key === 'teslatalk-language' || event.key === null) { readLanguage(); renderLanguage(); } });
 
 async function reconnect() {

@@ -39,8 +39,10 @@ test('respects language priority, persists manual choice and restores automatic 
   await page.evaluate(()=>{Object.defineProperty(navigator,'languages',{get:()=>['de-AT']});dispatchEvent(new Event('languagechange'));});
   await expect(page.locator('html')).toHaveAttribute('lang','de');
   await choice.selectOption('en');
+  await expect(choice.locator('option[value="auto"]')).toContainText('Deutsch');
   await page.evaluate(()=>{Object.defineProperty(navigator,'languages',{get:()=>['nl-NL']});dispatchEvent(new Event('languagechange'));});
   await expect(page.locator('html')).toHaveAttribute('lang','en');
+  await expect(choice.locator('option[value="auto"]')).toContainText('Nederlands');
 });
 
 test('manual switching works without localStorage and invalid saved values use detection',async({page})=>{

@@ -17,6 +17,7 @@ function readMode(): LanguageMode {
   try { const value = localStorage.getItem(storageKey); return valid(value) ? value : 'auto'; } catch { return 'auto'; }
 }
 let mode = readMode();
+let detectedLanguage = detectLanguage(navigator.languages?.length ? navigator.languages : [navigator.language]);
 let language = resolveLanguage();
 const listeners = new Set<() => void>();
 const reverse = new Map<string, string>();
@@ -37,11 +38,13 @@ for (const [key, values] of Object.entries(catalog)) {
     patterns.push({ key, names, expression: new RegExp(expression) });
   }
 }
-function resolveLanguage(): Language { return mode === 'auto' ? detectLanguage(navigator.languages?.length ? navigator.languages : [navigator.language]) : mode; }
+function resolveLanguage(): Language { return mode === 'auto' ? detectedLanguage : mode; }
 export const getLanguage = () => language;
+export const getDetectedLanguage = () => detectedLanguage;
 export const getLanguageMode = () => mode;
 export const getLocale = () => ({ de: 'de-DE', en: 'en-GB', nl: 'nl-NL' })[language];
 function update() {
+  detectedLanguage = detectLanguage(navigator.languages?.length ? navigator.languages : [navigator.language]);
   language = resolveLanguage();
   document.documentElement.lang = language;
   document.title = t('TeslaTalk – Gemeinsam unterwegs');
@@ -55,10 +58,10 @@ export function setLanguageMode(value: LanguageMode) {
   try { localStorage.setItem(storageKey, value); } catch { /* The choice still works for this session. */ }
   update();
 }
-window.addEventListener('languagechange', () => { if (mode === 'auto') update(); });
+window.addEventListener('languagechange', update);
 window.addEventListener('storage', event => { if (event.key === storageKey || event.key === null) { mode = readMode(); update(); } });
 const subscribe = (listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
-export const useLanguage = () => useSyncExternalStore(subscribe, () => `${mode}:${language}`);
+export const useLanguage = () => useSyncExternalStore(subscribe, () => `${mode}:${language}:${detectedLanguage}`);
 
 /** Only translate application messages. Never pass names, chat messages or API identifiers here. */
 export function t(source: string | null | undefined, params?: Record<string, string | number | null | undefined>): string {
