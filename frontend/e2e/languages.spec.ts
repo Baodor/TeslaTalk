@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { mockMapTiles } from './map-tiles';
 
 async function signedOut(page: Page) {
   await page.route('**/api/config',route=>route.fulfill({json:{demo:true,tesla_ready:true}}));
@@ -133,4 +134,37 @@ test('offline recovery uses the saved language and allows switching without a co
   await expect(page.getByRole('heading',{name:'No connection.'})).toBeVisible();
   await expect(page.getByRole('status')).toContainText('still unreachable');
   await expect(page.locator('html')).toHaveAttribute('lang','en');
+});
+
+test('trip route and control labels update while chat drafts and explicit command confirmation stay intact',async({page,context})=>{
+  await mockMapTiles(context);await dashboard(page);
+  const car={user_id:'language-driver',vehicle_id:'language-car',display_name:'Karte',vehicle_name:'Verlauf',allowed:true,available:true,demo:false};
+  const trip={id:'language-trip',title:'Karte',destination:'Verlauf',status:'active',my_role:'driver',leader_id:'language-driver',starts_at:Date.now()/1000-60,ends_at:Date.now()/1000+3600,finished_at:null,
+    participants_detail:[],navigation:null,album:{status:'planned',name:'Karte'},
+    vehicle_controls:{configured:true,vehicles:[car]},
+    route_overview:{planner_user_id:null,vehicles:[{...car,battery_pct:31,range_km:120,accepted:true,can_plan:true,status:'waiting'}],recommendations:{lowest_battery_user_id:'language-driver',lowest_range_user_id:'language-driver'}}};
+  await page.route('**/api/trips/language-trip',route=>route.fulfill({json:trip}));
+  await page.route('**/api/trips/language-trip/messages',route=>route.fulfill({json:[]}));
+  let commands=0;
+  await page.route('**/api/trips/language-trip/controls',route=>{
+    commands++;const data=route.request().postDataJSON();
+    expect(data.action).toBe('climate_on');expect(data.vehicle_ids).toEqual(['language-car']);
+    return route.fulfill({json:{status:'completed',vehicles:[{...car,status:'unknown',message:'Tesla/Proxy HTTP 500: Tesla hat den Befehl nicht bestätigt; Ergebnis bitte am Auto prüfen.'}]}});
+  });
+  await page.goto('/trip/language-trip');await page.getByRole('combobox').selectOption('nl');
+  await expect(page.getByRole('heading',{name:'Welke auto bepaalt de route?'})).toBeVisible();
+  await expect(page.getByText('KLEINSTE BEREIK',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Voertuigbediening',exact:true}).click();
+  await page.getByRole('button',{name:'Klimaat aan',exact:true}).click();
+  const dialog=page.getByRole('dialog');await dialog.getByRole('combobox').selectOption('en');
+  await expect(dialog.getByRole('heading',{name:'Climate on for the group?'})).toBeVisible();expect(commands).toBe(0);
+  await dialog.getByRole('button',{name:'Send to these vehicles now',exact:true}).click();
+  await expect(page.getByRole('status',{name:'Vehicle control results'})).toContainText('Tesla did not confirm the command');
+  await page.getByRole('combobox').selectOption('nl');
+  await expect(page.getByRole('status',{name:'Resultaten van voertuigbediening'})).toContainText('Tesla heeft het commando niet bevestigd');expect(commands).toBe(1);
+  await page.getByRole('button',{name:'Chat',exact:true}).click();
+  await page.getByLabel('Bericht',{exact:true}).fill('Karte und Verlauf');
+  await page.getByRole('combobox').selectOption('en');
+  await expect(page.getByLabel('Message',{exact:true})).toHaveValue('Karte und Verlauf');
+  await expect(page.getByRole('heading',{name:'Karte',exact:true})).toBeVisible();expect(commands).toBe(1);
 });

@@ -61,7 +61,8 @@ const subscribe = (listener: () => void) => { listeners.add(listener); return ()
 export const useLanguage = () => useSyncExternalStore(subscribe, () => `${mode}:${language}`);
 
 /** Only translate application messages. Never pass names, chat messages or API identifiers here. */
-export function t(source: string, params?: Record<string, string | number | null | undefined>): string {
+export function t(source: string | null | undefined, params?: Record<string, string | number | null | undefined>): string {
+  if (source == null) return '';
   const key = source.replace(/\s+/g, ' ').trim();
   let canonical = catalog[key] ? key : reverse.get(key) || key;
   if (!catalog[canonical] && !params && key.length <= 2000) {
