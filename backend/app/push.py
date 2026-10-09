@@ -21,29 +21,29 @@ log = logging.getLogger('teslatalk.push')
 def localize_payload(payload, language):
     """Translate application notification templates, preserving names and trip titles."""
     data = json.loads(payload)
-    if language not in ('en','nl'):
+    if language not in ('en','nl','de-AT'):
         if 'message_key' not in data:
             return payload
         data.pop('message_key',None)
         data.pop('parameters',None)
         return json.dumps(data,ensure_ascii=False)
     titles = {
-        'TeslaTalk · Testnachricht': ('TeslaTalk · Test notification','TeslaTalk · Testmelding'),
-        'TeslaTalk · Server-Testnachricht': ('TeslaTalk · Server test notification','TeslaTalk · Servertestmelding'),
+        'TeslaTalk · Testnachricht': ('TeslaTalk · Test notification','TeslaTalk · Testmelding','TeslaTalk · Servas, des is a Test'),
+        'TeslaTalk · Server-Testnachricht': ('TeslaTalk · Server test notification','TeslaTalk · Servertestmelding','TeslaTalk · Da Server probiert was'),
     }
     bodies = {
-        'Deine Benachrichtigungen erreichen dieses Gerät.': ('Your notifications reach this device.','Je meldingen bereiken dit apparaat.'),
-        'Deine TeslaTalk-Administration testet die Benachrichtigungen.': ('Your TeslaTalk administrator is testing notifications.','Je TeslaTalk-beheerder test de meldingen.'),
-        'Eine übernommene Fahrzeugroute weicht ab oder kann nicht gefahren werden. Bitte Routenübersicht prüfen.': ('An accepted vehicle route differs or cannot be driven. Please check the route overview.','Een overgenomen voertuigroute wijkt af of kan niet worden gereden. Controleer het routeoverzicht.'),
+        'Deine Benachrichtigungen erreichen dieses Gerät.': ('Your notifications reach this device.','Je meldingen bereiken dit apparaat.','Deine Benachrichtigungen kumman auf dem Gerät an.'),
+        'Deine TeslaTalk-Administration testet die Benachrichtigungen.': ('Your TeslaTalk administrator is testing notifications.','Je TeslaTalk-beheerder test de meldingen.','Dei TeslaTalk-Verwaltung probiert de Benachrichtigungen aus.'),
+        'Eine übernommene Fahrzeugroute weicht ab oder kann nicht gefahren werden. Bitte Routenübersicht prüfen.': ('An accepted vehicle route differs or cannot be driven. Please check the route overview.','Een overgenomen voertuigroute wijkt af of kan niet worden gereden. Controleer het routeoverzicht.','A übernommene Autoroute weicht ab oder geht si ned aus. Schau bitte de Routenübersicht an.'),
     }
-    index = 0 if language == 'en' else 1
+    index = {'en':0,'nl':1,'de-AT':2}[language]
     if data.get('title') in titles:
         data['title'] = titles[data['title']][index]
     body = data.get('body','')
     templates = {
-        'friend_request': ('{name} wants to connect with you.','{name} wil contact met je maken.'),
-        'trip_invite': ('You are invited to the trip “{title}”.','Je bent uitgenodigd voor de rit ‘{title}’.'),
-        'chat': ('{name}: new message in “{title}”.','{name}: nieuw bericht in ‘{title}’.'),
+        'friend_request': ('{name} wants to connect with you.','{name} wil contact met je maken.','{name} mag si mit dir verbinden.'),
+        'trip_invite': ('You are invited to the trip “{title}”.','Je bent uitgenodigd voor de rit ‘{title}’.','Du bist zur Fahrt „{title}“ eingladn.'),
+        'chat': ('{name}: new message in “{title}”.','{name}: nieuw bericht in ‘{title}’.','{name}: neue Nachricht in „{title}“.'),
     }
     template = templates.get(data.pop('message_key',None))
     parameters = data.pop('parameters',{})
@@ -52,13 +52,13 @@ def localize_payload(payload, language):
     elif body in bodies:
         data['body'] = bodies[body][index]
     elif body.endswith(' möchte sich mit dir verbinden.'):
-        data['body'] = body[:-len(' möchte sich mit dir verbinden.')] + (' wants to connect with you.' if language == 'en' else ' wil contact met je maken.')
+        data['body'] = templates['friend_request'][index].format(name=body[:-len(' möchte sich mit dir verbinden.')])
     elif body.startswith('Du bist zur Fahrt „') and body.endswith('“ eingeladen.'):
         title = body[len('Du bist zur Fahrt „'):-len('“ eingeladen.')]
-        data['body'] = ('You are invited to the trip “' + title + '”.' if language == 'en' else 'Je bent uitgenodigd voor de rit ‘' + title + '’.')
+        data['body'] = templates['trip_invite'][index].format(title=title)
     elif ': neue Nachricht in „' in body and body.endswith('“.'):
         name, title = body.rsplit(': neue Nachricht in „',1)
-        data['body'] = (name + ': new message in “' + title[:-2] + '”.' if language == 'en' else name + ': nieuw bericht in ‘' + title[:-2] + '’.')
+        data['body'] = templates['chat'][index].format(name=name,title=title[:-2])
     return json.dumps(data,ensure_ascii=False)
 
 
@@ -101,7 +101,7 @@ def subscribe(subscription, identity, session_token):
         raise HTTPException(503, 'Web-Push ist noch nicht eingerichtet.')
     data = validate_subscription(subscription)
     language = subscription.get('language')
-    if language in ('de','en','nl'):
+    if language in ('de','en','nl','de-AT'):
         data['language'] = language
     endpoint_hash, session_hash = digest(data['endpoint']), digest(session_token)
     if not db.one('SELECT token_hash FROM sessions WHERE token_hash=? AND user_id=? AND kind=?', (session_hash, identity.user['id'], 'user')):
@@ -111,7 +111,7 @@ def subscribe(subscription, identity, session_token):
         raise HTTPException(409, 'Bitte die bisherigen Benachrichtigungen auf diesem Gerät zuerst deaktivieren.')
     if existing and language is None:
         previous = json.loads(cipher().decrypt(existing['encrypted_subscription'].encode()))
-        if previous.get('language') in ('de','en','nl'):
+        if previous.get('language') in ('de','en','nl','de-AT'):
             data['language'] = previous['language']
     count = db.one('SELECT count(*) AS n FROM push_subscriptions WHERE user_id=? AND expires_at>?', (identity.user['id'], time.time()))['n']
     if count >= 8 and not existing:

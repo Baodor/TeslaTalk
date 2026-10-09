@@ -52,7 +52,9 @@ TeslaTalk verbindet Freunde, die gemeinsam mit ihren Teslas unterwegs sind. Eine
 
 TeslaTalk erkennt die bevorzugten Browser-/Handysprachen automatisch: Deutsch, Englisch und Niederländisch. Regionalvarianten wie `de-CH`, `en-US` und `nl-BE` werden berücksichtigt; die erste unterstützte Sprache in der Browserliste gewinnt. Ist keine dabei, wird Englisch angezeigt.
 
-Unter **Mein Profil → Sprache** lässt sich **Automatisch · Deutsch · English · Nederlands** auswählen, auch als Mitfahrer. Die Option „Automatisch“ zeigt die erkannte Handysprache an. Die manuelle Auswahl bleibt auf diesem Gerät nach dem Neuladen gespeichert. **Automatisch** stellt die Erkennung wieder her. Der Wechsel erfolgt sofort. Andere geöffnete Tabs übernehmen ihn ebenfalls, ohne dort Formulare, Chatentwürfe oder eine laufende Funkverbindung zurückzusetzen. Ohne verfügbaren Browserspeicher gilt die Auswahl für die laufende Sitzung.
+Unter **Mein Profil → Sprache** lässt sich **Automatisch · Deutsch · English · Nederlands · Österreichisch /s** auswählen, auch als Mitfahrer. Die Option „Automatisch“ zeigt die erkannte Handysprache an. Die manuelle Auswahl bleibt auf diesem Gerät nach dem Neuladen gespeichert. **Automatisch** stellt die Erkennung wieder her. Der Wechsel erfolgt sofort. Andere geöffnete Tabs übernehmen ihn ebenfalls, ohne dort Formulare, Chatentwürfe oder eine laufende Funkverbindung zurückzusetzen. Ohne verfügbaren Browserspeicher gilt die Auswahl für die laufende Sitzung.
+
+**„Österreichisch /s“** ist ein bewusst überzeichneter, lautmalerischer Satire-Modus mit österreichischer Umgangssprache: „Mei Profil“, „Gemma aufd Gassn?“ und „Mei Auto packt de Route ned“. Er gilt für die Oberfläche, Anwendungsmeldungen, Offline-Anzeige und Push-Nachrichten. Du aktivierst ihn ausdrücklich unter **Mein Profil → Sprache**; ein Handy mit `de-AT` wählt automatisch weiterhin Deutsch. Die Auswahl heißt in jeder Sprache exakt „Österreichisch /s“. Datums- und Zahlenformate nutzen dann `de-AT`; persönliche Texte, Namen und technische API-Bezeichner werden nicht umgeschrieben.
 
 Datumsanzeigen, Anwendungsmeldungen und die Offline-Seite verwenden die gewählte Sprache. Bei aktivierten Benachrichtigungen wird die Sprache des Geräts beim Server hinterlegt; persönliche Tests und Gruppenmeldungen werden pro Gerät übersetzt. Für bereits geschlossene Geräte gilt bis zum nächsten Öffnen die zuletzt übermittelte Sprache. Namen, Ziele, Chattexte und technische API-Bezeichner bleiben erhalten.
 
@@ -61,6 +63,7 @@ Datumsanzeigen, Anwendungsmeldungen und die Offline-Seite verwenden die gewählt
 - [ ] Je ein deutsches, englisches und niederländisches Handy/Browserprofil ohne gespeicherte Auswahl öffnen; automatisch angezeigte Sprache prüfen.
 - [ ] Unter „Mein Profil → Sprache“ alle drei Sprachen wählen, neu laden und danach auf „Automatisch“ zurückstellen.
 - [ ] Bei geöffnetem Formular in einem zweiten Tab über die Einstellungen wechseln; Eingaben, PIN und ausgewählte Fahrt müssen erhalten bleiben.
+- [ ] „Österreichisch /s“ wählen, Satire-Texte und unveränderte Namen prüfen; neu laden und auf „Automatisch“ zurückwechseln.
 - [ ] Anmeldung, QR-Mitfahrer, Profil, Routenplanung, Fahrzeugsteuerung und Adminbereich durchgehen.
 - [ ] Während einer Funkverbindung in einem zweiten Tab über die Einstellungen wechseln; Empfang und Mikrofonzustand müssen erhalten bleiben.
 - [ ] Persönliche Push-Testnachricht nach dem Wechsel senden und die Sprache auf dem Handy prüfen.

@@ -11,7 +11,7 @@ async function dashboard(page: Page, push=false, guest=false) {
   for(const path of ['/api/trips','/api/invites','/api/vehicles','/api/keys']) await page.route('**'+path,route=>route.fulfill({json:[]}));
 }
 async function openSettings(page: Page) {
-  await page.getByRole('button',{name:/^(Mein Profil|My profile|Mijn profiel)$/}).click();
+  await page.getByRole('button',{name:/^(Mein Profil|My profile|Mijn profiel|Mei Profil)$/}).click();
   await expect(page.getByRole('combobox')).toBeVisible();
 }
 async function settingsTab(context: BrowserContext) {
@@ -20,6 +20,7 @@ async function settingsTab(context: BrowserContext) {
 
 for(const [locale,language,heading] of [
   ['de-CH','de','Bereit für die nächste Fahrt?'],
+  ['de-AT','de','Bereit für die nächste Fahrt?'],
   ['en-US','en','Ready for the next trip?'],
   ['nl-BE','nl','Klaar voor de volgende rit?'],
   ['fr-FR','en','Ready for the next trip?'],
@@ -36,6 +37,24 @@ for(const [locale,language,heading] of [
     await page.setViewportSize({width:390,height:844});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   } finally {await context.close();}
+});
+
+test('Austrian satire is explicit, keeps its exact label, preserves form input and persists across reloads',async({page})=>{
+  await dashboard(page);await page.goto('/');await openSettings(page);
+  await page.getByLabel('Anzeigename',{exact:true}).fill('Karte {0}');
+  const choice=page.getByRole('combobox');
+  await expect(choice.locator('option[value="de-AT"]')).toHaveText('Österreichisch /s');
+  await choice.selectOption({label:'Österreichisch /s'});
+  await expect(page.locator('html')).toHaveAttribute('lang','de-AT');
+  await expect(page.getByRole('heading',{name:'Startklar, gemma.'})).toBeVisible();
+  await expect(page.getByLabel('Anzeigenam',{exact:true})).toHaveValue('Karte {0}');
+  await expect(page.locator('.user-block strong')).toHaveText('Karte');
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.reload();await openSettings(page);await expect(choice).toHaveValue('de-AT');
+  await choice.selectOption('nl');await expect(choice.locator('option[value="de-AT"]')).toHaveText('Österreichisch /s');
+  await choice.selectOption('en');await expect(choice.locator('option[value="de-AT"]')).toHaveText('Österreichisch /s');
+  await choice.selectOption('auto');await expect(page.locator('html')).toHaveAttribute('lang','de');
 });
 
 test('respects language priority, persists manual choice and restores automatic detection',async({page})=>{
@@ -118,6 +137,10 @@ test('changing language rebinds existing push consent without requesting permiss
   await openSettings(page);
   await page.getByRole('combobox').selectOption('nl');
   await expect.poll(()=>subscriptions.at(-1)?.language).toBe('nl');
+  await page.getByRole('combobox').selectOption('de-AT');
+  await expect.poll(()=>subscriptions.at(-1)?.language).toBe('de-AT');
+  await page.getByRole('combobox').selectOption('nl');
+  await expect.poll(()=>subscriptions.at(-1)?.language).toBe('nl');
   expect(await page.evaluate(()=>(window as any).languagePushCalls)).toEqual({permissions:0,subscriptions:0});
   await expect(page.getByRole('region',{name:'Meldingen en webapp'})).toContainText('Ingeschakeld op dit apparaat.');
 });
@@ -148,6 +171,10 @@ test('offline recovery uses the saved language and allows switching without a co
   await expect(page.getByRole('status')).toContainText('nog steeds niet bereikbaar');
   await expect(page.getByRole('combobox')).toBeHidden();
   await page.getByText('Instellingen',{exact:true}).click();
+  await page.getByRole('combobox').selectOption({label:'Österreichisch /s'});
+  await expect(page.getByRole('heading',{name:'Oida, ka Verbindung.'})).toBeVisible();
+  await expect(page.getByRole('status')).toContainText('erreich ma no immer ned');
+  await expect(page.locator('html')).toHaveAttribute('lang','de-AT');
   await page.getByRole('combobox').selectOption('en');
   await expect(page.getByRole('heading',{name:'No connection.'})).toBeVisible();
   await expect(page.getByRole('status')).toContainText('still unreachable');
@@ -187,4 +214,10 @@ test('trip route and control labels update while chat drafts and explicit comman
   await settings.getByRole('combobox').selectOption('en');
   await expect(page.getByLabel('Message',{exact:true})).toHaveValue('Karte und Verlauf');
   await expect(page.getByRole('heading',{name:'Karte',exact:true})).toBeVisible();expect(commands).toBe(1);
+  await settings.getByRole('combobox').selectOption('de-AT');
+  await expect(page.getByLabel('Nachricht',{exact:true})).toHaveValue('Karte und Verlauf');
+  await expect(page.getByRole('heading',{name:'Karte',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Autosteuerung',exact:true}).click();
+  await expect(page.getByRole('status',{name:'Ergebnisse vo da Autosteuerung'})).toContainText('Tesla/Proxy HTTP 500: Tesla hat den Befehl ned bestätigt');
+  await expect(page.getByRole('button',{name:'Klima aufdrahn',exact:true})).toBeVisible();expect(commands).toBe(1);
 });

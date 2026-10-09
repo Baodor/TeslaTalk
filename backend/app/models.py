@@ -108,7 +108,7 @@ class KeyCreate(BaseModel):
 class PushSubscription(BaseModel):
     endpoint: str = Field(min_length=10, max_length=2000)
     keys: dict[str, str]
-    language: Literal['de', 'en', 'nl'] | None = None
+    language: Literal['de', 'en', 'nl', 'de-AT'] | None = None
 
 
 class PushRemove(BaseModel):
@@ -119,4 +119,4 @@ class PushTest(PushRemove):
     # Sending the current subscription lets the server rebind a renewed browser
     # session and test it without a second, foreground-dependent HTTP request.
     keys: dict[str, str] | None = None
-    language: Literal['de', 'en', 'nl'] | None = None
+    language: Literal['de', 'en', 'nl', 'de-AT'] | None = None

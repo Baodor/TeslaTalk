@@ -50,7 +50,9 @@ TeslaTalk connects friends travelling together in their Teslas. Each trip brings
 
 TeslaTalk automatically detects German, English and Dutch from the browser’s preferred languages, including regional variants such as `de-CH`, `en-US` and `nl-BE`. The first supported preference wins; English is the fallback.
 
-**My profile → Language** offers **Automatic · Deutsch · English · Nederlands**, including for passengers. The Automatic option displays the detected phone language. A manual choice is remembered on that device after reloading; **Automatic** restores detection. Switching takes effect immediately. Other open tabs follow the choice without resetting their form input, chat drafts or an active radio connection. If browser storage is unavailable, the choice lasts for the current session.
+**My profile → Language** offers **Automatic · Deutsch · English · Nederlands · Österreichisch /s**, including for passengers. The Automatic option displays the detected phone language. A manual choice is remembered on that device after reloading; **Automatic** restores detection. Switching takes effect immediately. Other open tabs follow the choice without resetting their form input, chat drafts or an active radio connection. If browser storage is unavailable, the choice lasts for the current session.
+
+**“Österreichisch /s”** is a deliberately exaggerated, phonetic satire mode inspired by spoken Austrian German, with phrases such as “Mei Profil” and “Mei Auto packt de Route ned”. It covers the interface, application messages, offline recovery and push notifications. Enable it explicitly in **My profile → Language**; automatic detection still chooses German for `de-AT` phones. Its label is exactly “Österreichisch /s” in every language. Dates and numbers use `de-AT`; names, user content and technical API identifiers are preserved.
 
 Dates, application messages and offline recovery use the selected language. With notifications enabled, the device language is synchronised to the server; personal tests and group notifications are translated per device. A closed device uses its last synchronised language until the app is reopened. Names, destinations, chat text and technical API identifiers remain intact.
 
@@ -59,6 +61,7 @@ Dates, application messages and offline recovery use the selected language. With
 - [ ] Open German, English and Dutch browser profiles without a saved override and check detection.
 - [ ] Select each language in My profile → Language, reload, then restore Automatic.
 - [ ] Switch through settings in a second tab while a form is open and verify input, PIN and trip selection remain intact.
+- [ ] Select “Österreichisch /s”, check satire text and preserved names, reload and return to Automatic.
 - [ ] Check sign-in, QR passengers, profile, route planning, vehicle controls and administration.
 - [ ] Switch through settings in a second tab during a radio connection and verify listening and microphone state are preserved.
 - [ ] Send a personal push test after switching and check its language on the phone.

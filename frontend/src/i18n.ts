@@ -1,12 +1,13 @@
 import { useSyncExternalStore } from 'react';
 import translations from './translations.json';
 
-export type Language = 'de' | 'en' | 'nl';
+export type Language = 'de' | 'en' | 'nl' | 'de-AT';
 export type LanguageMode = Language | 'auto';
 const storageKey = 'teslatalk-language';
-const catalog: Record<string, { en: string; nl: string }> = translations;
-const valid = (value: unknown): value is LanguageMode => ['auto', 'de', 'en', 'nl'].includes(String(value));
+const catalog: Record<string, Record<Exclude<Language, 'de'>, string>> = translations;
+const valid = (value: unknown): value is LanguageMode => ['auto', 'de', 'en', 'nl', 'de-AT'].includes(String(value));
 export function detectLanguage(languages: readonly string[]): Language {
+  // Satire is an explicit choice, never automatically enabled for de-AT phones.
   for (const language of languages) {
     const base = language.toLowerCase().split(/[-_]/)[0];
     if (base === 'de' || base === 'en' || base === 'nl') return base;
@@ -27,7 +28,7 @@ for (const [key, values] of Object.entries(catalog)) {
 const patterns: { key: string; names: string[]; expression: RegExp }[] = [];
 for (const [key, values] of Object.entries(catalog)) {
   if (!key.includes('{')) continue;
-  for (const template of [key, values.en, values.nl]) {
+  for (const template of [key, ...Object.values(values)]) {
     const names: string[] = [];
     let cursor = 0, expression = '^';
     for (const match of template.matchAll(/\{(\w+)\}/g)) {
@@ -42,7 +43,7 @@ function resolveLanguage(): Language { return mode === 'auto' ? detectedLanguage
 export const getLanguage = () => language;
 export const getDetectedLanguage = () => detectedLanguage;
 export const getLanguageMode = () => mode;
-export const getLocale = () => ({ de: 'de-DE', en: 'en-GB', nl: 'nl-NL' })[language];
+export const getLocale = () => ({ de: 'de-DE', en: 'en-GB', nl: 'nl-NL', 'de-AT': 'de-AT' })[language];
 function update() {
   detectedLanguage = detectLanguage(navigator.languages?.length ? navigator.languages : [navigator.language]);
   language = resolveLanguage();

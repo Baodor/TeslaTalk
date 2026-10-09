@@ -8,7 +8,7 @@ def test_frontend_translation_catalog_covers_literals_and_preserves_placeholders
     source=Path(__file__).resolve().parents[2]/'frontend'/'src'
     catalog=json.loads((source/'translations.json').read_text())
     for key,translations in catalog.items():
-        assert set(translations)=={'en','nl'},key
+        assert set(translations)=={'en','nl','de-AT'},key
         placeholders=sorted(re.findall(r'\{\w+\}',key))
         for language,text in translations.items():
             assert text.strip(),(key,language)

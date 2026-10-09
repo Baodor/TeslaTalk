@@ -51,9 +51,13 @@ test('two microphones can publish concurrently in a real LiveKit room', async ({
   await expect(page.locator('.radio-status')).toHaveText('JE ZENDT · MICROFOON AAN');
   await expect(page.getByRole('button',{name:'Microfoon uitschakelen',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('audio')).toHaveCount(audioBefore);
-  expect(languageTokenRequests).toBe(0);page.off('request',countToken);
-  await settings.getByRole('combobox',{name:'Weergavetaal',exact:true}).selectOption('de');
+  await settings.getByRole('combobox',{name:'Weergavetaal',exact:true}).selectOption('de-AT');
+  await expect(page.locator('.radio-status')).toHaveText('DU SENDEST · MIKROFON EIN');
+  await expect(page.getByRole('button',{name:'Mikrofon abdrahn',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('audio')).toHaveCount(audioBefore);
+  await settings.getByRole('combobox',{name:'Anzeigsprach',exact:true}).selectOption('de');
   await expect(page.locator('html')).toHaveAttribute('lang','de');await settings.close();
+  expect(languageTokenRequests).toBe(0);page.off('request',countToken);
   await page.getByRole('button',{name:'Mikrofon ausschalten',exact:true}).click();
   await second.getByRole('button',{name:'Mikrofon ausschalten',exact:true}).press('Space');
   for(const client of [page,second]) await expect(client.getByRole('button',{name:'Mikrofon einschalten',exact:true})).toHaveAttribute('aria-pressed','false');
