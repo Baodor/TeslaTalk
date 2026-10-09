@@ -2806,5 +2806,13 @@
   "Simuliert; kein echter Fahrzeugbefehl gesendet.": {
     "en": "Simulated; no real vehicle command sent.",
     "nl": "Gesimuleerd; geen echt voertuigcommando verstuurd."
+  },
+  "Anzeigesprache": {
+    "en": "Display language",
+    "nl": "Weergavetaal"
+  },
+  "Automatisch verwendet die Sprache deines Handys oder Browsers. Deine Auswahl wird auf diesem Gerät gespeichert.": {
+    "en": "Automatic uses the language of your phone or browser. Your choice is saved on this device.",
+    "nl": "Automatisch gebruikt de taal van je telefoon of browser. Je keuze wordt op dit apparaat opgeslagen."
   }
 }

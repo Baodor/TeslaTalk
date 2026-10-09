@@ -4,7 +4,6 @@ import { RefreshCw, Trash2, Users } from 'lucide-react';
 import Avatar from './Avatar';
 import { api, date } from './api';
 import './AdminUsers.css';
-import LanguageSwitcher from './LanguageSwitcher';
 
 type Account = { id: string; provider: string; display_name: string; username: string; email: string | null;
   plate: string | null; avatar_url: string | null; created_at: number; last_login_at: number | null };
@@ -42,7 +41,6 @@ function DeleteAccount({user,close,deleted}:{user:Account;close:()=>void;deleted
   const [confirmation,setConfirmation] = useState(''),[busy,setBusy] = useState(false),[error,setError] = useState('');
   useEffect(()=>{dialog.current?.showModal();},[]);
   return <dialog ref={dialog} className="modal" aria-labelledby="delete-account-title" onCancel={event=>{if(busy)event.preventDefault();else close();}}>
-    <LanguageSwitcher inline />
     <h2 id="delete-account-title">{t("Benutzer dauerhaft löschen")}</h2>
     <p><strong>{user.display_name} (@{user.username})</strong> {t(" wird mit Profil, Tesla-Verknüpfung, Fahrzeugen, Nachrichten, Messwerten und Zugängen gelöscht.")}</p>
     <p className="error">{t("Auch alle von diesem Benutzer geleiteten Fahrten mit ihren Gruppendaten und zugehörigen QR-Zugängen werden gelöscht. Das lässt sich nicht rückgängig machen.")}</p>

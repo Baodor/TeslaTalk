@@ -52,19 +52,19 @@ TeslaTalk verbindet Freunde, die gemeinsam mit ihren Teslas unterwegs sind. Eine
 
 TeslaTalk erkennt die bevorzugten Browser-/Handysprachen automatisch: Deutsch, Englisch und Niederländisch. Regionalvarianten wie `de-CH`, `en-US` und `nl-BE` werden berücksichtigt; die erste unterstützte Sprache in der Browserliste gewinnt. Ist keine dabei, wird Englisch angezeigt.
 
-Oben auf jeder Seite lässt sich **Automatisch · Deutsch · English · Nederlands** auswählen, auch vor der Anmeldung und in Bestätigungsdialogen. Die manuelle Auswahl bleibt auf diesem Gerät nach dem Neuladen gespeichert. **Automatisch** stellt die Erkennung wieder her. Der Wechsel erfolgt sofort; offene Formulare, Chatentwürfe und eine laufende Funkverbindung bleiben erhalten. Ohne verfügbaren Browserspeicher gilt die Auswahl für die laufende Sitzung.
+Unter **Mein Profil → Sprache** lässt sich **Automatisch · Deutsch · English · Nederlands** auswählen, auch als Mitfahrer. Die Option „Automatisch“ zeigt die erkannte Handysprache an. Die manuelle Auswahl bleibt auf diesem Gerät nach dem Neuladen gespeichert. **Automatisch** stellt die Erkennung wieder her. Der Wechsel erfolgt sofort. Andere geöffnete Tabs übernehmen ihn ebenfalls, ohne dort Formulare, Chatentwürfe oder eine laufende Funkverbindung zurückzusetzen. Ohne verfügbaren Browserspeicher gilt die Auswahl für die laufende Sitzung.
 
 Datumsanzeigen, Anwendungsmeldungen und die Offline-Seite verwenden die gewählte Sprache. Bei aktivierten Benachrichtigungen wird die Sprache des Geräts beim Server hinterlegt; persönliche Tests und Gruppenmeldungen werden pro Gerät übersetzt. Für bereits geschlossene Geräte gilt bis zum nächsten Öffnen die zuletzt übermittelte Sprache. Namen, Ziele, Chattexte und technische API-Bezeichner bleiben erhalten.
 
 **Checkliste nach dem Update:**
 
-- [ ] Je ein deutsches, englisches und niederländisches Handy/Browserprofil ohne gespeicherte Auswahl öffnen; angezeigte Sprache oben prüfen.
-- [ ] Manuell alle drei Sprachen wählen, neu laden und danach auf „Automatisch“ zurückstellen.
-- [ ] In einem geöffneten Formular wechseln; Eingaben, PIN und ausgewählte Fahrt müssen erhalten bleiben.
+- [ ] Je ein deutsches, englisches und niederländisches Handy/Browserprofil ohne gespeicherte Auswahl öffnen; automatisch angezeigte Sprache prüfen.
+- [ ] Unter „Mein Profil → Sprache“ alle drei Sprachen wählen, neu laden und danach auf „Automatisch“ zurückstellen.
+- [ ] Bei geöffnetem Formular in einem zweiten Tab über die Einstellungen wechseln; Eingaben, PIN und ausgewählte Fahrt müssen erhalten bleiben.
 - [ ] Anmeldung, QR-Mitfahrer, Profil, Routenplanung, Fahrzeugsteuerung und Adminbereich durchgehen.
-- [ ] Während einer Funkverbindung wechseln; Empfang und Mikrofonzustand müssen erhalten bleiben.
+- [ ] Während einer Funkverbindung in einem zweiten Tab über die Einstellungen wechseln; Empfang und Mikrofonzustand müssen erhalten bleiben.
 - [ ] Persönliche Push-Testnachricht nach dem Wechsel senden und die Sprache auf dem Handy prüfen.
-- [ ] Offline-Seite prüfen; Sprachwechsel muss auch ohne Verbindung funktionieren.
+- [ ] Offline-Seite prüfen; unter „Einstellungen“ muss der Sprachwechsel auch ohne Verbindung funktionieren.
 
 ## Roadmap
 

@@ -2,9 +2,9 @@ const reconnectLink = document.getElementById('reconnect');
 const statusText = document.getElementById('status');
 const languageSelect = document.getElementById('offline-language');
 const offlineText = {
-  de: {language:'Sprache',auto:'Automatisch',home:'TeslaTalk – Startseite',title:'Die Verbindung fehlt.',description:'Dein Browser kann den TeslaTalk-Server gerade nicht erreichen. Fahrten, Karte, Sprachfunk und neue Nachrichten sind verfügbar, sobald die Verbindung wieder steht.',reconnect:'Erneut verbinden',checking:'Verbindung wird geprüft …',unavailable:'Der TeslaTalk-Server ist weiterhin nicht erreichbar. Prüfe Verbindung und HTTPS-Zertifikat.',notReady:'Der Server ist noch nicht bereit.',http:'Der Server antwortet mit HTTP '},
-  en: {language:'Language',auto:'Automatic',home:'TeslaTalk – Home',title:'No connection.',description:'Your browser cannot reach the TeslaTalk server right now. Trips, maps, voice radio and new messages will be available once the connection is restored.',reconnect:'Reconnect',checking:'Checking connection …',unavailable:'The TeslaTalk server is still unreachable. Check the connection and HTTPS certificate.',notReady:'The server is not ready yet.',http:'The server responds with HTTP '},
-  nl: {language:'Taal',auto:'Automatisch',home:'TeslaTalk – Startpagina',title:'Geen verbinding.',description:'Je browser kan de TeslaTalk-server momenteel niet bereiken. Ritten, kaart, spraakradio en nieuwe berichten zijn beschikbaar zodra de verbinding is hersteld.',reconnect:'Opnieuw verbinden',checking:'Verbinding wordt gecontroleerd …',unavailable:'De TeslaTalk-server is nog steeds niet bereikbaar. Controleer de verbinding en het HTTPS-certificaat.',notReady:'De server is nog niet klaar.',http:'De server antwoordt met HTTP '}
+  de: {settings:'Einstellungen',language:'Sprache',auto:'Automatisch',home:'TeslaTalk – Startseite',title:'Die Verbindung fehlt.',description:'Dein Browser kann den TeslaTalk-Server gerade nicht erreichen. Fahrten, Karte, Sprachfunk und neue Nachrichten sind verfügbar, sobald die Verbindung wieder steht.',reconnect:'Erneut verbinden',checking:'Verbindung wird geprüft …',unavailable:'Der TeslaTalk-Server ist weiterhin nicht erreichbar. Prüfe Verbindung und HTTPS-Zertifikat.',notReady:'Der Server ist noch nicht bereit.',http:'Der Server antwortet mit HTTP '},
+  en: {settings:'Settings',language:'Language',auto:'Automatic',home:'TeslaTalk – Home',title:'No connection.',description:'Your browser cannot reach the TeslaTalk server right now. Trips, maps, voice radio and new messages will be available once the connection is restored.',reconnect:'Reconnect',checking:'Checking connection …',unavailable:'The TeslaTalk server is still unreachable. Check the connection and HTTPS certificate.',notReady:'The server is not ready yet.',http:'The server responds with HTTP '},
+  nl: {settings:'Instellingen',language:'Taal',auto:'Automatisch',home:'TeslaTalk – Startpagina',title:'Geen verbinding.',description:'Je browser kan de TeslaTalk-server momenteel niet bereiken. Ritten, kaart, spraakradio en nieuwe berichten zijn beschikbaar zodra de verbinding is hersteld.',reconnect:'Opnieuw verbinden',checking:'Verbinding wordt gecontroleerd …',unavailable:'De TeslaTalk-server is nog steeds niet bereikbaar. Controleer de verbinding en het HTTPS-certificaat.',notReady:'De server is nog niet klaar.',http:'De server antwoordt met HTTP '}
 };
 let offlineMode = 'auto', offlineLanguage = 'en', statusKey = '', httpStatus = 0, connecting = false;
 function readLanguage() {
@@ -16,6 +16,7 @@ function renderLanguage() {
   const text = offlineText[offlineLanguage];
   document.documentElement.lang = offlineLanguage;
   document.getElementById('language-label').textContent = text.language;
+  document.getElementById('settings-label').textContent = text.settings;
   languageSelect.value = offlineMode;
   languageSelect.options[0].textContent = text.auto + ' · ' + ({de:'Deutsch',en:'English',nl:'Nederlands'})[detected];
   document.querySelector('.brand-logo').setAttribute('aria-label', text.home);

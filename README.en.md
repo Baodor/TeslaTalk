@@ -50,19 +50,19 @@ TeslaTalk connects friends travelling together in their Teslas. Each trip brings
 
 TeslaTalk automatically detects German, English and Dutch from the browser’s preferred languages, including regional variants such as `de-CH`, `en-US` and `nl-BE`. The first supported preference wins; English is the fallback.
 
-The selector at the top of every page offers **Automatic · Deutsch · English · Nederlands**, including sign-in and confirmation dialogs. A manual choice is remembered on that device after reloading; **Automatic** restores detection. Switching takes effect immediately while preserving form input, chat drafts and an active radio connection. If browser storage is unavailable, the choice lasts for the current session.
+**My profile → Language** offers **Automatic · Deutsch · English · Nederlands**, including for passengers. The Automatic option displays the detected phone language. A manual choice is remembered on that device after reloading; **Automatic** restores detection. Switching takes effect immediately. Other open tabs follow the choice without resetting their form input, chat drafts or an active radio connection. If browser storage is unavailable, the choice lasts for the current session.
 
 Dates, application messages and offline recovery use the selected language. With notifications enabled, the device language is synchronised to the server; personal tests and group notifications are translated per device. A closed device uses its last synchronised language until the app is reopened. Names, destinations, chat text and technical API identifiers remain intact.
 
 **Post-update checklist:**
 
 - [ ] Open German, English and Dutch browser profiles without a saved override and check detection.
-- [ ] Select each language manually, reload, then restore Automatic.
-- [ ] Switch in an open form and verify input, PIN and trip selection remain intact.
+- [ ] Select each language in My profile → Language, reload, then restore Automatic.
+- [ ] Switch through settings in a second tab while a form is open and verify input, PIN and trip selection remain intact.
 - [ ] Check sign-in, QR passengers, profile, route planning, vehicle controls and administration.
-- [ ] Switch during a radio connection and verify listening and microphone state are preserved.
+- [ ] Switch through settings in a second tab during a radio connection and verify listening and microphone state are preserved.
 - [ ] Send a personal push test after switching and check its language on the phone.
-- [ ] Check language switching on the offline page without a connection.
+- [ ] Check language switching under Settings on the offline page without a connection.
 
 ## Roadmap
 

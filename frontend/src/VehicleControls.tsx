@@ -2,7 +2,6 @@ import { t } from './i18n';
 import { useEffect, useRef, useState } from 'react';
 import { Car, Wind, X } from 'lucide-react';
 import { api, ApiError } from './api';
-import LanguageSwitcher from './LanguageSwitcher';
 
 type Action = 'frunk_open' | 'rear_trunk_toggle' | 'windows_vent' | 'windows_close' | 'climate_on' | 'climate_off';
 type CarControl = {user_id:string;vehicle_id:string;display_name:string;vehicle_name:string;allowed:boolean;available:boolean;demo:boolean};
@@ -71,7 +70,6 @@ export default function VehicleControls({tripId,userId,leader,active,driver,over
     {uncertain&&<div className="notice"><span>{t("Ergebnis bitte am Auto prüfen. Der Befehl wird nicht automatisch wiederholt.")}</span><button disabled={busy} onClick={()=>void checkResult()}>{t("Auftragsstatus abrufen")}</button></div>}
     {result&&<div role="status" aria-label={t("Ergebnisse der Fahrzeugsteuerung")}><ul>{result.vehicles.map(car=><li key={car.vehicle_id}><strong>{car.display_name} · {car.vehicle_name}: {t(statuses[car.status]||car.status)}</strong><p>{t(car.message)}</p></li>)}</ul></div>}
     {pending&&<dialog ref={dialog} className="modal" aria-labelledby="comfort-confirm-title" onCancel={event=>{if(busy)event.preventDefault();else setPending(null);}}>
-      <LanguageSwitcher inline />
       <header><h2 id="comfort-confirm-title">{t(labels[pending.action])} {t(" für die Gruppe?")}</h2><button className="icon-button" aria-label={t("Schließen")} disabled={busy} onClick={()=>setPending(null)}><X size={21}/></button></header>
       <p>{t("Diese Aktion wird an ")}{pending.cars.length} {t(" freigegebene Fahrzeuge gesendet:")}</p><ul>{pending.cars.map(car=><li key={car.vehicle_id}>{car.display_name} · {car.vehicle_name}{car.demo?t(" (nur Demo)"):''}</li>)}</ul>
       <p>{t("Prüfe, dass die Aktion bei allen aufgeführten Autos jetzt gewünscht ist und die beweglichen Teile frei sind.")}</p>

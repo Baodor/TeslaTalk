@@ -24,7 +24,7 @@ function CopyValue({ value }: { value: string }) {
 function Modal({ title, children, close }: { title: string; children: ReactNode; close: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => { ref.current?.showModal(); }, []);
-  return <dialog ref={ref} className="modal" onCancel={close}><LanguageSwitcher inline /><header><h2>{title}</h2><button className="icon-button" aria-label={t("Schließen")} onClick={close}><X size={21} /></button></header>{children}</dialog>;
+  return <dialog ref={ref} className="modal" onCancel={close}><header><h2>{title}</h2><button className="icon-button" aria-label={t("Schließen")} onClick={close}><X size={21} /></button></header>{children}</dialog>;
 }
 function ActionForm({ children, onSubmit, label = t("Speichern") }: { children: ReactNode; onSubmit: (data: FormData) => Promise<void>; label?: string }) {
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
@@ -226,6 +226,7 @@ function ProfilePage({ user, vehicles, reload, notify, pwa, teslaReady, guestTri
   return <>
     <header className="page-header"><div><span className="eyebrow">{t("DEIN PROFIL")}</span><h1>{t("Startklar")}<span className="accent">.</span></h1><p>{guest ? t("Deine persönlichen Einstellungen für diese Fahrt.") : t("Dein Name für die Gruppe. Dein Fahrzeug für die Fahrt.")}</p></div></header>
     <div className="settings-grid">
+      <LanguageSwitcher />
       <PWAControls controls={pwa} />
       {guest && <section className="panel" aria-label={t("Tesla-Profil für Mitfahrer")}>
         <h3>{t("Dein Tesla-Profil als Mitfahrer")}</h3>
