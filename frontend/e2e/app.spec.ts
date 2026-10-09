@@ -131,7 +131,7 @@ test('two drivers chat live; named guest expires and public sharing stays privat
   await dialog.getByRole('button', { name: 'Fahrt öffnen', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Zusammen ans Meer', exact: true })).toBeVisible();
   const tripId=page.url().split('/').pop()!;
-  const friendContext=await browser.newContext();
+  const friendContext=await browser.newContext({locale:'de-DE'});
   await mockMapTiles(friendContext);
   const friend=await friendContext.newPage();
   await login(friend, 'Freund '+Date.now());
@@ -147,7 +147,7 @@ test('two drivers chat live; named guest expires and public sharing stays privat
   await expect(friend.getByText('Alle bereit? Los geht’s ans Meer.', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Fotos & Mitfahrer', exact: true }).click();
   const detail=await (await page.request.get(`/api/trips/${tripId}`)).json();
-  const guestContext=await browser.newContext({geolocation:{latitude:49.88,longitude:8.66},permissions:['geolocation']});
+  const guestContext=await browser.newContext({locale:'de-DE',geolocation:{latitude:49.88,longitude:8.66},permissions:['geolocation']});
   await mockMapTiles(guestContext);
   const guest=await guestContext.newPage();
   await guest.goto(detail.guest_url);

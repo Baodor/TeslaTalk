@@ -1,3 +1,4 @@
+import { t, getLocale } from './i18n';
 import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import L from 'leaflet';
@@ -32,7 +33,7 @@ function MapTiles() {
   return <>
     {/* OSM requires a Referer. Send the origin only, never private trip paths. */}
     <TileLayer ref={layer} referrerPolicy="origin" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" eventHandlers={{tileerror:()=>setFailed(true)}} />
-    {failed && <div className="map-load-error" role="status"><strong>Kartenkacheln konnten nicht geladen werden.</strong><span>Prüfe die Internetverbindung und ob dein Netzwerk den Kartendienst blockiert.</span><button onClick={()=>{setFailed(false);layer.current?.redraw();}}>Karte erneut laden</button></div>}
+    {failed && <div className="map-load-error" role="status"><strong>{t("Kartenkacheln konnten nicht geladen werden.")}</strong><span>{t("Prüfe die Internetverbindung und ob dein Netzwerk den Kartendienst blockiert.")}</span><button onClick={()=>{setFailed(false);layer.current?.redraw();}}>{t("Karte erneut laden")}</button></div>}
   </>;
 }
 
@@ -51,7 +52,7 @@ function Controls({ positions, focusKey }: { positions: [number, number][]; focu
     observer.observe(container);
     return () => { active = false; observer.disconnect(); };
   }, [map]);
-  return <button className="map-center" title="Gruppe zentrieren" aria-label="Gruppe zentrieren" onClick={center}><LocateFixed size={19} /></button>;
+  return <button className="map-center" title={t("Gruppe zentrieren")} aria-label={t("Gruppe zentrieren")} onClick={center}><LocateFixed size={19} /></button>;
 }
 
 export default function TripMap({ participants, traces = [], navigation = null }: { participants: Participant[]; traces?: any[]; navigation?: NavigationData | null }) {
@@ -80,21 +81,21 @@ export default function TripMap({ participants, traces = [], navigation = null }
     {/* Leaflet's zoom transition timer can outlive map.remove() when changing tabs. */}
     <MapContainer center={[50.1109, 8.6821]} zoom={8} zoomControl={false} zoomAnimation={false} scrollWheelZoom className="trip-map">
       <MapTiles />
-      {destination && <Marker position={destination} icon={destinationIcon} title={'Navigationsziel: ' + (route?.destination || 'Ziel')}>
-        <Popup><strong>Navigationsziel des Planungsfahrzeugs</strong><br />{route?.destination || 'Ziel aus dem Auto'}</Popup>
+      {destination && <Marker position={destination} icon={destinationIcon} title={'Navigationsziel: ' + (route?.destination || t("Ziel"))}>
+        <Popup><strong>{t("Navigationsziel des Planungsfahrzeugs")}</strong><br />{route?.destination || t("Ziel aus dem Auto")}</Popup>
       </Marker>}
       {route && route.route_points.length > 1 && <Polyline positions={route.route_points} pathOptions={{ color: '#76d1b1', weight: 4, opacity: 0.9 }} />}
       {vehicles.map(p => <Marker key={'vehicle:' + p.id} position={[p.data.latitude, p.data.longitude]} icon={car(color(p.id))} title={'Fahrzeug: ' + p.display_name}>
-        <Popup><strong>Fahrzeug · {p.vehicle_name || p.display_name}</strong><br />{p.display_name} · {p.model}<br />{p.data.battery_pct ?? '—'} % Akku</Popup>
+        <Popup><strong>{t("Fahrzeug · ")}{p.vehicle_name || p.display_name}</strong><br />{p.display_name} · {p.model}<br />{p.data.battery_pct ?? '—'} {t(" % Akku")}</Popup>
       </Marker>)}
       {people.map(p => <Marker key={'person:' + p.id} position={[p.personal_location!.latitude, p.personal_location!.longitude]} icon={person(p, color(p.id))} zIndexOffset={500} title={'Person: ' + p.display_name}>
-        <Popup><strong>Person · {p.display_name}</strong><br />{p.role === 'passenger' ? 'Mitfahrer' : 'Fahrer'} · geteilter Browser-Standort<br />Aktualisiert: {new Date(p.personal_location!.updated_at * 1000).toLocaleTimeString('de-DE')}</Popup>
+        <Popup><strong>{t("Person · ")}{p.display_name}</strong><br />{p.role === 'passenger' ? t("Mitfahrer") : t("Fahrer")} {t(" · geteilter Browser-Standort")}<br />{t("Aktualisiert: ")}{new Date(p.personal_location!.updated_at * 1000).toLocaleTimeString(getLocale())}</Popup>
       </Marker>)}
       {Object.entries(grouped).map(([key, trace]) => <Polyline key={key} positions={trace.points} pathOptions={{ color: color(trace.userId), weight: 3, dashArray: trace.personal ? '5 7' : undefined }} />)}
       <Controls positions={positions} focusKey={markerKey+':'+(route ? `${route.destination}:${destination}:${route.route_points.length}` : 'group')} />
     </MapContainer>
-    <div className="map-label"><span className="status-dot" /> NUR DEINE FAHRT</div>
-    {(positions.length > 0 || traces.length > 0) && <div className="map-legend"><span className="legend-person" />Person<span className="legend-car" />Fahrzeug{destination && <><span className="legend-destination" />Ziel</>}{route && route.route_points.length > 1 && <><span className="legend-route" />Route</>}</div>}
-    {!positions.length && !traces.length && <div className="map-empty"><MapPin size={22} /><span>Noch keine Standortdaten.<small>Fahrzeugdaten abrufen oder deinen persönlichen Standort teilen. Das geht auch als Mitfahrer.</small></span></div>}
-  </div>{driverVehicles.length > 0 && <p className="hint" aria-live="polite">Fahrzeugpositionen: {vehicles.length} von {driverVehicles.length}.{missingVehicles.length > 0 && <> Position fehlt für {missingVehicles.map(p => p.vehicle_name || p.display_name).join(', ')}. Tesla muss Standortdaten liefern; ein geteilter Handy-Standort ersetzt keine Fahrzeugposition.</>}</p>}</>;
+    <div className="map-label"><span className="status-dot" /> {t(" NUR DEINE FAHRT")}</div>
+    {(positions.length > 0 || traces.length > 0) && <div className="map-legend"><span className="legend-person" />{t("Person")}<span className="legend-car" />{t("Fahrzeug")}{destination && <><span className="legend-destination" />{t("Ziel")}</>}{route && route.route_points.length > 1 && <><span className="legend-route" />{t("Route")}</>}</div>}
+    {!positions.length && !traces.length && <div className="map-empty"><MapPin size={22} /><span>{t("Noch keine Standortdaten.")}<small>{t("Fahrzeugdaten abrufen oder deinen persönlichen Standort teilen. Das geht auch als Mitfahrer.")}</small></span></div>}
+  </div>{driverVehicles.length > 0 && <p className="hint" aria-live="polite">{t("Fahrzeugpositionen: ")}{vehicles.length} {t(" von ")}{driverVehicles.length}.{missingVehicles.length > 0 && <> {t(" Position fehlt für ")}{missingVehicles.map(p => p.vehicle_name || p.display_name).join(', ')}{t(". Tesla muss Standortdaten liefern; ein geteilter Handy-Standort ersetzt keine Fahrzeugposition.")}</>}</p>}</>;
 }

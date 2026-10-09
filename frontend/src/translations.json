@@ -1,0 +1,2810 @@
+{
+  "Alle Benutzer": {
+    "en": "All users",
+    "nl": "Alle gebruikers"
+  },
+  "Aktualisieren": {
+    "en": "Refresh",
+    "nl": "Vernieuwen"
+  },
+  "Konten · Letzter Login wird seit diesem Update erfasst. Tesla-Mail und Profilbild erscheinen, soweit Tesla sie liefert.": {
+    "en": "Accounts · Last login is recorded from this update onwards. Tesla email and profile picture are shown when provided by Tesla.",
+    "nl": "Accounts · De laatste aanmelding wordt vanaf deze update vastgelegd. Tesla-e-mailadres en profielfoto worden getoond als Tesla ze verstrekt."
+  },
+  "Benutzer werden geladen …": {
+    "en": "Loading users …",
+    "nl": "Gebruikers worden geladen …"
+  },
+  "Benutzer": {
+    "en": "User",
+    "nl": "Gebruiker"
+  },
+  "Tesla-Mailadresse": {
+    "en": "Tesla email address",
+    "nl": "Tesla-e-mailadres"
+  },
+  "Benutzername": {
+    "en": "Username",
+    "nl": "Gebruikersnaam"
+  },
+  "Kennzeichen": {
+    "en": "Licence plate",
+    "nl": "Kenteken"
+  },
+  "Letzter Login": {
+    "en": "Last login",
+    "nl": "Laatste aanmelding"
+  },
+  "Aktionen": {
+    "en": "Actions",
+    "nl": "Acties"
+  },
+  "Demo": {
+    "en": "Demo",
+    "nl": "Demo"
+  },
+  "Noch nicht erfasst": {
+    "en": "Not recorded yet",
+    "nl": "Nog niet vastgelegd"
+  },
+  "löschen": {
+    "en": "delete",
+    "nl": "verwijderen"
+  },
+  "Löschen": {
+    "en": "Delete",
+    "nl": "Verwijderen"
+  },
+  "Noch keine Benutzer registriert.": {
+    "en": "No users registered yet.",
+    "nl": "Er zijn nog geen gebruikers geregistreerd."
+  },
+  "wurde gelöscht.": {
+    "en": "has been deleted.",
+    "nl": "is verwijderd."
+  },
+  "Benutzer dauerhaft löschen": {
+    "en": "Permanently delete user",
+    "nl": "Gebruiker definitief verwijderen"
+  },
+  "wird mit Profil, Tesla-Verknüpfung, Fahrzeugen, Nachrichten, Messwerten und Zugängen gelöscht.": {
+    "en": "will be deleted along with their profile, Tesla link, vehicles, messages, measurements and access credentials.",
+    "nl": "wordt verwijderd, inclusief profiel, Tesla-koppeling, voertuigen, berichten, meetgegevens en toegang."
+  },
+  "Auch alle von diesem Benutzer geleiteten Fahrten mit ihren Gruppendaten und zugehörigen QR-Zugängen werden gelöscht. Das lässt sich nicht rückgängig machen.": {
+    "en": "All trips led by this user, including group data and associated QR access, will also be deleted. This cannot be undone.",
+    "nl": "Alle ritten die deze gebruiker leidt, inclusief groepsgegevens en bijbehorende QR-toegang, worden ook verwijderd. Dit kan niet ongedaan worden gemaakt."
+  },
+  "Benutzername zur Bestätigung": {
+    "en": "Username to confirm",
+    "nl": "Gebruikersnaam ter bevestiging"
+  },
+  "Abbrechen": {
+    "en": "Cancel",
+    "nl": "Annuleren"
+  },
+  "Wird gelöscht …": {
+    "en": "Deleting …",
+    "nl": "Wordt verwijderd …"
+  },
+  "Dauerhaft löschen": {
+    "en": "Delete permanently",
+    "nl": "Definitief verwijderen"
+  },
+  "TeslaTalk API – vollständiger Integrationskontext": {
+    "en": "TeslaTalk API – complete integration context",
+    "nl": "TeslaTalk API – volledige integratiecontext"
+  },
+  "Nutze ausschließlich die dokumentierten Endpunkte und beachte Rechte und Zeitgrenzen.": {
+    "en": "Use only the documented endpoints and respect permissions and time limits.",
+    "nl": "Gebruik uitsluitend de gedocumenteerde endpoints en houd rekening met rechten en tijdslimieten."
+  },
+  "Alle Zugangsdaten sind Platzhalter. Dieser Text enthält keine echten Schlüssel oder privaten Kontodaten.": {
+    "en": "All credentials are placeholders. This text contains no real keys or private account data.",
+    "nl": "Alle toegangsgegevens zijn voorbeelden. Deze tekst bevat geen echte sleutels of privéaccountgegevens."
+  },
+  "Führe keine Aufrufe ohne ausdrücklichen Auftrag aus. JSON-Schema-Referenzen werden in openapi.components.schemas aufgelöst.": {
+    "en": "Do not make calls without explicit instructions. JSON Schema references are resolved in openapi.components.schemas.",
+    "nl": "Voer geen aanroepen uit zonder expliciete opdracht. JSON Schema-verwijzingen worden opgelost in openapi.components.schemas."
+  },
+  "Clipboard unavailable": {
+    "en": "Clipboard unavailable",
+    "nl": "Klembord niet beschikbaar"
+  },
+  "Zurück zu TeslaTalk": {
+    "en": "Back to TeslaTalk",
+    "nl": "Terug naar TeslaTalk"
+  },
+  "INTEGRATIONEN": {
+    "en": "INTEGRATIONS",
+    "nl": "INTEGRATIES"
+  },
+  "API-Dokumentation": {
+    "en": "API documentation",
+    "nl": "API-documentatie"
+  },
+  "Alle Endpunkte mit Funktion, Zugriff, Parametern und Schemas. Der Kopierbutton enthält die gesamte Dokumentation – auch bei aktiven Filtern.": {
+    "en": "All endpoints with functions, access, parameters and schemas. The copy button includes the entire documentation, even when filters are active.",
+    "nl": "Alle endpoints met functies, toegang, parameters en schema’s. De kopieerknop bevat de volledige documentatie, ook bij actieve filters."
+  },
+  "Mit Fahrerkonto anmelden": {
+    "en": "Sign in with a driver account",
+    "nl": "Aanmelden met een bestuurdersaccount"
+  },
+  "Erneut versuchen": {
+    "en": "Try again",
+    "nl": "Opnieuw proberen"
+  },
+  "API-Dokumentation wird geladen …": {
+    "en": "Loading API documentation …",
+    "nl": "API-documentatie wordt geladen …"
+  },
+  "API-Informationen": {
+    "en": "API information",
+    "nl": "API-informatie"
+  },
+  "Endpunkte · Version": {
+    "en": "endpoints · version",
+    "nl": "endpoints · versie"
+  },
+  "Alle Informationen kopiert": {
+    "en": "All information copied",
+    "nl": "Alle informatie gekopieerd"
+  },
+  "Alle Informationen für ein LLM kopieren": {
+    "en": "Copy all information for an LLM",
+    "nl": "Alle informatie voor een LLM kopiëren"
+  },
+  "Text herunterladen": {
+    "en": "Download text",
+    "nl": "Tekst downloaden"
+  },
+  "OpenAPI JSON": {
+    "en": "OpenAPI JSON",
+    "nl": "OpenAPI JSON"
+  },
+  "Vollständiger Kontext mit allen Endpunkten, Regeln, Beispielen und Schemas ist in der Zwischenablage.": {
+    "en": "The complete context with all endpoints, rules, examples and schemas is on the clipboard.",
+    "nl": "De volledige context met alle endpoints, regels, voorbeelden en schema’s staat op het klembord."
+  },
+  "Enthält keine persönlichen API-Schlüssel, Sitzungen oder Fahrzeugdaten.": {
+    "en": "Contains no personal API keys, sessions or vehicle data.",
+    "nl": "Bevat geen persoonlijke API-sleutels, sessies of voertuiggegevens."
+  },
+  "LLM-Kontext manuell kopieren": {
+    "en": "Copy LLM context manually",
+    "nl": "LLM-context handmatig kopiëren"
+  },
+  "Manuell kopieren": {
+    "en": "Copy manually",
+    "nl": "Handmatig kopiëren"
+  },
+  "Kopiertext schließen": {
+    "en": "Close copy text",
+    "nl": "Kopieertekst sluiten"
+  },
+  "Der Browser erlaubt hier keinen direkten Zugriff auf die Zwischenablage. Wähle den vollständigen Text aus und kopiere ihn; alternativ kannst du ihn herunterladen.": {
+    "en": "The browser does not allow direct clipboard access here. Select and copy the complete text, or download it instead.",
+    "nl": "De browser staat hier geen directe toegang tot het klembord toe. Selecteer en kopieer de volledige tekst of download deze."
+  },
+  "Vollständiger LLM-Kontext": {
+    "en": "Complete LLM context",
+    "nl": "Volledige LLM-context"
+  },
+  "Aufrufregeln": {
+    "en": "Call rules",
+    "nl": "Aanroepregels"
+  },
+  "Endpunkte suchen": {
+    "en": "Search endpoints",
+    "nl": "Endpoints zoeken"
+  },
+  "z. B. navigation, GET, Push": {
+    "en": "e.g. navigation, GET, Push",
+    "nl": "bijv. navigation, GET, Push"
+  },
+  "Bereich": {
+    "en": "Category",
+    "nl": "Categorie"
+  },
+  "Alle Bereiche": {
+    "en": "All categories",
+    "nl": "Alle categorieën"
+  },
+  "von": {
+    "en": "of",
+    "nl": "van"
+  },
+  "Endpunkten angezeigt": {
+    "en": "endpoints shown",
+    "nl": "endpoints weergegeven"
+  },
+  "Zugriff:": {
+    "en": "Access:",
+    "nl": "Toegang:"
+  },
+  "Antwort und Verhalten:": {
+    "en": "Response and behaviour:",
+    "nl": "Antwoord en gedrag:"
+  },
+  "Parameter, Anfrage und Antwortschema": {
+    "en": "Parameters, request and response schema",
+    "nl": "Parameters, aanvraag- en antwoordschema"
+  },
+  "Beispiele und Datentypen": {
+    "en": "Examples and data types",
+    "nl": "Voorbeelden en gegevenstypen"
+  },
+  "Aufrufbeispiele mit Platzhaltern": {
+    "en": "Example calls with placeholders",
+    "nl": "Voorbeeldaanroepen met placeholders"
+  },
+  "Alle JSON-Schema-Definitionen": {
+    "en": "All JSON Schema definitions",
+    "nl": "Alle JSON Schema-definities"
+  },
+  "TeslaTalk – Startseite": {
+    "en": "TeslaTalk – Home",
+    "nl": "TeslaTalk – Startpagina"
+  },
+  "Tesla": {
+    "en": "Tesla",
+    "nl": "Tesla"
+  },
+  "Talk": {
+    "en": "Talk",
+    "nl": "Talk"
+  },
+  "GEMEINSAM UNTERWEGS": {
+    "en": "ON THE ROAD TOGETHER",
+    "nl": "SAMEN ONDERWEG"
+  },
+  "Kopieren": {
+    "en": "Copy",
+    "nl": "Kopiëren"
+  },
+  "Schließen": {
+    "en": "Close",
+    "nl": "Sluiten"
+  },
+  "Speichern": {
+    "en": "Save",
+    "nl": "Opslaan"
+  },
+  "Wird gespeichert …": {
+    "en": "Saving …",
+    "nl": "Wordt opgeslagen …"
+  },
+  "Verbinde mit deinem Server …": {
+    "en": "Connecting to your server …",
+    "nl": "Verbinding maken met je server …"
+  },
+  "DEINE GRUPPE. DEINE FAHRT.": {
+    "en": "YOUR GROUP. YOUR TRIP.",
+    "nl": "JOUW GROEP. JOUW RIT."
+  },
+  "Die Straße teilt sich.": {
+    "en": "The roads may split.",
+    "nl": "De wegen kunnen splitsen."
+  },
+  "Die Verbindung bleibt.": {
+    "en": "The connection stays.",
+    "nl": "De verbinding blijft."
+  },
+  "Sprechen, zusammenfinden und gemeinsam losfahren.": {
+    "en": "Talk, meet up and set off together.",
+    "nl": "Praat, vind elkaar en vertrek samen."
+  },
+  "TeslaTalk hält deinen Roadtrip zusammen.": {
+    "en": "TeslaTalk keeps your road trip together.",
+    "nl": "TeslaTalk houdt je roadtrip bij elkaar."
+  },
+  "Sprechfunk": {
+    "en": "Voice radio",
+    "nl": "Spraakradio"
+  },
+  "Live-Karte": {
+    "en": "Live map",
+    "nl": "Livekaart"
+  },
+  "Deine Freunde": {
+    "en": "Your friends",
+    "nl": "Je vrienden"
+  },
+  "Selbst gehostet. Auf deinem Server.": {
+    "en": "Self-hosted. On your server.",
+    "nl": "Zelf gehost. Op jouw server."
+  },
+  "TESLATALK · V0.1": {
+    "en": "TESLATALK · V0.1",
+    "nl": "TESLATALK · V0.1"
+  },
+  "Bereit für die nächste Fahrt?": {
+    "en": "Ready for the next trip?",
+    "nl": "Klaar voor de volgende rit?"
+  },
+  "Melde dich mit Tesla an und wähle dein Fahrzeug. Deine Zugangsdaten bleiben bei Tesla.": {
+    "en": "Sign in with Tesla and select your vehicle. Your credentials stay with Tesla.",
+    "nl": "Meld je aan met Tesla en kies je voertuig. Je toegangsgegevens blijven bij Tesla."
+  },
+  "Mit Tesla anmelden": {
+    "en": "Sign in with Tesla",
+    "nl": "Aanmelden met Tesla"
+  },
+  "Tesla-Anmeldung noch nicht eingerichtet.": {
+    "en": "Tesla sign-in has not been configured yet.",
+    "nl": "Tesla-aanmelding is nog niet ingesteld."
+  },
+  "Der Betreiber muss seine Fleet-API-Anwendung konfigurieren.": {
+    "en": "The operator needs to configure their Fleet API application.",
+    "nl": "De beheerder moet de Fleet API-applicatie instellen."
+  },
+  "Tesla-Anmeldung wurde abgebrochen.": {
+    "en": "Tesla sign-in was cancelled.",
+    "nl": "Tesla-aanmelding is geannuleerd."
+  },
+  "DEMO · KEIN ECHTES FAHRZEUG": {
+    "en": "DEMO · NO REAL VEHICLE",
+    "nl": "DEMO · GEEN ECHT VOERTUIG"
+  },
+  "Demo öffnen": {
+    "en": "Open demo",
+    "nl": "Demo openen"
+  },
+  "Dein Demo-Name": {
+    "en": "Your demo name",
+    "nl": "Je demonaam"
+  },
+  "Mitfahrer? Scanne den QR-Code deiner Fahrt und nutze deinen persönlichen PIN.": {
+    "en": "Passenger? Scan your trip’s QR code and use your personal PIN.",
+    "nl": "Meerijden? Scan de QR-code van je rit en gebruik je persoonlijke pincode."
+  },
+  "Administration": {
+    "en": "Administration",
+    "nl": "Beheer"
+  },
+  "Ein Teil deiner Daten konnte nicht geladen werden.": {
+    "en": "Some of your data could not be loaded.",
+    "nl": "Een deel van je gegevens kon niet worden geladen."
+  },
+  "Bitte erneut versuchen.": {
+    "en": "Please try again.",
+    "nl": "Probeer het opnieuw."
+  },
+  "Verbindung fehlgeschlagen.": {
+    "en": "Connection failed.",
+    "nl": "Verbinding mislukt."
+  },
+  "Deine Fahrten werden geladen …": {
+    "en": "Loading your trips …",
+    "nl": "Je ritten worden geladen …"
+  },
+  "DEIN ROADTRIP": {
+    "en": "YOUR ROAD TRIP",
+    "nl": "JOUW ROADTRIP"
+  },
+  "Fahrten": {
+    "en": "Trips",
+    "nl": "Ritten"
+  },
+  "Freunde": {
+    "en": "Friends",
+    "nl": "Vrienden"
+  },
+  "Mein Profil": {
+    "en": "My profile",
+    "nl": "Mijn profiel"
+  },
+  "Privater Server": {
+    "en": "Private server",
+    "nl": "Privéserver"
+  },
+  "Mitfahrer · Zugang auf Zeit": {
+    "en": "Passenger · temporary access",
+    "nl": "Passagier · tijdelijke toegang"
+  },
+  "Abmelden": {
+    "en": "Sign out",
+    "nl": "Afmelden"
+  },
+  "DEMO-MODUS · Fahrzeugwerte sind Beispieldaten": {
+    "en": "DEMO MODE · Vehicle values are example data",
+    "nl": "DEMOMODUS · Voertuigwaarden zijn voorbeeldgegevens"
+  },
+  "Hinweis schließen": {
+    "en": "Dismiss notice",
+    "nl": "Melding sluiten"
+  },
+  "Fahrt wird geladen …": {
+    "en": "Loading trip …",
+    "nl": "Rit wordt geladen …"
+  },
+  "GEMEINSAM WEITER": {
+    "en": "MOVING ON TOGETHER",
+    "nl": "SAMEN VERDER"
+  },
+  "Deine Fahrten": {
+    "en": "Your trips",
+    "nl": "Je ritten"
+  },
+  "Ein Ziel. Deine Leute. Alles an einem Ort.": {
+    "en": "One destination. Your people. Everything in one place.",
+    "nl": "Eén bestemming. Jouw mensen. Alles op één plek."
+  },
+  "Mit PIN beitreten": {
+    "en": "Join with PIN",
+    "nl": "Deelnemen met pincode"
+  },
+  "Fahrt erstellen": {
+    "en": "Create trip",
+    "nl": "Rit aanmaken"
+  },
+  "Verbinde zuerst dein Fahrzeug.": {
+    "en": "Connect your vehicle first.",
+    "nl": "Koppel eerst je voertuig."
+  },
+  "Öffne dein Profil und rufe deine Tesla-Fahrzeuge ab.": {
+    "en": "Open your profile and retrieve your Tesla vehicles.",
+    "nl": "Open je profiel en haal je Tesla-voertuigen op."
+  },
+  "Zum Profil": {
+    "en": "Go to profile",
+    "nl": "Naar profiel"
+  },
+  "Du bist eingeladen": {
+    "en": "You’re invited",
+    "nl": "Je bent uitgenodigd"
+  },
+  "Mitfahren": {
+    "en": "Join trip",
+    "nl": "Meerijden"
+  },
+  "Geplante & aktive Fahrten": {
+    "en": "Planned & active trips",
+    "nl": "Geplande en actieve ritten"
+  },
+  "Deine Fahrzeuge": {
+    "en": "Your vehicles",
+    "nl": "Je voertuigen"
+  },
+  "Standorte bleiben": {
+    "en": "Locations stay",
+    "nl": "Locaties blijven"
+  },
+  "in deiner Gruppe": {
+    "en": "within your group",
+    "nl": "binnen je groep"
+  },
+  "Das Ziel ist die gemeinsame Fahrt": {
+    "en": "The goal is travelling together",
+    "nl": "Het doel is samen rijden"
+  },
+  "Die nächste Fahrt wartet auf dich.": {
+    "en": "Your next trip is waiting.",
+    "nl": "Je volgende rit wacht op je."
+  },
+  "Erstelle einen Roadtrip oder tritt mit dem PIN deiner Freunde bei.": {
+    "en": "Create a road trip or join using your friends’ PIN.",
+    "nl": "Maak een roadtrip aan of neem deel met de pincode van je vrienden."
+  },
+  "ALS NÄCHSTES": {
+    "en": "COMING NEXT",
+    "nl": "BINNENKORT"
+  },
+  "Zusammen laden. Erinnerungen teilen.": {
+    "en": "Charge together. Share memories.",
+    "nl": "Samen laden. Herinneringen delen."
+  },
+  "Gemeinsame Ladeplanung, Immich-Alben und der „Ich muss aufs Klo“-Knopf stehen auf der Roadmap.": {
+    "en": "Shared charging plans, Immich albums and the “I need the toilet” button are on the roadmap.",
+    "nl": "Gezamenlijke laadplanning, Immich-albums en de knop ‘Ik moet naar het toilet’ staan op de roadmap."
+  },
+  "Roadmap": {
+    "en": "Roadmap",
+    "nl": "Roadmap"
+  },
+  "Du brauchst den sechsstelligen Fahrer-PIN der Fahrt.": {
+    "en": "You need the trip’s six-digit driver PIN.",
+    "nl": "Je hebt de zescijferige bestuurderspincode van de rit nodig."
+  },
+  "Fahrt beitreten": {
+    "en": "Join trip",
+    "nl": "Deelnemen aan rit"
+  },
+  "Fahrer-PIN": {
+    "en": "Driver PIN",
+    "nl": "Bestuurderspincode"
+  },
+  "Deine Fahrt steht.": {
+    "en": "Your trip is ready.",
+    "nl": "Je rit staat klaar."
+  },
+  "Neue Fahrt erstellen": {
+    "en": "Create a new trip",
+    "nl": "Nieuwe rit aanmaken"
+  },
+  "Teile diesen Fahrer-PIN mit deinen Freunden. Er wird nur jetzt angezeigt.": {
+    "en": "Share this driver PIN with your friends. It is only shown now.",
+    "nl": "Deel deze bestuurderspincode met je vrienden. Deze wordt alleen nu getoond."
+  },
+  "Fahrt öffnen": {
+    "en": "Open trip",
+    "nl": "Rit openen"
+  },
+  "Name der Fahrt": {
+    "en": "Trip name",
+    "nl": "Naam van de rit"
+  },
+  "Ein Wochenende am Meer": {
+    "en": "A weekend by the sea",
+    "nl": "Een weekend aan zee"
+  },
+  "Ziel": {
+    "en": "Destination",
+    "nl": "Bestemming"
+  },
+  "Wohin geht es?": {
+    "en": "Where are you going?",
+    "nl": "Waar ga je naartoe?"
+  },
+  "Von": {
+    "en": "From",
+    "nl": "Van"
+  },
+  "Bis": {
+    "en": "Until",
+    "nl": "Tot"
+  },
+  "Mitfahrerzugänge gelten genau in diesem Zeitraum. Nach Fahrtende ist der Chat nur noch lesbar.": {
+    "en": "Passenger access is valid only during this period. After the trip ends, the chat becomes read-only.",
+    "nl": "Passagierstoegang is alleen geldig in deze periode. Na afloop van de rit kun je de chat alleen lezen."
+  },
+  "Dieser Browser unterstützt keine Standortfreigabe.": {
+    "en": "This browser does not support location sharing.",
+    "nl": "Deze browser ondersteunt geen locatiedeling."
+  },
+  "Zurück": {
+    "en": "Back",
+    "nl": "Terug"
+  },
+  "Fahrt nicht verfügbar": {
+    "en": "Trip unavailable",
+    "nl": "Rit niet beschikbaar"
+  },
+  "Alle Fahrten": {
+    "en": "All trips",
+    "nl": "Alle ritten"
+  },
+  "Gemeinsam unterwegs": {
+    "en": "On the road together",
+    "nl": "Samen onderweg"
+  },
+  "Einladen": {
+    "en": "Invite",
+    "nl": "Uitnodigen"
+  },
+  "Karte": {
+    "en": "Map",
+    "nl": "Kaart"
+  },
+  "Chat": {
+    "en": "Chat",
+    "nl": "Chat"
+  },
+  "Verlauf": {
+    "en": "History",
+    "nl": "Geschiedenis"
+  },
+  "Live verbunden": {
+    "en": "Connected live",
+    "nl": "Live verbonden"
+  },
+  "Verbindung wird aufgebaut": {
+    "en": "Connecting",
+    "nl": "Verbinding wordt gemaakt"
+  },
+  "Freigabe meines Fahrzeugs": {
+    "en": "My vehicle’s permissions",
+    "nl": "Toestemming voor mijn voertuig"
+  },
+  "Standorte sind nur in dieser Fahrt sichtbar.": {
+    "en": "Locations are visible only within this trip.",
+    "nl": "Locaties zijn alleen zichtbaar binnen deze rit."
+  },
+  "Standortfreigabe stoppen": {
+    "en": "Stop sharing location",
+    "nl": "Locatiedeling stoppen"
+  },
+  "Standort teilen": {
+    "en": "Share location",
+    "nl": "Locatie delen"
+  },
+  "Fahrzeugdaten aktualisiert.": {
+    "en": "Vehicle data refreshed.",
+    "nl": "Voertuiggegevens vernieuwd."
+  },
+  "Daten abrufen": {
+    "en": "Retrieve data",
+    "nl": "Gegevens ophalen"
+  },
+  "Fahrt-Chat": {
+    "en": "Trip chat",
+    "nl": "Ritchat"
+  },
+  "TEILNEHMER": {
+    "en": "PARTICIPANTS",
+    "nl": "DEELNEMERS"
+  },
+  "Sag deiner Gruppe Hallo.": {
+    "en": "Say hello to your group.",
+    "nl": "Zeg hallo tegen je groep."
+  },
+  "Nachrichten bleiben bei dieser Fahrt gespeichert.": {
+    "en": "Messages are saved with this trip.",
+    "nl": "Berichten worden bij deze rit opgeslagen."
+  },
+  "Nachricht": {
+    "en": "Message",
+    "nl": "Bericht"
+  },
+  "Fahrt beendet · Chat ist nur lesbar": {
+    "en": "Trip ended · Chat is read-only",
+    "nl": "Rit afgelopen · Chat is alleen leesbaar"
+  },
+  "Nachricht an deine Fahrt …": {
+    "en": "Message your trip …",
+    "nl": "Bericht aan je groep …"
+  },
+  "Nachricht senden": {
+    "en": "Send message",
+    "nl": "Bericht versturen"
+  },
+  "Fotos & Mitfahrer": {
+    "en": "Photos & passengers",
+    "nl": "Foto’s en passagiers"
+  },
+  "IMMICH FOLGT": {
+    "en": "IMMICH COMING LATER",
+    "nl": "IMMICH VOLGT LATER"
+  },
+  "Geplantes Album:": {
+    "en": "Planned album:",
+    "nl": "Gepland album:"
+  },
+  ". Die Immich-Anbindung und Foto-Uploads kommen im nächsten Schritt.": {
+    "en": ". Immich integration and photo uploads are coming in the next step.",
+    "nl": ". De Immich-koppeling en foto-uploads komen in de volgende stap."
+  },
+  "QR-Code für die Mitfahrer-Selbstregistrierung": {
+    "en": "QR code for passenger self-registration",
+    "nl": "QR-code voor zelfregistratie van passagiers"
+  },
+  "Mitfahrer selbst registrieren": {
+    "en": "Passengers register themselves",
+    "nl": "Passagiers registreren zichzelf"
+  },
+  "QR scannen · eigenen Namen und PIN wählen · kein Tesla-Konto": {
+    "en": "Scan QR · choose your own name and PIN · no Tesla account",
+    "nl": "Scan QR · kies je eigen naam en pincode · geen Tesla-account"
+  },
+  "Registrierte Mitfahrer": {
+    "en": "Registered passengers",
+    "nl": "Geregistreerde passagiers"
+  },
+  "Jeder Mitfahrer registriert sich über den QR-Link selbst. Du musst Namen und PINs nicht vorab anlegen.": {
+    "en": "Each passenger registers via the QR link. You do not need to create names or PINs in advance.",
+    "nl": "Iedere passagier registreert zich via de QR-link. Je hoeft vooraf geen namen of pincodes aan te maken."
+  },
+  "BEIGETRETEN": {
+    "en": "JOINED",
+    "nl": "DEELGENOMEN"
+  },
+  "Noch keine Mitfahrer registriert.": {
+    "en": "No passengers registered yet.",
+    "nl": "Er zijn nog geen passagiers geregistreerd."
+  },
+  "Mitfahrerzugänge enden am": {
+    "en": "Passenger access ends on",
+    "nl": "Passagierstoegang eindigt op"
+  },
+  "Immich und Foto-Uploads sind noch nicht angebunden.": {
+    "en": "Immich and photo uploads are not connected yet.",
+    "nl": "Immich en foto-uploads zijn nog niet gekoppeld."
+  },
+  "Fahrt öffentlich teilen": {
+    "en": "Share trip publicly",
+    "nl": "Rit openbaar delen"
+  },
+  "Ein separater Leselink zeigt die Fahrtübersicht. Private Chats, Kennzeichen und GPS-Verläufe bleiben intern.": {
+    "en": "A separate read-only link shows the trip overview. Private chats, licence plates and GPS history remain internal.",
+    "nl": "Een aparte leeslink toont het ritoverzicht. Privéchats, kentekens en GPS-geschiedenis blijven intern."
+  },
+  "Leselink": {
+    "en": "Read-only link",
+    "nl": "Leeslink"
+  },
+  "Freigabe widerrufen": {
+    "en": "Revoke sharing",
+    "nl": "Delen intrekken"
+  },
+  "Aufgezeichnete Fahrt": {
+    "en": "Recorded trip",
+    "nl": "Vastgelegde rit"
+  },
+  "Daten exportieren": {
+    "en": "Export data",
+    "nl": "Gegevens exporteren"
+  },
+  "Verbrauch wird aus gemessenen Energie- und Kilometerzählern berechnet. Ohne Energiedaten erscheint kein erfundener Verbrauchswert.": {
+    "en": "Consumption is calculated from measured energy and mileage counters. Without energy data, no invented consumption value is shown.",
+    "nl": "Het verbruik wordt berekend uit gemeten energie- en kilometertellers. Zonder energiegegevens wordt geen verzonnen verbruik getoond."
+  },
+  "Niedrigster Verbrauch": {
+    "en": "Lowest consumption",
+    "nl": "Laagste verbruik"
+  },
+  "Kürzeste Zeit": {
+    "en": "Shortest time",
+    "nl": "Kortste tijd"
+  },
+  "Ø Tempo": {
+    "en": "Avg. speed",
+    "nl": "Gem. snelheid"
+  },
+  "Teilnehmer": {
+    "en": "Participants",
+    "nl": "Deelnemers"
+  },
+  "Verbrauch": {
+    "en": "Consumption",
+    "nl": "Verbruik"
+  },
+  "Strecke": {
+    "en": "Distance",
+    "nl": "Afstand"
+  },
+  "Zeit": {
+    "en": "Time",
+    "nl": "Tijd"
+  },
+  "Noch keine Messwerte aufgezeichnet.": {
+    "en": "No measurements recorded yet.",
+    "nl": "Er zijn nog geen meetgegevens vastgelegd."
+  },
+  "Die Karte zeigt bis zu 1.000 Messpunkte. Der Export enthält die vollständige Aufzeichnung. Zeit und Tempo beziehen sich auf die erfassten Abschnitte.": {
+    "en": "The map shows up to 1,000 measurement points. The export contains the complete recording. Time and speed refer to the recorded sections.",
+    "nl": "De kaart toont maximaal 1.000 meetpunten. De export bevat de volledige opname. Tijd en snelheid hebben betrekking op de vastgelegde trajecten."
+  },
+  "Deine Gruppe": {
+    "en": "Your group",
+    "nl": "Je groep"
+  },
+  "Leitung": {
+    "en": "Leader",
+    "nl": "Ritleider"
+  },
+  "km": {
+    "en": "km",
+    "nl": "km"
+  },
+  "Fahrt jetzt beenden? Mitfahrerzugänge und Sprachfunk werden geschlossen.": {
+    "en": "End the trip now? Passenger access and voice radio will be closed.",
+    "nl": "Rit nu beëindigen? Passagierstoegang en spraakradio worden gesloten."
+  },
+  "Fahrt jetzt beenden": {
+    "en": "End trip now",
+    "nl": "Rit nu beëindigen"
+  },
+  "Freunde einladen": {
+    "en": "Invite friends",
+    "nl": "Vrienden uitnodigen"
+  },
+  "Fahrer benötigen ein TeslaTalk-Konto. Für Mitfahrer ohne Tesla-Konto nutzt du „Fotos & Mitfahrer“.": {
+    "en": "Drivers need a TeslaTalk account. For passengers without a Tesla account, use “Photos & passengers”.",
+    "nl": "Bestuurders hebben een TeslaTalk-account nodig. Gebruik ‘Foto’s en passagiers’ voor passagiers zonder Tesla-account."
+  },
+  "ist eingeladen.": {
+    "en": "has been invited.",
+    "nl": "is uitgenodigd."
+  },
+  "Einladung senden": {
+    "en": "Send invitation",
+    "nl": "Uitnodiging versturen"
+  },
+  "Einladung ist im Konto des Fahrers verfügbar.": {
+    "en": "The invitation is available in the driver’s account.",
+    "nl": "De uitnodiging staat in het account van de bestuurder."
+  },
+  "Benutzername, Kennzeichen oder E-Mail": {
+    "en": "Username, licence plate or email",
+    "nl": "Gebruikersnaam, kenteken of e-mailadres"
+  },
+  "DEINE LEUTE": {
+    "en": "YOUR PEOPLE",
+    "nl": "JOUW MENSEN"
+  },
+  "Einmal verbinden. Beim nächsten Roadtrip leichter zusammenfinden.": {
+    "en": "Connect once. Find each other more easily on your next road trip.",
+    "nl": "Maak eenmalig verbinding. Vind elkaar makkelijker bij je volgende roadtrip."
+  },
+  "Freund hinzufügen": {
+    "en": "Add friend",
+    "nl": "Vriend toevoegen"
+  },
+  "Suche ein bereits registriertes Fahrer-Konto.": {
+    "en": "Find an already registered driver account.",
+    "nl": "Zoek een al geregistreerd bestuurdersaccount."
+  },
+  "Freundschaft anfragen": {
+    "en": "Send friend request",
+    "nl": "Vriendschapsverzoek versturen"
+  },
+  "Freundschaft angefragt.": {
+    "en": "Friend request sent.",
+    "nl": "Vriendschapsverzoek verstuurd."
+  },
+  "Exakte Angabe": {
+    "en": "Exact value",
+    "nl": "Exacte waarde"
+  },
+  "Deine Verbindungen": {
+    "en": "Your connections",
+    "nl": "Je contacten"
+  },
+  "Befreundet": {
+    "en": "Friends",
+    "nl": "Bevriend"
+  },
+  "Möchte sich verbinden": {
+    "en": "Wants to connect",
+    "nl": "Wil contact maken"
+  },
+  "Anfrage gesendet": {
+    "en": "Request sent",
+    "nl": "Verzoek verstuurd"
+  },
+  "Annehmen": {
+    "en": "Accept",
+    "nl": "Accepteren"
+  },
+  "Verbindung entfernen": {
+    "en": "Remove connection",
+    "nl": "Contact verwijderen"
+  },
+  "Deine Gruppe beginnt hier.": {
+    "en": "Your group starts here.",
+    "nl": "Je groep begint hier."
+  },
+  "Frage deine Freunde nach ihrem Benutzernamen.": {
+    "en": "Ask your friends for their usernames.",
+    "nl": "Vraag je vrienden naar hun gebruikersnaam."
+  },
+  "Tesla-Profilbild aktualisiert.": {
+    "en": "Tesla profile picture refreshed.",
+    "nl": "Tesla-profielfoto vernieuwd."
+  },
+  "Tesla liefert für dieses Konto derzeit kein Profilbild.": {
+    "en": "Tesla currently provides no profile picture for this account.",
+    "nl": "Tesla levert momenteel geen profielfoto voor dit account."
+  },
+  "DEIN PROFIL": {
+    "en": "YOUR PROFILE",
+    "nl": "JOUW PROFIEL"
+  },
+  "Startklar": {
+    "en": "Ready to go",
+    "nl": "Klaar voor vertrek"
+  },
+  "Deine persönlichen Einstellungen für diese Fahrt.": {
+    "en": "Your personal settings for this trip.",
+    "nl": "Je persoonlijke instellingen voor deze rit."
+  },
+  "Dein Name für die Gruppe. Dein Fahrzeug für die Fahrt.": {
+    "en": "Your name for the group. Your vehicle for the trip.",
+    "nl": "Je naam voor de groep. Je voertuig voor de rit."
+  },
+  "Tesla-Profil für Mitfahrer": {
+    "en": "Tesla profile for passengers",
+    "nl": "Tesla-profiel voor passagiers"
+  },
+  "Dein Tesla-Profil als Mitfahrer": {
+    "en": "Your Tesla profile as a passenger",
+    "nl": "Je Tesla-profiel als passagier"
+  },
+  "Tesla-Profil verknüpft · Mitfahrer": {
+    "en": "Tesla profile linked · Passenger",
+    "nl": "Tesla-profiel gekoppeld · Passagier"
+  },
+  "Mitfahrer mit eigenem Namen und PIN": {
+    "en": "Passenger with your own name and PIN",
+    "nl": "Passagier met eigen naam en pincode"
+  },
+  "Verknüpfe dein Tesla-Konto für dein Profilbild. Du bleibst Mitfahrer; dein Auto wird weder abgerufen noch in Reichweite, Akku oder Routenplanung einbezogen.": {
+    "en": "Link your Tesla account for your profile picture. You remain a passenger; your car is not retrieved or included in range, battery or route planning.",
+    "nl": "Koppel je Tesla-account voor je profielfoto. Je blijft passagier; je auto wordt niet opgehaald en telt niet mee voor bereik, accu of routeplanning."
+  },
+  "Tesla-Profil erneut laden": {
+    "en": "Reload Tesla profile",
+    "nl": "Tesla-profiel opnieuw laden"
+  },
+  "Mit Tesla verknüpfen": {
+    "en": "Link with Tesla",
+    "nl": "Koppelen met Tesla"
+  },
+  "Die Verknüpfung benötigt eine aktive Fahrt und eine eingerichtete Tesla-Anmeldung.": {
+    "en": "Linking requires an active trip and configured Tesla sign-in.",
+    "nl": "Koppelen vereist een actieve rit en ingestelde Tesla-aanmelding."
+  },
+  "Tesla-Profilverknüpfung entfernt.": {
+    "en": "Tesla profile link removed.",
+    "nl": "Tesla-profielkoppeling verwijderd."
+  },
+  "Tesla-Verknüpfung entfernen": {
+    "en": "Remove Tesla link",
+    "nl": "Tesla-koppeling verwijderen"
+  },
+  "So finden dich deine Freunde": {
+    "en": "How your friends find you",
+    "nl": "Zo vinden je vrienden je"
+  },
+  "Profilbild aus deinem Tesla-Konto": {
+    "en": "Profile picture from your Tesla account",
+    "nl": "Profielfoto uit je Tesla-account"
+  },
+  "Initialen, solange kein Profilbild verfügbar ist": {
+    "en": "Initials until a profile picture is available",
+    "nl": "Initialen zolang er geen profielfoto beschikbaar is"
+  },
+  "Profilbild wird geladen …": {
+    "en": "Loading profile picture …",
+    "nl": "Profielfoto wordt geladen …"
+  },
+  "Tesla-Profilbild laden": {
+    "en": "Load Tesla profile picture",
+    "nl": "Tesla-profielfoto laden"
+  },
+  "Profil gespeichert.": {
+    "en": "Profile saved.",
+    "nl": "Profiel opgeslagen."
+  },
+  "Anzeigename": {
+    "en": "Display name",
+    "nl": "Weergavenaam"
+  },
+  "Kennzeichen (optional)": {
+    "en": "Licence plate (optional)",
+    "nl": "Kenteken (optioneel)"
+  },
+  "Deine Tesla-Fahrzeuge": {
+    "en": "Your Tesla vehicles",
+    "nl": "Je Tesla-voertuigen"
+  },
+  "Fahrzeuge abrufen": {
+    "en": "Retrieve vehicles",
+    "nl": "Voertuigen ophalen"
+  },
+  "Auswählen": {
+    "en": "Select",
+    "nl": "Selecteren"
+  },
+  "Tesla muss den Fahrzeugzugriff freigeben. Ein schlafendes Fahrzeug wird nicht automatisch geweckt.": {
+    "en": "Tesla must grant vehicle access. A sleeping vehicle is not automatically woken up.",
+    "nl": "Tesla moet toegang tot het voertuig verlenen. Een slapend voertuig wordt niet automatisch gewekt."
+  },
+  "Persönliche API-Schlüssel": {
+    "en": "Personal API keys",
+    "nl": "Persoonlijke API-sleutels"
+  },
+  "Für deine eigenen Integrationen und Telemetrie-Importe. Schlüssel werden nur einmal angezeigt und können jederzeit widerrufen werden.": {
+    "en": "For your own integrations and telemetry imports. Keys are shown only once and can be revoked at any time.",
+    "nl": "Voor je eigen integraties en telemetrie-importen. Sleutels worden slechts één keer getoond en kunnen altijd worden ingetrokken."
+  },
+  "Alle API-Endpunkte & LLM-Kopierfunktion": {
+    "en": "All API endpoints & LLM copy tool",
+    "nl": "Alle API-endpoints en LLM-kopieerfunctie"
+  },
+  "Schlüssel erzeugen": {
+    "en": "Generate key",
+    "nl": "Sleutel aanmaken"
+  },
+  "Bezeichnung": {
+    "en": "Label",
+    "nl": "Naam"
+  },
+  "Meine Integration": {
+    "en": "My integration",
+    "nl": "Mijn integratie"
+  },
+  "Ohne Ablaufdatum": {
+    "en": "No expiry date",
+    "nl": "Geen vervaldatum"
+  },
+  "Gültigkeit in Tagen (1–365)": {
+    "en": "Validity in days (1–365)",
+    "nl": "Geldigheid in dagen (1–365)"
+  },
+  "Widerrufen": {
+    "en": "Revoke",
+    "nl": "Intrekken"
+  },
+  "Dein Server": {
+    "en": "Your server",
+    "nl": "Je server"
+  },
+  "Die Administration meldet sich separat über den konfigurierten OIDC-Anbieter an. Fahrer erhalten dadurch keine Administratorrechte.": {
+    "en": "Administrators sign in separately via the configured OIDC provider. This does not give drivers administrator rights.",
+    "nl": "Beheerders melden zich apart aan via de ingestelde OIDC-provider. Bestuurders krijgen hierdoor geen beheerdersrechten."
+  },
+  "Administration öffnen": {
+    "en": "Open administration",
+    "nl": "Beheer openen"
+  },
+  "Quellcode · AGPLv3": {
+    "en": "Source code · AGPLv3",
+    "nl": "Broncode · AGPLv3"
+  },
+  "MITFAHRER-ZUGANG": {
+    "en": "PASSENGER ACCESS",
+    "nl": "PASSAGIERSTOEGANG"
+  },
+  "Gemeinsam mitfahren.": {
+    "en": "Travel together.",
+    "nl": "Samen meerijden."
+  },
+  "Einladung wird geladen …": {
+    "en": "Loading invitation …",
+    "nl": "Uitnodiging wordt geladen …"
+  },
+  "Neu registrieren": {
+    "en": "Register",
+    "nl": "Registreren"
+  },
+  "Bereits registriert? Anmelden": {
+    "en": "Already registered? Sign in",
+    "nl": "Al geregistreerd? Aanmelden"
+  },
+  "Als Mitfahrer anmelden": {
+    "en": "Sign in as a passenger",
+    "nl": "Aanmelden als passagier"
+  },
+  "Die beiden PINs stimmen nicht überein.": {
+    "en": "The two PINs do not match.",
+    "nl": "De twee pincodes komen niet overeen."
+  },
+  "Dein Name": {
+    "en": "Your name",
+    "nl": "Je naam"
+  },
+  "Eigenen PIN wählen (6 Ziffern)": {
+    "en": "Choose your own PIN (6 digits)",
+    "nl": "Kies je eigen pincode (6 cijfers)"
+  },
+  "Dein persönlicher PIN": {
+    "en": "Your personal PIN",
+    "nl": "Je persoonlijke pincode"
+  },
+  "PIN wiederholen": {
+    "en": "Repeat PIN",
+    "nl": "Pincode herhalen"
+  },
+  "Wähle deinen Namen und deinen eigenen PIN. Merke dir beides für die nächste Anmeldung.": {
+    "en": "Choose your name and your own PIN. Remember both for your next sign-in.",
+    "nl": "Kies je naam en je eigen pincode. Onthoud beide voor je volgende aanmelding."
+  },
+  "Nutze deinen registrierten Namen und PIN; vorhandene Einladungen mit einem PIN vom Fahrtleiter funktionieren weiterhin.": {
+    "en": "Use your registered name and PIN; existing invitations with a PIN from the trip leader still work.",
+    "nl": "Gebruik je geregistreerde naam en pincode; bestaande uitnodigingen met een pincode van de ritleider blijven werken."
+  },
+  "Dein Zugang endet automatisch mit der Fahrt.": {
+    "en": "Your access ends automatically with the trip.",
+    "nl": "Je toegang eindigt automatisch met de rit."
+  },
+  "Der Zugang ist nur innerhalb des Fahrtzeitraums verfügbar.": {
+    "en": "Access is only available during the trip period.",
+    "nl": "Toegang is alleen beschikbaar tijdens de rit."
+  },
+  "Kein Tesla-Konto erforderlich.": {
+    "en": "No Tesla account required.",
+    "nl": "Geen Tesla-account nodig."
+  },
+  "EIN GETEILTER ROADTRIP": {
+    "en": "A SHARED ROAD TRIP",
+    "nl": "EEN GEDEELDE ROADTRIP"
+  },
+  "Eine gemeinsame Erinnerung.": {
+    "en": "A shared memory.",
+    "nl": "Een gezamenlijke herinnering."
+  },
+  "Öffentliche Ansicht · nur lesbar": {
+    "en": "Public view · read-only",
+    "nl": "Openbare weergave · alleen lezen"
+  },
+  "Private Nachrichten und Fahrzeugdaten bleiben in der Gruppe.": {
+    "en": "Private messages and vehicle data stay within the group.",
+    "nl": "Privéberichten en voertuiggegevens blijven binnen de groep."
+  },
+  "Das Fotoalbum folgt mit der Immich-Integration.": {
+    "en": "The photo album will follow with the Immich integration.",
+    "nl": "Het fotoalbum volgt met de Immich-koppeling."
+  },
+  "Freigabe wird geladen …": {
+    "en": "Loading shared trip …",
+    "nl": "Gedeelde rit wordt geladen …"
+  },
+  "Testnachricht für {0} Geräte in {1} Konten eingeplant. Die Zustellung erfolgt im Hintergrund.": {
+    "en": "Test notification queued for {0} devices across {1} accounts. Delivery runs in the background.",
+    "nl": "Testmelding ingepland voor {0} apparaten van {1} accounts. De bezorging gebeurt op de achtergrond."
+  },
+  "Keine Geräte mit aktivierten Benachrichtigungen und gültiger Anmeldung vorhanden.": {
+    "en": "No devices with enabled notifications and a valid sign-in are available.",
+    "nl": "Er zijn geen apparaten met ingeschakelde meldingen en een geldige aanmelding beschikbaar."
+  },
+  "Zur Anwendung": {
+    "en": "Go to app",
+    "nl": "Naar de app"
+  },
+  "ADMINISTRATION": {
+    "en": "ADMINISTRATION",
+    "nl": "BEHEER"
+  },
+  "Dein TeslaTalk-Server.": {
+    "en": "Your TeslaTalk server.",
+    "nl": "Je TeslaTalk-server."
+  },
+  "Konten": {
+    "en": "Accounts",
+    "nl": "Accounts"
+  },
+  "Messpunkte": {
+    "en": "Measurement points",
+    "nl": "Meetpunten"
+  },
+  "Tesla Fleet API": {
+    "en": "Tesla Fleet API",
+    "nl": "Tesla Fleet API"
+  },
+  "EINRICHTUNG FEHLT": {
+    "en": "SETUP REQUIRED",
+    "nl": "INSTELLING VEREIST"
+  },
+  "Sprachfunk": {
+    "en": "Voice radio",
+    "nl": "Spraakradio"
+  },
+  "Abfrageintervall bei geöffneter Gruppenfahrt": {
+    "en": "Polling interval while a group trip is open",
+    "nl": "Opvraaginterval bij een geopende groepsrit"
+  },
+  "Sekunden": {
+    "en": "seconds",
+    "nl": "seconden"
+  },
+  "Speicherung": {
+    "en": "Storage",
+    "nl": "Opslag"
+  },
+  "Server-Benachrichtigungen": {
+    "en": "Server notifications",
+    "nl": "Servermeldingen"
+  },
+  "Benachrichtigungen testen": {
+    "en": "Test notifications",
+    "nl": "Meldingen testen"
+  },
+  "Eine Testnachricht an alle Geräte auf diesem Server mit aktivierten Benachrichtigungen und gültiger Anmeldung senden, einschließlich installierter Web-Apps.": {
+    "en": "Send a test notification to all devices on this server with enabled notifications and a valid sign-in, including installed web apps.",
+    "nl": "Stuur een testmelding naar alle apparaten op deze server met ingeschakelde meldingen en een geldige aanmelding, inclusief geïnstalleerde webapps."
+  },
+  "Versand wird eingeplant …": {
+    "en": "Queuing delivery …",
+    "nl": "Bezorging wordt ingepland …"
+  },
+  "Testnachricht an alle Geräte": {
+    "en": "Test notification to all devices",
+    "nl": "Testmelding naar alle apparaten"
+  },
+  "Mitfahrer werden nur während ihrer gültigen Fahrt berücksichtigt.": {
+    "en": "Passengers are only included during their valid trip.",
+    "nl": "Passagiers worden alleen meegenomen tijdens hun geldige rit."
+  },
+  "Web-Push ist noch nicht eingerichtet. VAPID-Schlüssel in der Serverkonfiguration hinterlegen.": {
+    "en": "Web Push has not been configured yet. Add VAPID keys to the server configuration.",
+    "nl": "Web Push is nog niet ingesteld. Voeg VAPID-sleutels toe aan de serverconfiguratie."
+  },
+  "Serverkonfiguration und Integrationsgeheimnisse werden über die Umgebungsvariablen der Installation verwaltet.": {
+    "en": "Server configuration and integration secrets are managed through the installation’s environment variables.",
+    "nl": "Serverconfiguratie en integratiegeheimen worden beheerd via de omgevingsvariabelen van de installatie."
+  },
+  "Administratorzugang wird geprüft …": {
+    "en": "Checking administrator access …",
+    "nl": "Beheerderstoegang wordt gecontroleerd …"
+  },
+  "Über OIDC anmelden": {
+    "en": "Sign in via OIDC",
+    "nl": "Aanmelden via OIDC"
+  },
+  "OIDC ist noch nicht eingerichtet.": {
+    "en": "OIDC has not been configured yet.",
+    "nl": "OIDC is nog niet ingesteld."
+  },
+  "Issuer, Client-ID und Administratorgruppe in der Serverkonfiguration hinterlegen.": {
+    "en": "Add the issuer, client ID and administrator group to the server configuration.",
+    "nl": "Voeg issuer, client-ID en beheerdersgroep toe aan de serverconfiguratie."
+  },
+  "Profilbild von {0}": {
+    "en": "Profile picture of {0}",
+    "nl": "Profielfoto van {0}"
+  },
+  "Gemeinsame Fahrzeugroute": {
+    "en": "Shared vehicle route",
+    "nl": "Gezamenlijke voertuigroute"
+  },
+  "Eigene Fahrzeugroute": {
+    "en": "Your vehicle route",
+    "nl": "Je voertuigroute"
+  },
+  "Berechnete Gruppenroute": {
+    "en": "Calculated group route",
+    "nl": "Berekende groepsroute"
+  },
+  "Route aus deinem Auto": {
+    "en": "Route from your car",
+    "nl": "Route uit je auto"
+  },
+  "DEMO": {
+    "en": "DEMO",
+    "nl": "DEMO"
+  },
+  "Die Navigation des ausgewählten Planungsfahrzeugs wird automatisch für diese Gruppe angezeigt.": {
+    "en": "The selected planning vehicle’s navigation is automatically shown to this group.",
+    "nl": "De navigatie van het gekozen planningsvoertuig wordt automatisch aan deze groep getoond."
+  },
+  "Lies das aktuelle Navigationsziel deines Standardfahrzeugs. Dieser Abruf bleibt privat.": {
+    "en": "Read the current navigation destination of your default vehicle. This request stays private.",
+    "nl": "Lees de huidige navigatiebestemming van je standaardvoertuig. Deze opvraag blijft privé."
+  },
+  "Zielkoordinaten:": {
+    "en": "Destination coordinates:",
+    "nl": "Bestemmingscoördinaten:"
+  },
+  "Reststrecke": {
+    "en": "Remaining distance",
+    "nl": "Resterende afstand"
+  },
+  "Restzeit": {
+    "en": "Remaining time",
+    "nl": "Resterende tijd"
+  },
+  "min": {
+    "en": "min",
+    "nl": "min"
+  },
+  "Ankunft": {
+    "en": "Arrival",
+    "nl": "Aankomst"
+  },
+  "Akku bei Ankunft": {
+    "en": "Battery on arrival",
+    "nl": "Accu bij aankomst"
+  },
+  "Verkehrsverzögerung": {
+    "en": "Traffic delay",
+    "nl": "Verkeersvertraging"
+  },
+  "Der genaue Straßenverlauf aus Fleet Telemetry ist verfügbar.": {
+    "en": "The detailed road route from Fleet Telemetry is available.",
+    "nl": "De exacte wegroute uit Fleet Telemetry is beschikbaar."
+  },
+  "Tesla liefert hier das Ziel und verfügbare Kennzahlen. Für den genauen Straßenverlauf ist ein Fleet-Telemetry-Import erforderlich.": {
+    "en": "Tesla provides the destination and available metrics here. A Fleet Telemetry import is required for the detailed road route.",
+    "nl": "Tesla levert hier de bestemming en beschikbare meetgegevens. Voor de exacte wegroute is een Fleet Telemetry-import nodig."
+  },
+  "Im Auto ist keine Navigation aktiv. Starte eine Route im Auto und rufe sie erneut ab.": {
+    "en": "No navigation is active in the car. Start a route in the car and retrieve it again.",
+    "nl": "Er is geen navigatie actief in de auto. Start een route in de auto en haal deze opnieuw op."
+  },
+  "Tesla liefert derzeit keine Navigationsdaten. Navigation im Auto starten und erneut abrufen; alternativ Fleet Telemetry anbinden.": {
+    "en": "Tesla currently provides no navigation data. Start navigation in the car and retrieve again, or connect Fleet Telemetry.",
+    "nl": "Tesla levert momenteel geen navigatiegegevens. Start navigatie in de auto en haal opnieuw op, of koppel Fleet Telemetry."
+  },
+  "Wähle zuerst ein Planungsfahrzeug. Die Gruppenroute erscheint nach der Berechnung im Auto.": {
+    "en": "Select a planning vehicle first. The group route appears once the car has calculated it.",
+    "nl": "Kies eerst een planningsvoertuig. De groepsroute verschijnt nadat de auto deze heeft berekend."
+  },
+  "Noch keine Navigationsdaten abgerufen.": {
+    "en": "No navigation data retrieved yet.",
+    "nl": "Er zijn nog geen navigatiegegevens opgehaald."
+  },
+  "Letzter Stand der abgeschlossenen Fahrt": {
+    "en": "Last status of the completed trip",
+    "nl": "Laatste stand van de afgelopen rit"
+  },
+  "Veralteter Stand – erneut abrufen": {
+    "en": "Outdated status – retrieve again",
+    "nl": "Verouderde stand – opnieuw ophalen"
+  },
+  "Stand": {
+    "en": "Updated",
+    "nl": "Bijgewerkt"
+  },
+  "Fleet Telemetry": {
+    "en": "Fleet Telemetry",
+    "nl": "Fleet Telemetry"
+  },
+  "Route wird abgerufen …": {
+    "en": "Retrieving route …",
+    "nl": "Route wordt opgehaald …"
+  },
+  "Berechnete Route aktualisieren": {
+    "en": "Refresh calculated route",
+    "nl": "Berekende route vernieuwen"
+  },
+  "Route aus Auto abrufen": {
+    "en": "Retrieve route from car",
+    "nl": "Route uit auto ophalen"
+  },
+  "Dieser Browser unterstützt Web-Push hier nicht. Auf dem iPhone TeslaTalk über das Home-Bildschirm-Symbol öffnen.": {
+    "en": "This browser does not support Web Push here. On iPhone, open TeslaTalk using its Home Screen icon.",
+    "nl": "Deze browser ondersteunt hier geen Web Push. Open TeslaTalk op iPhone via het beginschermpictogram."
+  },
+  "Der Betreiber muss Web-Push auf dem Server einrichten. Deine Auswahl bleibt gespeichert.": {
+    "en": "The operator needs to configure Web Push on the server. Your choice stays saved.",
+    "nl": "De beheerder moet Web Push op de server instellen. Je keuze blijft opgeslagen."
+  },
+  "Im Browser blockiert. Erlaube Benachrichtigungen in den Geräte- oder Browser-Einstellungen.": {
+    "en": "Blocked in the browser. Allow notifications in your device or browser settings.",
+    "nl": "Geblokkeerd in de browser. Sta meldingen toe in je apparaat- of browserinstellingen."
+  },
+  "Auf diesem Gerät noch nicht freigegeben.": {
+    "en": "Permission has not been granted on this device yet.",
+    "nl": "Er is nog geen toestemming gegeven op dit apparaat."
+  },
+  "Dein Browser-Abonnement fehlt. Aktiviere es erneut; deine Einstellung bleibt gespeichert.": {
+    "en": "Your browser subscription is missing. Enable it again; your preference stays saved.",
+    "nl": "Je browserabonnement ontbreekt. Schakel het opnieuw in; je voorkeur blijft opgeslagen."
+  },
+  "Benachrichtigungen sind auf diesem Gerät ausgeschaltet.": {
+    "en": "Notifications are disabled on this device.",
+    "nl": "Meldingen zijn uitgeschakeld op dit apparaat."
+  },
+  "Auf diesem Gerät aktiviert.": {
+    "en": "Enabled on this device.",
+    "nl": "Ingeschakeld op dit apparaat."
+  },
+  "Der Serverabgleich steht aus. Deine Einstellung bleibt gespeichert; versuche es erneut, sobald die Verbindung steht.": {
+    "en": "Server synchronisation is pending. Your preference stays saved; try again once connected.",
+    "nl": "Serversynchronisatie staat nog open. Je voorkeur blijft opgeslagen; probeer het opnieuw zodra er verbinding is."
+  },
+  "Der Betreiber muss Web-Push in der Serverkonfiguration einrichten.": {
+    "en": "The operator needs to configure Web Push in the server settings.",
+    "nl": "De beheerder moet Web Push in de serverinstellingen configureren."
+  },
+  "Nicht freigegeben. Erlaube Benachrichtigungen in den Geräte- oder Browser-Einstellungen.": {
+    "en": "Permission not granted. Allow notifications in your device or browser settings.",
+    "nl": "Geen toestemming gegeven. Sta meldingen toe in je apparaat- of browserinstellingen."
+  },
+  "Das Browser-Abonnement konnte nicht deaktiviert werden. Bitte erneut versuchen.": {
+    "en": "The browser subscription could not be disabled. Please try again.",
+    "nl": "Het browserabonnement kon niet worden uitgeschakeld. Probeer het opnieuw."
+  },
+  "Auf diesem Gerät ausgeschaltet.": {
+    "en": "Disabled on this device.",
+    "nl": "Uitgeschakeld op dit apparaat."
+  },
+  "Benachrichtigungen auf diesem Gerät deaktiviert.": {
+    "en": "Notifications disabled on this device.",
+    "nl": "Meldingen uitgeschakeld op dit apparaat."
+  },
+  "Browser freigegeben. Serverabgleich läuft …": {
+    "en": "Browser permission granted. Synchronising with server …",
+    "nl": "Browsertoestemming gegeven. Synchroniseren met server …"
+  },
+  "Benachrichtigungen für Nachrichten, Einladungen und Freundschaftsanfragen aktiviert.": {
+    "en": "Notifications enabled for messages, invitations and friend requests.",
+    "nl": "Meldingen ingeschakeld voor berichten, uitnodigingen en vriendschapsverzoeken."
+  },
+  "Im Browser ausgeschaltet. Der Serverabgleich ist fehlgeschlagen.": {
+    "en": "Disabled in the browser. Server synchronisation failed.",
+    "nl": "Uitgeschakeld in de browser. Serversynchronisatie mislukt."
+  },
+  "Der Serverabgleich steht aus. Deine Einstellung bleibt gespeichert; versuche es erneut.": {
+    "en": "Server synchronisation is pending. Your preference stays saved; please try again.",
+    "nl": "Serversynchronisatie staat nog open. Je voorkeur blijft opgeslagen; probeer het opnieuw."
+  },
+  "Benachrichtigungen konnten nicht eingerichtet werden.": {
+    "en": "Notifications could not be configured.",
+    "nl": "Meldingen konden niet worden ingesteld."
+  },
+  "Das Browser-Abonnement fehlt oder die Freigabe wurde entzogen. Benachrichtigungen erneut aktivieren.": {
+    "en": "The browser subscription is missing or permission was revoked. Enable notifications again.",
+    "nl": "Het browserabonnement ontbreekt of de toestemming is ingetrokken. Schakel meldingen opnieuw in."
+  },
+  "Testnachricht an den Push-Dienst übergeben.{0} Prüfe die Mitteilungszentrale dieses Geräts.": {
+    "en": "Test notification handed to the push service.{0} Check this device’s notification centre.",
+    "nl": "Testmelding overgedragen aan de pushdienst.{0} Controleer het meldingencentrum van dit apparaat."
+  },
+  "Angenommen um {0}{1}.": {
+    "en": "Accepted at {0}{1}.",
+    "nl": "Geaccepteerd om {0}{1}."
+  },
+  "Testnachricht an dieses Gerät gesendet.": {
+    "en": "Test notification sent to this device.",
+    "nl": "Testmelding naar dit apparaat verstuurd."
+  },
+  "Die Testnachricht konnte nicht gesendet werden.": {
+    "en": "The test notification could not be sent.",
+    "nl": "De testmelding kon niet worden verstuurd."
+  },
+  "Benachrichtigungen und Web-App": {
+    "en": "Notifications and web app",
+    "nl": "Meldingen en webapp"
+  },
+  "Benachrichtigungen & Web-App": {
+    "en": "Notifications & web app",
+    "nl": "Meldingen en webapp"
+  },
+  "Deine Einstellung gilt für dieses Gerät. Du erhältst Hinweise zu Nachrichten, Einladungen und Freundschaftsanfragen.": {
+    "en": "Your preference applies to this device. You receive notifications for messages, invitations and friend requests.",
+    "nl": "Je voorkeur geldt voor dit apparaat. Je ontvangt meldingen voor berichten, uitnodigingen en vriendschapsverzoeken."
+  },
+  "Wird geprüft …": {
+    "en": "Checking …",
+    "nl": "Wordt gecontroleerd …"
+  },
+  "Benachrichtigungen erneut aktivieren": {
+    "en": "Enable notifications again",
+    "nl": "Meldingen opnieuw inschakelen"
+  },
+  "Benachrichtigungen an": {
+    "en": "Enable notifications",
+    "nl": "Meldingen inschakelen"
+  },
+  "Deaktivieren": {
+    "en": "Disable",
+    "nl": "Uitschakelen"
+  },
+  "Erneut abgleichen": {
+    "en": "Synchronise again",
+    "nl": "Opnieuw synchroniseren"
+  },
+  "Testnachricht an dieses Gerät": {
+    "en": "Test notification to this device",
+    "nl": "Testmelding naar dit apparaat"
+  },
+  "Zum Home-Bildschirm": {
+    "en": "Add to Home Screen",
+    "nl": "Zet op beginscherm"
+  },
+  "TeslaTalk installieren": {
+    "en": "Install TeslaTalk",
+    "nl": "TeslaTalk installeren"
+  },
+  "Rotes TeslaTalk-Icon mit Walkie-Talkie und Tesla-T": {
+    "en": "Red TeslaTalk icon with walkie-talkie and Tesla T",
+    "nl": "Rood TeslaTalk-pictogram met portofoon en Tesla-T"
+  },
+  "Dein Roadtrip auf dem Home-Bildschirm": {
+    "en": "Your road trip on the Home Screen",
+    "nl": "Je roadtrip op het beginscherm"
+  },
+  "iPhone / iPad:": {
+    "en": "iPhone / iPad:",
+    "nl": "iPhone / iPad:"
+  },
+  "Öffne die TeslaTalk-Startseite in Safari. Wähle Teilen → Zum Home-Bildschirm. Bei einem alten Buchstabensymbol den bisherigen Eintrag entfernen und neu hinzufügen. Starte TeslaTalk anschließend über das neue Symbol und aktiviere Benachrichtigungen.": {
+    "en": "Open the TeslaTalk home page in Safari. Choose Share → Add to Home Screen. If you have an old letter icon, remove that entry and add it again. Then open TeslaTalk using the new icon and enable notifications.",
+    "nl": "Open de TeslaTalk-startpagina in Safari. Kies Delen → Zet op beginscherm. Verwijder een oud letterpictogram en voeg het opnieuw toe. Open TeslaTalk daarna via het nieuwe pictogram en schakel meldingen in."
+  },
+  "Android / Desktop:": {
+    "en": "Android / Desktop:",
+    "nl": "Android / Desktop:"
+  },
+  "Wähle im Browser-Menü „App installieren“ oder „Zum Startbildschirm hinzufügen“.": {
+    "en": "Choose “Install app” or “Add to Home Screen” in the browser menu.",
+    "nl": "Kies ‘App installeren’ of ‘Toevoegen aan startscherm’ in het browsermenu."
+  },
+  "Web-Push braucht HTTPS und einen unterstützten Browser. Auf iPhone / iPad wird iOS / iPadOS 16.4 oder neuer benötigt. Sprachfunk braucht eine aktive Internetverbindung.": {
+    "en": "Web Push requires HTTPS and a supported browser. iPhone / iPad requires iOS / iPadOS 16.4 or later. Voice radio requires an active internet connection.",
+    "nl": "Web Push vereist HTTPS en een ondersteunde browser. Op iPhone / iPad is iOS / iPadOS 16.4 of nieuwer nodig. Spraakradio vereist een actieve internetverbinding."
+  },
+  "Ton und Vibration steuerst du in den Mitteilungseinstellungen deines Geräts. Ein Fokus kann Mitteilungen zurückhalten; eine geplante Übersicht zeigt sie erst später an.": {
+    "en": "Control sound and vibration in your device’s notification settings. Focus mode can hold notifications; a scheduled summary shows them later.",
+    "nl": "Geluid en trillingen stel je in bij de meldingsinstellingen van je apparaat. Een focus kan meldingen tegenhouden; een gepland overzicht toont ze later."
+  },
+  "Das Mikrofon konnte nicht umgeschaltet werden. Bitte den Funk neu verbinden.": {
+    "en": "The microphone could not be switched. Please reconnect the radio.",
+    "nl": "De microfoon kon niet worden omgeschakeld. Verbind de radio opnieuw."
+  },
+  "Mikrofonzugriff benötigt HTTPS und einen unterstützten Browser.": {
+    "en": "Microphone access requires HTTPS and a supported browser.",
+    "nl": "Microfoontoegang vereist HTTPS en een ondersteunde browser."
+  },
+  "Die Funkverbindung wurde getrennt. Bitte erneut verbinden.": {
+    "en": "The radio connection was disconnected. Please reconnect.",
+    "nl": "De radioverbinding is verbroken. Maak opnieuw verbinding."
+  },
+  "Die Sprachverbindung ist fehlgeschlagen.": {
+    "en": "The voice connection failed.",
+    "nl": "De spraakverbinding is mislukt."
+  },
+  "Mikrofonzugriff wurde nicht erlaubt. Erlaube TeslaTalk den Mikrofonzugriff in den Website-Einstellungen deines Browsers und versuche es erneut.": {
+    "en": "Microphone access was denied. Allow TeslaTalk microphone access in your browser’s site settings and try again.",
+    "nl": "Microfoontoegang is geweigerd. Geef TeslaTalk toegang tot de microfoon in de website-instellingen van je browser en probeer het opnieuw."
+  },
+  "Kein nutzbares Mikrofon gefunden. Prüfe dein Mikrofon und ob es von einer anderen Anwendung blockiert wird.": {
+    "en": "No usable microphone found. Check your microphone and whether another app is blocking it.",
+    "nl": "Geen bruikbare microfoon gevonden. Controleer je microfoon en of een andere app deze blokkeert."
+  },
+  "Die Audioverbindung zu {0} ist gescheitert. Der Betreiber muss die direkten Audio-Ports, NAT und gegebenenfalls TURN prüfen.": {
+    "en": "The audio connection to {0} failed. The operator needs to check direct audio ports, NAT and, if applicable, TURN.",
+    "nl": "De audioverbinding met {0} is mislukt. De beheerder moet de directe audiopoorten, NAT en zo nodig TURN controleren."
+  },
+  "deinem Sprachserver": {
+    "en": "your voice server",
+    "nl": "je spraakserver"
+  },
+  "Sprachserver {0} nicht erreichbar. Der Betreiber muss das HTTPS-Zertifikat, die öffentliche LiveKit-Adresse und den WebSocket-Router prüfen.": {
+    "en": "Voice server {0} is unreachable. The operator needs to check the HTTPS certificate, public LiveKit address and WebSocket router.",
+    "nl": "Spraakserver {0} is niet bereikbaar. De beheerder moet het HTTPS-certificaat, het openbare LiveKit-adres en de WebSocket-router controleren."
+  },
+  "Mikrofonfreigabe wird angefragt": {
+    "en": "Requesting microphone permission",
+    "nl": "Microfoontoestemming wordt gevraagd"
+  },
+  "Funkverbindung wird aufgebaut": {
+    "en": "Connecting radio",
+    "nl": "Radioverbinding wordt gemaakt"
+  },
+  "Verbindung wird wiederhergestellt": {
+    "en": "Reconnecting",
+    "nl": "Verbinding wordt hersteld"
+  },
+  "FUNK AUS": {
+    "en": "RADIO OFF",
+    "nl": "RADIO UIT"
+  },
+  "DU SENDEST · MIKROFON AN": {
+    "en": "TRANSMITTING · MICROPHONE ON",
+    "nl": "JE ZENDT · MICROFOON AAN"
+  },
+  "FUNK AN · SPRACHERKENNUNG AN": {
+    "en": "RADIO ON · VOICE ACTIVATION ON",
+    "nl": "RADIO AAN · SPRAAKACTIVERING AAN"
+  },
+  "FUNK AN · MIKROFON AUS": {
+    "en": "RADIO ON · MICROPHONE OFF",
+    "nl": "RADIO AAN · MICROFOON UIT"
+  },
+  "Verbunden · mehrere Sprecher möglich": {
+    "en": "Connected · Multiple speakers supported",
+    "nl": "Verbonden · Meerdere sprekers mogelijk"
+  },
+  "Deine Gruppe auf einer Frequenz": {
+    "en": "Your group on one frequency",
+    "nl": "Je groep op één frequentie"
+  },
+  "Funk trennen": {
+    "en": "Disconnect radio",
+    "nl": "Radio loskoppelen"
+  },
+  "Funk verbinden": {
+    "en": "Connect radio",
+    "nl": "Radio verbinden"
+  },
+  "Mikrofon freigegeben. Empfang läuft; Senden steuerst du unten.": {
+    "en": "Microphone permission granted. Listening is active; control transmission below.",
+    "nl": "Microfoontoestemming gegeven. Ontvangst is actief; hieronder regel je het zenden."
+  },
+  "Bitte warten …": {
+    "en": "Please wait …",
+    "nl": "Even geduld …"
+  },
+  "Mikrofon erlauben & Funk verbinden": {
+    "en": "Allow microphone & connect radio",
+    "nl": "Microfoon toestaan en radio verbinden"
+  },
+  "Antippen": {
+    "en": "Tap",
+    "nl": "Tik"
+  },
+  "Sprachaktivierung": {
+    "en": "Voice activation",
+    "nl": "Spraakactivering"
+  },
+  "Sprachaktivierung aktiv": {
+    "en": "Voice activation active",
+    "nl": "Spraakactivering actief"
+  },
+  "Mikrofon ausschalten": {
+    "en": "Turn microphone off",
+    "nl": "Microfoon uitschakelen"
+  },
+  "Mikrofon einschalten": {
+    "en": "Turn microphone on",
+    "nl": "Microfoon inschakelen"
+  },
+  "Mikrofon an · Du sendest": {
+    "en": "Microphone on · Transmitting",
+    "nl": "Microfoon aan · Je zendt"
+  },
+  "Spracherkennung an · Wartet auf dich": {
+    "en": "Voice activation on · Waiting for you",
+    "nl": "Spraakactivering aan · Wacht op jou"
+  },
+  "Mikrofon aus": {
+    "en": "Microphone off",
+    "nl": "Microfoon uit"
+  },
+  "Antippen zum Ausschalten": {
+    "en": "Tap to turn off",
+    "nl": "Tik om uit te schakelen"
+  },
+  "Antippen zum Sprechen": {
+    "en": "Tap to speak",
+    "nl": "Tik om te spreken"
+  },
+  "Bereit. Empfang läuft auch bei stummem Mikrofon.": {
+    "en": "Ready. Listening stays active even with the microphone muted.",
+    "nl": "Klaar. Ontvangst blijft actief, ook met een gedempte microfoon."
+  },
+  "Funk einschalten und Mikrofon freigeben.": {
+    "en": "Turn on the radio and grant microphone permission.",
+    "nl": "Schakel de radio in en geef microfoontoestemming."
+  },
+  "Funk ist nur im Fahrtzeitraum verfügbar.": {
+    "en": "Radio is only available during the trip period.",
+    "nl": "Radio is alleen beschikbaar tijdens de rit."
+  },
+  "Noch nicht zugestimmt": {
+    "en": "Not consented yet",
+    "nl": "Nog geen toestemming"
+  },
+  "Wartet auf Gruppenroute": {
+    "en": "Waiting for group route",
+    "nl": "Wacht op groepsroute"
+  },
+  "Ziel wird gesendet": {
+    "en": "Sending destination",
+    "nl": "Bestemming wordt verstuurd"
+  },
+  "Tesla berechnet die Route": {
+    "en": "Tesla is calculating the route",
+    "nl": "Tesla berekent de route"
+  },
+  "Berechnete Route ist die Gruppenroute": {
+    "en": "Calculated route is the group route",
+    "nl": "Berekende route is de groepsroute"
+  },
+  "Ziel gesendet · Strecke unbestätigt": {
+    "en": "Destination sent · Route unconfirmed",
+    "nl": "Bestemming verstuurd · Route onbevestigd"
+  },
+  "Straßenverlauf innerhalb Vergleichstoleranz": {
+    "en": "Road route within comparison tolerance",
+    "nl": "Wegroute binnen vergelijkingstolerantie"
+  },
+  "Route prüfen": {
+    "en": "Check route",
+    "nl": "Route controleren"
+  },
+  "Übertragung fehlgeschlagen": {
+    "en": "Transfer failed",
+    "nl": "Overdracht mislukt"
+  },
+  "Dieser Tesla hat einen abweichenden Verlauf berechnet.": {
+    "en": "This Tesla calculated a different route.",
+    "nl": "Deze Tesla heeft een afwijkende route berekend."
+  },
+  "Dieser Fahrer meldet: Die Route kann nicht gefahren werden.": {
+    "en": "This driver reports that the route cannot be driven.",
+    "nl": "Deze bestuurder meldt dat de route niet gereden kan worden."
+  },
+  "Tesla meldet einen negativen Akku bei Ankunft.": {
+    "en": "Tesla reports a negative battery level on arrival.",
+    "nl": "Tesla meldt een negatief accuniveau bij aankomst."
+  },
+  "Das Ziel konnte nicht an diesen Tesla übertragen werden.": {
+    "en": "The destination could not be sent to this Tesla.",
+    "nl": "De bestemming kon niet naar deze Tesla worden verstuurd."
+  },
+  "Routenplanung der Gruppe": {
+    "en": "Group route planning",
+    "nl": "Routeplanning van de groep"
+  },
+  "Welches Auto gibt die Route vor?": {
+    "en": "Which car sets the route?",
+    "nl": "Welke auto bepaalt de route?"
+  },
+  "Wähle zuerst das Fahrzeug für die Planung. Die Gruppe zeigt dessen berechnete Navigation automatisch an.": {
+    "en": "Select the planning vehicle first. The group automatically shows its calculated navigation.",
+    "nl": "Kies eerst het voertuig voor de planning. De groep toont automatisch de berekende navigatie daarvan."
+  },
+  "GERINGSTE REICHWEITE": {
+    "en": "LOWEST RANGE",
+    "nl": "KLEINSTE BEREIK"
+  },
+  "Noch keine aktuellen Reichweiten": {
+    "en": "No current range data yet",
+    "nl": "Nog geen actuele bereikgegevens"
+  },
+  "Empfehlung für das Planungsfahrzeug": {
+    "en": "Recommended planning vehicle",
+    "nl": "Aanbevolen planningsvoertuig"
+  },
+  "NIEDRIGSTER AKKUSTAND": {
+    "en": "LOWEST BATTERY LEVEL",
+    "nl": "LAAGSTE ACCUNIVEAU"
+  },
+  "Noch keine aktuellen Akkustände": {
+    "en": "No current battery levels yet",
+    "nl": "Nog geen actuele accuniveaus"
+  },
+  "Separate Empfehlung nach Akkustand": {
+    "en": "Separate recommendation by battery level",
+    "nl": "Apart advies op basis van accuniveau"
+  },
+  "Gemeldete Reichweite ist keine Garantie der Reststrecke. Empfehlungen berücksichtigen nur Messwerte der letzten fünf Minuten.": {
+    "en": "Reported range does not guarantee the remaining distance. Recommendations only consider measurements from the last five minutes.",
+    "nl": "Het gemelde bereik garandeert geen resterende afstand. Aanbevelingen gebruiken alleen meetgegevens van de laatste vijf minuten."
+  },
+  "Zieladresse für die erste Planung": {
+    "en": "Destination address for initial planning",
+    "nl": "Bestemmingsadres voor de eerste planning"
+  },
+  "Adresse oder eindeutiger Zielort": {
+    "en": "Address or unambiguous destination",
+    "nl": "Adres of eenduidige bestemming"
+  },
+  "Automatische Zielübernahme beenden": {
+    "en": "Stop automatically accepting destinations",
+    "nl": "Automatische bestemmingsovername stoppen"
+  },
+  "Automatische Zielübernahme in meinem Auto erlauben": {
+    "en": "Allow automatic destination acceptance in my car",
+    "nl": "Automatische bestemmingsovername in mijn auto toestaan"
+  },
+  "Mein Auto schafft diese Route nicht": {
+    "en": "My car cannot manage this route",
+    "nl": "Mijn auto kan deze route niet rijden"
+  },
+  "Übertragung erneut versuchen": {
+    "en": "Retry transfer",
+    "nl": "Overdracht opnieuw proberen"
+  },
+  "PLANT DIE ROUTE": {
+    "en": "PLANNING THE ROUTE",
+    "nl": "PLANT DE ROUTE"
+  },
+  "Akku unbekannt": {
+    "en": "Battery unknown",
+    "nl": "Accu onbekend"
+  },
+  "Reichweite unbekannt": {
+    "en": "Range unknown",
+    "nl": "Bereik onbekend"
+  },
+  "Route bitte prüfen": {
+    "en": "Please check route",
+    "nl": "Controleer de route"
+  },
+  "Du kannst die Route dieses Autos als neue Gruppenroute übernehmen.": {
+    "en": "You can adopt this car’s route as the new group route.",
+    "nl": "Je kunt de route van deze auto als nieuwe groepsroute overnemen."
+  },
+  "Dieses Fahrzeug für Planung auswählen": {
+    "en": "Select this vehicle for planning",
+    "nl": "Dit voertuig kiezen voor planning"
+  },
+  "Route dieses Autos übernehmen": {
+    "en": "Adopt this car’s route",
+    "nl": "Route van deze auto overnemen"
+  },
+  "Dieser Fahrer muss die Zielübernahme zuerst erlauben.": {
+    "en": "This driver must allow destination acceptance first.",
+    "nl": "Deze bestuurder moet eerst bestemmingsovername toestaan."
+  },
+  "Aktuell überträgt TeslaTalk das Ziel. Jeder Tesla plant selbst. Identische Ladestopps werden damit noch nicht übernommen oder bestätigt; dafür fehlen die vollständigen Ladeplan-Daten und deren Übertragung. Ein Straßenvergleich benötigt Fleet Telemetry und verwendet 200 m Toleranz; verschiedene Startpunkte können unbestätigt bleiben.": {
+    "en": "TeslaTalk currently transfers the destination. Each Tesla plans independently. Identical charging stops are not transferred or confirmed yet; the complete charging plan data and its transfer are missing. Road comparison requires Fleet Telemetry and uses a 200 m tolerance; different starting points may remain unconfirmed.",
+    "nl": "TeslaTalk draagt momenteel de bestemming over. Iedere Tesla plant zelf. Identieke laadstops worden nog niet overgenomen of bevestigd; daarvoor ontbreken de volledige laadplangegevens en de overdracht ervan. Wegvergelijking vereist Fleet Telemetry en gebruikt 200 m tolerantie; verschillende startpunten kunnen onbevestigd blijven."
+  },
+  "Kartenkacheln konnten nicht geladen werden.": {
+    "en": "Map tiles could not be loaded.",
+    "nl": "Kaarttegels konden niet worden geladen."
+  },
+  "Prüfe die Internetverbindung und ob dein Netzwerk den Kartendienst blockiert.": {
+    "en": "Check your internet connection and whether your network blocks the map service.",
+    "nl": "Controleer je internetverbinding en of je netwerk de kaartdienst blokkeert."
+  },
+  "Karte erneut laden": {
+    "en": "Reload map",
+    "nl": "Kaart opnieuw laden"
+  },
+  "Gruppe zentrieren": {
+    "en": "Centre group",
+    "nl": "Groep centreren"
+  },
+  "Navigationsziel des Planungsfahrzeugs": {
+    "en": "Planning vehicle’s navigation destination",
+    "nl": "Navigatiebestemming van het planningsvoertuig"
+  },
+  "Ziel aus dem Auto": {
+    "en": "Destination from the car",
+    "nl": "Bestemming uit de auto"
+  },
+  "Fahrzeug ·": {
+    "en": "Vehicle ·",
+    "nl": "Voertuig ·"
+  },
+  "% Akku": {
+    "en": "% battery",
+    "nl": "% accu"
+  },
+  "Person ·": {
+    "en": "Person ·",
+    "nl": "Persoon ·"
+  },
+  "· geteilter Browser-Standort": {
+    "en": "· shared browser location",
+    "nl": "· gedeelde browserlocatie"
+  },
+  "Aktualisiert:": {
+    "en": "Updated:",
+    "nl": "Bijgewerkt:"
+  },
+  "NUR DEINE FAHRT": {
+    "en": "YOUR TRIP ONLY",
+    "nl": "ALLEEN JOUW RIT"
+  },
+  "Person": {
+    "en": "Person",
+    "nl": "Persoon"
+  },
+  "Fahrzeug": {
+    "en": "Vehicle",
+    "nl": "Voertuig"
+  },
+  "Route": {
+    "en": "Route",
+    "nl": "Route"
+  },
+  "Noch keine Standortdaten.": {
+    "en": "No location data yet.",
+    "nl": "Nog geen locatiegegevens."
+  },
+  "Fahrzeugdaten abrufen oder deinen persönlichen Standort teilen. Das geht auch als Mitfahrer.": {
+    "en": "Retrieve vehicle data or share your personal location. Passengers can do this too.",
+    "nl": "Haal voertuiggegevens op of deel je persoonlijke locatie. Dit kan ook als passagier."
+  },
+  "Fahrzeugpositionen:": {
+    "en": "Vehicle positions:",
+    "nl": "Voertuigposities:"
+  },
+  "Position fehlt für": {
+    "en": "Position missing for",
+    "nl": "Positie ontbreekt voor"
+  },
+  ". Tesla muss Standortdaten liefern; ein geteilter Handy-Standort ersetzt keine Fahrzeugposition.": {
+    "en": ". Tesla must provide location data; a shared phone location does not replace a vehicle position.",
+    "nl": ". Tesla moet locatiegegevens leveren; een gedeelde telefoonlocatie vervangt geen voertuigpositie."
+  },
+  "Tesla-Erstanmeldung": {
+    "en": "First Tesla sign-in",
+    "nl": "Eerste Tesla-aanmelding"
+  },
+  "WILLKOMMEN BEI TESLATALK": {
+    "en": "WELCOME TO TESLATALK",
+    "nl": "WELKOM BIJ TESLATALK"
+  },
+  "Wähle deinen Benutzernamen.": {
+    "en": "Choose your username.",
+    "nl": "Kies je gebruikersnaam."
+  },
+  "Dein Tesla-Konto ist verbunden. Mit deinem eindeutigen Benutzernamen finden dich Freunde und können dich zu Fahrten einladen.": {
+    "en": "Your Tesla account is connected. Your unique username lets friends find you and invite you to trips.",
+    "nl": "Je Tesla-account is gekoppeld. Met je unieke gebruikersnaam kunnen vrienden je vinden en uitnodigen voor ritten."
+  },
+  "z. B. roadtrip-max": {
+    "en": "e.g. roadtrip-max",
+    "nl": "bijv. roadtrip-max"
+  },
+  "3–30 Zeichen: Buchstaben, Ziffern, Unterstrich oder Bindestrich. Groß- und Kleinschreibung unterscheiden keine Namen.": {
+    "en": "3–30 characters: letters, digits, underscore or hyphen. Usernames are case-insensitive.",
+    "nl": "3–30 tekens: letters, cijfers, underscore of koppelteken. Gebruikersnamen zijn niet hoofdlettergevoelig."
+  },
+  "Benutzername speichern & weiter": {
+    "en": "Save username & continue",
+    "nl": "Gebruikersnaam opslaan en verder"
+  },
+  "Frunk öffnen": {
+    "en": "Open frunk",
+    "nl": "Frunk openen"
+  },
+  "Heckklappe betätigen": {
+    "en": "Operate tailgate",
+    "nl": "Achterklep bedienen"
+  },
+  "Fenster lüften": {
+    "en": "Vent windows",
+    "nl": "Ramen ventileren"
+  },
+  "Fenster schließen": {
+    "en": "Close windows",
+    "nl": "Ramen sluiten"
+  },
+  "Klima an": {
+    "en": "Climate on",
+    "nl": "Klimaat aan"
+  },
+  "Klima aus": {
+    "en": "Climate off",
+    "nl": "Klimaat uit"
+  },
+  "Bestätigt": {
+    "en": "Confirmed",
+    "nl": "Bevestigd"
+  },
+  "Übersprungen": {
+    "en": "Skipped",
+    "nl": "Overgeslagen"
+  },
+  "Fehlgeschlagen": {
+    "en": "Failed",
+    "nl": "Mislukt"
+  },
+  "Ergebnis unklar": {
+    "en": "Outcome unclear",
+    "nl": "Resultaat onduidelijk"
+  },
+  "Noch offen": {
+    "en": "Pending",
+    "nl": "Nog open"
+  },
+  "Du bestimmst, ob der Fahrtleiter Frunk, Heckklappe, Fenster und Klima deines Autos während dieser Fahrt steuern darf. Die Freigabe gilt nur für": {
+    "en": "You decide whether the trip leader may control your car’s frunk, tailgate, windows and climate during this trip. Permission applies only to",
+    "nl": "Jij bepaalt of de ritleider tijdens deze rit de frunk, achterklep, ramen en klimaatregeling van je auto mag bedienen. Toestemming geldt alleen voor"
+  },
+  "Komfortsteuerung für mein Auto widerrufen": {
+    "en": "Revoke comfort controls for my car",
+    "nl": "Toestemming voor comfortbediening van mijn auto intrekken"
+  },
+  "Komfortsteuerung für mein Auto erlauben": {
+    "en": "Allow comfort controls for my car",
+    "nl": "Comfortbediening van mijn auto toestaan"
+  },
+  "Die Fahrzeugsteuerung ist vom Betreiber noch nicht aktiviert.": {
+    "en": "The operator has not enabled vehicle controls yet.",
+    "nl": "De beheerder heeft voertuigbediening nog niet ingeschakeld."
+  },
+  "Komfortsteuerung der Gruppe": {
+    "en": "Group comfort controls",
+    "nl": "Comfortbediening van de groep"
+  },
+  "Fahrzeugsteuerung": {
+    "en": "Vehicle controls",
+    "nl": "Voertuigbediening"
+  },
+  "Die Fahrzeugsteuerung ist nur während einer aktiven Fahrt verfügbar.": {
+    "en": "Vehicle controls are only available during an active trip.",
+    "nl": "Voertuigbediening is alleen beschikbaar tijdens een actieve rit."
+  },
+  "Fahrzeugen freigegeben.": {
+    "en": "vehicles have permission.",
+    "nl": "voertuigen hebben toestemming."
+  },
+  "Jede Aktion betrifft die unten angezeigten freigegebenen Autos.": {
+    "en": "Each action affects the permitted cars listed below.",
+    "nl": "Iedere actie geldt voor de hieronder getoonde auto’s met toestemming."
+  },
+  "Keine Freigabe": {
+    "en": "No permission",
+    "nl": "Geen toestemming"
+  },
+  "Frunk, Heckklappe und Fenster nur bei aktuell bestätigter Parkstellung. „Heckklappe betätigen“ öffnet oder schließt entsprechend der aktuellen Position; Unterstützung hängt vom Fahrzeug ab. Der Frunk wird von Hand geschlossen. Fenster können gelüftet werden. Klima nutzt die im Auto eingestellte Temperatur.": {
+    "en": "Frunk, tailgate and windows require a recently confirmed parked state. “Operate tailgate” opens or closes it based on its current position; support depends on the vehicle. The frunk is closed manually. Windows can be vented. Climate uses the temperature set in the car.",
+    "nl": "Frunk, achterklep en ramen vereisen een recent bevestigde parkeerstand. ‘Achterklep bedienen’ opent of sluit afhankelijk van de huidige positie; ondersteuning hangt van het voertuig af. De frunk wordt met de hand gesloten. Ramen kunnen worden geventileerd. De klimaatregeling gebruikt de temperatuur die in de auto is ingesteld."
+  },
+  "Ergebnis bitte am Auto prüfen. Der Befehl wird nicht automatisch wiederholt.": {
+    "en": "Please check the result on the car. The command will not be repeated automatically.",
+    "nl": "Controleer het resultaat bij de auto. Het commando wordt niet automatisch herhaald."
+  },
+  "Auftragsstatus abrufen": {
+    "en": "Retrieve request status",
+    "nl": "Opdrachtstatus ophalen"
+  },
+  "Ergebnisse der Fahrzeugsteuerung": {
+    "en": "Vehicle control results",
+    "nl": "Resultaten van voertuigbediening"
+  },
+  "für die Gruppe?": {
+    "en": "for the group?",
+    "nl": "voor de groep?"
+  },
+  "Diese Aktion wird an": {
+    "en": "This action will be sent to",
+    "nl": "Deze actie wordt verstuurd naar"
+  },
+  "freigegebene Fahrzeuge gesendet:": {
+    "en": "permitted vehicles:",
+    "nl": "voertuigen met toestemming:"
+  },
+  "(nur Demo)": {
+    "en": "(demo only)",
+    "nl": "(alleen demo)"
+  },
+  "Prüfe, dass die Aktion bei allen aufgeführten Autos jetzt gewünscht ist und die beweglichen Teile frei sind.": {
+    "en": "Check that this action is currently wanted for all listed cars and that moving parts are clear.",
+    "nl": "Controleer of deze actie nu gewenst is bij alle genoemde auto’s en of de bewegende delen vrij zijn."
+  },
+  "Wird gesendet …": {
+    "en": "Sending …",
+    "nl": "Wordt verstuurd …"
+  },
+  "Jetzt an diese Fahrzeuge senden": {
+    "en": "Send to these vehicles now",
+    "nl": "Nu naar deze voertuigen versturen"
+  },
+  "Bitte Eingaben prüfen.": {
+    "en": "Please check your input.",
+    "nl": "Controleer je invoer."
+  },
+  "{0} h {1} min": {
+    "en": "{0} h {1} min",
+    "nl": "{0} h {1} min"
+  },
+  "Anzeige konnte nicht geladen werden.": {
+    "en": "The page could not be loaded.",
+    "nl": "De pagina kon niet worden geladen."
+  },
+  "Neu laden": {
+    "en": "Reload",
+    "nl": "Opnieuw laden"
+  },
+  "Sprache": {
+    "en": "Language",
+    "nl": "Taal"
+  },
+  "Automatisch": {
+    "en": "Automatic",
+    "nl": "Automatisch"
+  },
+  "TeslaTalk – Gemeinsam unterwegs": {
+    "en": "TeslaTalk – On the road together",
+    "nl": "TeslaTalk – Samen onderweg"
+  },
+  "Sprechfunk, Live-Karte und Gruppenfahrten mit deinen Freunden.": {
+    "en": "Voice radio, live maps and group trips with your friends.",
+    "nl": "Spraakradio, livekaart en groepsritten met je vrienden."
+  },
+  "● UNTERWEGS": {
+    "en": "● ON THE ROAD",
+    "nl": "● ONDERWEG"
+  },
+  "GEPLANT": {
+    "en": "PLANNED",
+    "nl": "GEPLAND"
+  },
+  "ABGESCHLOSSEN": {
+    "en": "COMPLETED",
+    "nl": "AFGEROND"
+  },
+  "KONFIGURIERT": {
+    "en": "CONFIGURED",
+    "nl": "INGESTELD"
+  },
+  "Registrieren & mitfahren": {
+    "en": "Register & join trip",
+    "nl": "Registreren en meerijden"
+  },
+  "Demo-Server": {
+    "en": "Demo server",
+    "nl": "Demoserver"
+  },
+  "Standardfahrzeug": {
+    "en": "Default vehicle",
+    "nl": "Standaardvoertuig"
+  },
+  "Mitfahrer": {
+    "en": "Passenger",
+    "nl": "Passagier"
+  },
+  "Fahrer": {
+    "en": "Driver",
+    "nl": "Bestuurder"
+  },
+  "Navigationsziel": {
+    "en": "Navigation destination",
+    "nl": "Navigatiebestemming"
+  },
+  "Demodaten": {
+    "en": "Demo data",
+    "nl": "Demogegevens"
+  },
+  "Benachrichtigungen": {
+    "en": "Notifications",
+    "nl": "Meldingen"
+  },
+  "Freigegeben": {
+    "en": "Permission granted",
+    "nl": "Toestemming gegeven"
+  },
+  "erneuern": {
+    "en": "renew",
+    "nl": "vernieuwen"
+  },
+  "erstellen": {
+    "en": "create",
+    "nl": "aanmaken"
+  },
+  "spricht": {
+    "en": "is speaking",
+    "nl": "spreekt"
+  },
+  "Standortfreigabe:": {
+    "en": "Location sharing:",
+    "nl": "Locatiedeling:"
+  },
+  "· Messwerte: {0}": {
+    "en": "· Measurements: {0}",
+    "nl": "· Meetgegevens: {0}"
+  },
+  "Demo ·": {
+    "en": "Demo ·",
+    "nl": "Demo ·"
+  },
+  "Roadtrip-Fahrer": {
+    "en": "Road trip driver",
+    "nl": "Roadtrip-bestuurder"
+  },
+  "Konto nicht vorhanden.": {
+    "en": "Account not found.",
+    "nl": "Account niet gevonden."
+  },
+  "Diese Funktion ist nur für Fahrer verfügbar.": {
+    "en": "This feature is only available to drivers.",
+    "nl": "Deze functie is alleen beschikbaar voor bestuurders."
+  },
+  "Bitte zuerst einen eindeutigen Benutzernamen wählen.": {
+    "en": "Please choose a unique username first.",
+    "nl": "Kies eerst een unieke gebruikersnaam."
+  },
+  "Ungültiger API-Schlüssel.": {
+    "en": "Invalid API key.",
+    "nl": "Ongeldige API-sleutel."
+  },
+  "API-Schlüssel ungültig oder abgelaufen.": {
+    "en": "API key invalid or expired.",
+    "nl": "API-sleutel ongeldig of verlopen."
+  },
+  "Bitte anmelden.": {
+    "en": "Please sign in.",
+    "nl": "Meld je aan."
+  },
+  "Zu viele Versuche. Bitte kurz warten.": {
+    "en": "Too many attempts. Please wait a moment.",
+    "nl": "Te veel pogingen. Wacht even."
+  },
+  "Ungültiges Push-Abonnement. Apple, Firefox und Chromium werden unterstützt.": {
+    "en": "Invalid push subscription. Apple, Firefox and Chromium are supported.",
+    "nl": "Ongeldig pushabonnement. Apple, Firefox en Chromium worden ondersteund."
+  },
+  "Web-Push ist noch nicht eingerichtet.": {
+    "en": "Web Push has not been configured yet.",
+    "nl": "Web Push is nog niet ingesteld."
+  },
+  "Push-Abonnements benötigen eine Browser-Anmeldung.": {
+    "en": "Push subscriptions require browser sign-in.",
+    "nl": "Pushabonnementen vereisen een browseraanmelding."
+  },
+  "Bitte die bisherigen Benachrichtigungen auf diesem Gerät zuerst deaktivieren.": {
+    "en": "Please disable the previous notifications on this device first.",
+    "nl": "Schakel eerst de eerdere meldingen op dit apparaat uit."
+  },
+  "Höchstens acht Geräte pro Konto sind erlaubt.": {
+    "en": "A maximum of eight devices per account is allowed.",
+    "nl": "Maximaal acht apparaten per account toegestaan."
+  },
+  "Dieses Browser-Abonnement ist nicht registriert. Benachrichtigungen im Profil erneut abgleichen.": {
+    "en": "This browser subscription is not registered. Synchronise notifications again in your profile.",
+    "nl": "Dit browserabonnement is niet geregistreerd. Synchroniseer de meldingen opnieuw in je profiel."
+  },
+  "Deine Benachrichtigungen erreichen dieses Gerät.": {
+    "en": "Your notifications reach this device.",
+    "nl": "Je meldingen bereiken dit apparaat."
+  },
+  "Der Push-Dienst ist gerade nicht erreichbar. Bitte erneut versuchen.": {
+    "en": "The push service is currently unreachable. Please try again.",
+    "nl": "De pushdienst is momenteel niet bereikbaar. Probeer het opnieuw."
+  },
+  "Frontend noch nicht gebaut.": {
+    "en": "Frontend has not been built yet.",
+    "nl": "De frontend is nog niet gebouwd."
+  },
+  "Fahrt nicht gefunden.": {
+    "en": "Trip not found.",
+    "nl": "Rit niet gevonden."
+  },
+  "Zugang abgelaufen.": {
+    "en": "Access expired.",
+    "nl": "Toegang verlopen."
+  },
+  "Mitfahrer-Zugang gilt nur während der Fahrt.": {
+    "en": "Passenger access is only valid during the trip.",
+    "nl": "Passagierstoegang is alleen geldig tijdens de rit."
+  },
+  "Die Fahrt ist noch nicht aktiv oder bereits beendet.": {
+    "en": "The trip has not started yet or has already ended.",
+    "nl": "De rit is nog niet actief of is al afgelopen."
+  },
+  "Nur der Fahrtleiter darf diese Aktion ausführen.": {
+    "en": "Only the trip leader may perform this action.",
+    "nl": "Alleen de ritleider mag deze actie uitvoeren."
+  },
+  "APP_SECRET benötigt mindestens 32 Zeichen. Bitte scripts/configure.py ausführen.": {
+    "en": "APP_SECRET requires at least 32 characters. Please run scripts/configure.py.",
+    "nl": "APP_SECRET vereist minstens 32 tekens. Voer scripts/configure.py uit."
+  },
+  "Externer Dienst derzeit nicht erreichbar.": {
+    "en": "External service currently unreachable.",
+    "nl": "Externe dienst momenteel niet bereikbaar."
+  },
+  "Push-Test benötigt eine Browser-Anmeldung.": {
+    "en": "Push testing requires browser sign-in.",
+    "nl": "Een pushtest vereist browseraanmelding."
+  },
+  "Tesla-Profilverknüpfung benötigt eine Mitfahrer-Browsersitzung.": {
+    "en": "Tesla profile linking requires a passenger browser session.",
+    "nl": "Tesla-profielkoppeling vereist een passagiersbrowsersessie."
+  },
+  "Diese Verknüpfung ist nur für QR-Mitfahrer vorgesehen.": {
+    "en": "This link is only intended for QR passengers.",
+    "nl": "Deze koppeling is alleen bedoeld voor QR-passagiers."
+  },
+  "Mitfahrer-Anmeldung hat sich geändert. Verknüpfung bitte neu starten.": {
+    "en": "Passenger sign-in has changed. Please restart linking.",
+    "nl": "De passagiersaanmelding is gewijzigd. Start de koppeling opnieuw."
+  },
+  "Dieser Zugang ist kein Mitfahrer-Zugang.": {
+    "en": "This access is not passenger access.",
+    "nl": "Deze toegang is geen passagierstoegang."
+  },
+  "Tesla-Anmeldung ist noch nicht konfiguriert.": {
+    "en": "Tesla sign-in has not been configured yet.",
+    "nl": "Tesla-aanmelding is nog niet ingesteld."
+  },
+  "Mitfahrer-Zugang wurde beendet. Verknüpfung bitte neu starten.": {
+    "en": "Passenger access has ended. Please restart linking.",
+    "nl": "Passagierstoegang is beëindigd. Start de koppeling opnieuw."
+  },
+  "Tesla lieferte keine eindeutige Kontoidentität.": {
+    "en": "Tesla did not provide a unique account identity.",
+    "nl": "Tesla heeft geen unieke accountidentiteit geleverd."
+  },
+  "Keine Mitfahrer-Verknüpfung vorhanden.": {
+    "en": "No passenger profile link exists.",
+    "nl": "Er is geen passagiersprofielkoppeling."
+  },
+  "OIDC-Administration ist noch nicht konfiguriert.": {
+    "en": "OIDC administration has not been configured yet.",
+    "nl": "OIDC-beheer is nog niet ingesteld."
+  },
+  "Dieser Benutzername ist bereits vergeben. Bitte einen anderen wählen.": {
+    "en": "This username is already taken. Please choose another.",
+    "nl": "Deze gebruikersnaam is al in gebruik. Kies een andere."
+  },
+  "Profilbilder werden über dein verbundenes Tesla-Konto geladen.": {
+    "en": "Profile pictures are loaded through your connected Tesla account.",
+    "nl": "Profielfoto’s worden via je gekoppelde Tesla-account geladen."
+  },
+  "Tesla lieferte kein nutzbares Kontoprofil.": {
+    "en": "Tesla did not provide a usable account profile.",
+    "nl": "Tesla heeft geen bruikbaar accountprofiel geleverd."
+  },
+  "Fahrzeug nicht gefunden.": {
+    "en": "Vehicle not found.",
+    "nl": "Voertuig niet gevonden."
+  },
+  "Navigations-Import benötigt einen persönlichen API-Schlüssel.": {
+    "en": "Navigation imports require a personal API key.",
+    "nl": "Navigatie-importen vereisen een persoonlijke API-sleutel."
+  },
+  "Kein passendes Fahrer-Konto gefunden.": {
+    "en": "No matching driver account found.",
+    "nl": "Geen passend bestuurdersaccount gevonden."
+  },
+  "Anfrage nicht gefunden.": {
+    "en": "Request not found.",
+    "nl": "Verzoek niet gevonden."
+  },
+  "Bitte zuerst dein Tesla-Fahrzeug auswählen.": {
+    "en": "Please select your Tesla vehicle first.",
+    "nl": "Kies eerst je Tesla-voertuig."
+  },
+  "Bitte zuerst dein Fahrzeug auswählen.": {
+    "en": "Please select your vehicle first.",
+    "nl": "Kies eerst je voertuig."
+  },
+  "PIN ungültig oder Fahrt beendet.": {
+    "en": "PIN invalid or trip ended.",
+    "nl": "Pincode ongeldig of rit afgelopen."
+  },
+  "Die Fahrt ist bereits beendet.": {
+    "en": "The trip has already ended.",
+    "nl": "De rit is al afgelopen."
+  },
+  "Einladung ungültig oder abgelaufen.": {
+    "en": "Invitation invalid or expired.",
+    "nl": "Uitnodiging ongeldig of verlopen."
+  },
+  "Komfortsteuerung benötigt eine aktuelle Fahrer-Browsersitzung.": {
+    "en": "Comfort controls require a current driver browser session.",
+    "nl": "Comfortbediening vereist een actuele bestuurdersbrowsersessie."
+  },
+  "Komfortsteuerung ist nur für Fahrer verfügbar.": {
+    "en": "Comfort controls are only available to drivers.",
+    "nl": "Comfortbediening is alleen beschikbaar voor bestuurders."
+  },
+  "Die signierte Tesla-Befehlsanbindung ist noch nicht eingerichtet.": {
+    "en": "The signed Tesla command integration has not been configured yet.",
+    "nl": "De ondertekende Tesla-commandokoppeling is nog niet ingesteld."
+  },
+  "Auftrag wurde nicht gefunden. Kein Befehl wird durch diese Abfrage gesendet.": {
+    "en": "Request not found. This lookup does not send any command.",
+    "nl": "Opdracht niet gevonden. Deze opvraag verstuurt geen commando."
+  },
+  "Fahrt bereits beendet.": {
+    "en": "Trip already ended.",
+    "nl": "Rit al afgelopen."
+  },
+  "Mitfahrer-Link nicht gefunden.": {
+    "en": "Passenger link not found.",
+    "nl": "Passagierslink niet gevonden."
+  },
+  "Mitfahrer-Zugang ist außerhalb des Fahrtzeitraums gesperrt.": {
+    "en": "Passenger access is blocked outside the trip period.",
+    "nl": "Passagierstoegang is geblokkeerd buiten de ritperiode."
+  },
+  "Dieser Name ist für die Fahrt bereits registriert. Bitte anmelden oder einen anderen Namen wählen.": {
+    "en": "This name is already registered for the trip. Please sign in or choose another name.",
+    "nl": "Deze naam is al geregistreerd voor de rit. Meld je aan of kies een andere naam."
+  },
+  "Name oder PIN ungültig.": {
+    "en": "Name or PIN invalid.",
+    "nl": "Naam of pincode ongeldig."
+  },
+  "Sprachfunk ist noch nicht konfiguriert.": {
+    "en": "Voice radio has not been configured yet.",
+    "nl": "Spraakradio is nog niet ingesteld."
+  },
+  "Audioserver derzeit nicht erreichbar.": {
+    "en": "Audio server currently unreachable.",
+    "nl": "Audioserver momenteel niet bereikbaar."
+  },
+  "Öffentlicher Leselink ist erst nach Fahrtende verfügbar.": {
+    "en": "Public read-only links are only available after the trip ends.",
+    "nl": "Openbare leeslinks zijn pas beschikbaar nadat de rit is afgelopen."
+  },
+  "Freigabe nicht gefunden.": {
+    "en": "Shared trip not found.",
+    "nl": "Gedeelde rit niet gevonden."
+  },
+  "Tesla-Public-Key noch nicht hinterlegt.": {
+    "en": "Tesla public key has not been configured yet.",
+    "nl": "De openbare Tesla-sleutel is nog niet ingesteld."
+  },
+  "App-Icon noch nicht gebaut.": {
+    "en": "App icon has not been built yet.",
+    "nl": "App-pictogram is nog niet gebouwd."
+  },
+  "Anfrage zu groß.": {
+    "en": "Request too large.",
+    "nl": "Aanvraag te groot."
+  },
+  "Mitfahrer-Zugang ist nicht mehr gültig.": {
+    "en": "Passenger access is no longer valid.",
+    "nl": "Passagierstoegang is niet meer geldig."
+  },
+  "Anmeldung abgelaufen oder ungültig. Bitte neu starten.": {
+    "en": "Sign-in expired or invalid. Please start again.",
+    "nl": "Aanmelding verlopen of ongeldig. Begin opnieuw."
+  },
+  "Tesla-Anmeldung fehlgeschlagen. Bitte erneut versuchen.": {
+    "en": "Tesla sign-in failed. Please try again.",
+    "nl": "Tesla-aanmelding mislukt. Probeer het opnieuw."
+  },
+  "Tesla-Konto konnte nicht gelesen werden.": {
+    "en": "Tesla account could not be read.",
+    "nl": "Tesla-account kon niet worden gelezen."
+  },
+  "Demo Model 3": {
+    "en": "Demo Model 3",
+    "nl": "Demo Model 3"
+  },
+  "Der Fahrer muss die Routenübernahme für sein Auto zuerst erlauben.": {
+    "en": "The driver must allow route acceptance for their car first.",
+    "nl": "De bestuurder moet eerst routeovername voor de eigen auto toestaan."
+  },
+  "Bitte eine Zieladresse angeben.": {
+    "en": "Please enter a destination address.",
+    "nl": "Voer een bestemmingsadres in."
+  },
+  "Planungsfahrzeug wurde gewechselt. Bitte erneut planen.": {
+    "en": "Planning vehicle changed. Please plan again.",
+    "nl": "Planningsvoertuig gewijzigd. Plan opnieuw."
+  },
+  "Der Fahrer muss die Routenübernahme zuerst erlauben.": {
+    "en": "The driver must allow route acceptance first.",
+    "nl": "De bestuurder moet eerst routeovername toestaan."
+  },
+  "Planungsfahrzeug wurde gewechselt. Bitte erneut auswählen.": {
+    "en": "Planning vehicle changed. Please select again.",
+    "nl": "Planningsvoertuig gewijzigd. Kies opnieuw."
+  },
+  "Bitte zuerst die Routenübernahme aktivieren.": {
+    "en": "Please enable route acceptance first.",
+    "nl": "Schakel eerst routeovername in."
+  },
+  "Der persönliche Standort benötigt Breite und Länge.": {
+    "en": "Personal location requires latitude and longitude.",
+    "nl": "Persoonlijke locatie vereist breedte- en lengtegraad."
+  },
+  "Telemetrie-Import benötigt einen persönlichen API-Schlüssel.": {
+    "en": "Telemetry imports require a personal API key.",
+    "nl": "Telemetrie-importen vereisen een persoonlijke API-sleutel."
+  },
+  "Ungültiger Ursprung der Anfrage.": {
+    "en": "Invalid request origin.",
+    "nl": "Ongeldige aanvraagherkomst."
+  },
+  "Ungültige Anfragegröße.": {
+    "en": "Invalid request size.",
+    "nl": "Ongeldige aanvraaggrootte."
+  },
+  "Tesla-Fahrer": {
+    "en": "Tesla driver",
+    "nl": "Tesla-bestuurder"
+  },
+  "Tesla-Fahrzeugdaten derzeit nicht erreichbar.": {
+    "en": "Tesla vehicle data is currently unreachable.",
+    "nl": "Tesla-voertuiggegevens zijn momenteel niet bereikbaar."
+  },
+  "Tesla lieferte keine nutzbare API-Antwort.": {
+    "en": "Tesla did not provide a usable API response.",
+    "nl": "Tesla heeft geen bruikbaar API-antwoord geleverd."
+  },
+  "Tesla lieferte keine nutzbaren Fahrzeugdaten.": {
+    "en": "Tesla did not provide usable vehicle data.",
+    "nl": "Tesla heeft geen bruikbare voertuiggegevens geleverd."
+  },
+  "Tesla lieferte keine Fahrzeugliste.": {
+    "en": "Tesla did not provide a vehicle list.",
+    "nl": "Tesla heeft geen voertuiglijst geleverd."
+  },
+  "Fahrt oder Fahrzeugfreigabe ist nicht mehr aktiv.": {
+    "en": "Trip or vehicle permission is no longer active.",
+    "nl": "De rit of voertuigtoestemming is niet meer actief."
+  },
+  "Dieser Fahrer hat die Zielübernahme nicht erlaubt.": {
+    "en": "This driver has not allowed destination acceptance.",
+    "nl": "Deze bestuurder heeft bestemmingsovername niet toegestaan."
+  },
+  "Tesla-Navigationsbefehle sind noch nicht aktiviert. TESLA_NAVIGATION_COMMANDS aktivieren und das Tesla-Konto mit vehicle_cmds erneut verbinden.": {
+    "en": "Tesla navigation commands are not enabled yet. Enable TESLA_NAVIGATION_COMMANDS and reconnect the Tesla account with vehicle_cmds.",
+    "nl": "Tesla-navigatiecommando’s zijn nog niet ingeschakeld. Schakel TESLA_NAVIGATION_COMMANDS in en koppel het Tesla-account opnieuw met vehicle_cmds."
+  },
+  "Die Tesla-Befehlsanbindung benötigt eine gültige HTTPS-Proxy-Adresse ohne Zugangsdaten oder URL-Pfad.": {
+    "en": "The Tesla command integration requires a valid HTTPS proxy address without credentials or a URL path.",
+    "nl": "De Tesla-commandokoppeling vereist een geldig HTTPS-proxyadres zonder toegangsgegevens of URL-pad."
+  },
+  "Tesla hat das Navigationsziel nicht angenommen.": {
+    "en": "Tesla did not accept the navigation destination.",
+    "nl": "Tesla heeft de navigatiebestemming niet geaccepteerd."
+  },
+  "Tesla hat das Navigationsziel nicht bestätigt. Bitte das Auto prüfen.": {
+    "en": "Tesla did not confirm the navigation destination. Please check the car.",
+    "nl": "Tesla heeft de navigatiebestemming niet bevestigd. Controleer de auto."
+  },
+  "Tesla-Konto bitte erneut verbinden.": {
+    "en": "Please reconnect your Tesla account.",
+    "nl": "Koppel je Tesla-account opnieuw."
+  },
+  "Tesla-Zugriff abgelaufen. Bitte erneut anmelden.": {
+    "en": "Tesla access expired. Please sign in again.",
+    "nl": "Tesla-toegang verlopen. Meld je opnieuw aan."
+  },
+  "Tesla-Anmeldung erneuern.": {
+    "en": "Renew Tesla sign-in.",
+    "nl": "Vernieuw de Tesla-aanmelding."
+  },
+  "Tesla-Berechtigungen oder Partnerregistrierung fehlen.": {
+    "en": "Tesla permissions or partner registration are missing.",
+    "nl": "Tesla-rechten of partnerregistratie ontbreken."
+  },
+  "Fahrzeug schläft oder ist nicht erreichbar.": {
+    "en": "Vehicle is asleep or unreachable.",
+    "nl": "Voertuig slaapt of is niet bereikbaar."
+  },
+  "Tesla-Anfragelimit erreicht.": {
+    "en": "Tesla request limit reached.",
+    "nl": "Tesla-aanvraaglimiet bereikt."
+  },
+  "Tesla-Konto erneut verbinden.": {
+    "en": "Reconnect Tesla account.",
+    "nl": "Tesla-account opnieuw koppelen."
+  },
+  "Tesla-Befehlsberechtigung vehicle_cmds oder virtueller Fahrzeugschlüssel fehlt.": {
+    "en": "Tesla command permission vehicle_cmds or the virtual vehicle key is missing.",
+    "nl": "Tesla-commandorecht vehicle_cmds of de virtuele voertuigsleutel ontbreekt."
+  },
+  "Das Fahrzeug schläft oder ist nicht erreichbar.": {
+    "en": "The vehicle is asleep or unreachable.",
+    "nl": "Het voertuig slaapt of is niet bereikbaar."
+  },
+  "Mein Tesla": {
+    "en": "My Tesla",
+    "nl": "Mijn Tesla"
+  },
+  "Keine Administrator-Berechtigung.": {
+    "en": "No administrator permission.",
+    "nl": "Geen beheerdersrecht."
+  },
+  "Die Anmeldesitzung fehlt oder ist abgelaufen. Starte die Anmeldung erneut über /auth/admin und erlaube Website-Cookies.": {
+    "en": "The sign-in session is missing or expired. Restart sign-in via /auth/admin and allow site cookies.",
+    "nl": "De aanmeldsessie ontbreekt of is verlopen. Start opnieuw via /auth/admin en sta websitecookies toe."
+  },
+  "Der OIDC-Anbieter lehnt die Client-Anmeldung ab. Client-ID, Client-Secret und OIDC_TOKEN_AUTH_METHOD prüfen; für Pocket ID client_secret_post verwenden.": {
+    "en": "The OIDC provider rejects client authentication. Check the client ID, client secret and OIDC_TOKEN_AUTH_METHOD; use client_secret_post for Pocket ID.",
+    "nl": "De OIDC-provider weigert clientauthenticatie. Controleer client-ID, client-secret en OIDC_TOKEN_AUTH_METHOD; gebruik client_secret_post voor Pocket ID."
+  },
+  "Der Anmeldecode ist ungültig oder bereits verwendet. Neu anmelden und die Redirect-URI im OIDC-Client prüfen.": {
+    "en": "The sign-in code is invalid or already used. Sign in again and check the redirect URI in the OIDC client.",
+    "nl": "De aanmeldcode is ongeldig of al gebruikt. Meld je opnieuw aan en controleer de redirect-URI in de OIDC-client."
+  },
+  "Der OIDC-Anbieter erlaubt die angeforderten Scopes nicht. OIDC_SCOPES und Client-Freigaben prüfen.": {
+    "en": "The OIDC provider does not allow the requested scopes. Check OIDC_SCOPES and client permissions.",
+    "nl": "De OIDC-provider staat de gevraagde scopes niet toe. Controleer OIDC_SCOPES en clientrechten."
+  },
+  "Der OIDC-Anbieter hat die Anmeldung abgelehnt. Benutzer- und Client-Freigaben prüfen.": {
+    "en": "The OIDC provider rejected sign-in. Check user and client permissions.",
+    "nl": "De OIDC-provider heeft de aanmelding geweigerd. Controleer gebruikers- en clientrechten."
+  },
+  "Der ID-Token ist abgelaufen. Serverzeit und Zeitsynchronisation prüfen und neu anmelden.": {
+    "en": "The ID token expired. Check server time and time synchronisation, then sign in again.",
+    "nl": "Het ID-token is verlopen. Controleer servertijd en tijdsynchronisatie en meld je opnieuw aan."
+  },
+  "Die Signatur des ID-Tokens konnte nicht geprüft werden. Issuer und Signaturschlüssel des OIDC-Anbieters prüfen.": {
+    "en": "The ID token signature could not be verified. Check the OIDC provider’s issuer and signing keys.",
+    "nl": "De ID-tokenhandtekening kon niet worden gecontroleerd. Controleer issuer en ondertekeningssleutels van de OIDC-provider."
+  },
+  "Ein ID-Token-Claim ist ungültig. Issuer, Client-ID, Serverzeit und eine frische Anmeldung prüfen.": {
+    "en": "An ID token claim is invalid. Check issuer, client ID, server time and a fresh sign-in.",
+    "nl": "Een ID-tokenclaim is ongeldig. Controleer issuer, client-ID, servertijd en een nieuwe aanmelding."
+  },
+  "Im ID-Token fehlt eine Pflichtangabe. OIDC-Anwendung und angeforderte Scopes prüfen.": {
+    "en": "A required ID token claim is missing. Check the OIDC application and requested scopes.",
+    "nl": "Een verplicht ID-tokenveld ontbreekt. Controleer de OIDC-applicatie en gevraagde scopes."
+  },
+  "Der Gruppen-Claim enthält keine verwertbaren Gruppen. Prüfe die Mitgliedschaft deines Benutzers in Pocket ID.": {
+    "en": "The group claim contains no usable groups. Check your user’s membership in Pocket ID.",
+    "nl": "De groepsclaim bevat geen bruikbare groepen. Controleer het lidmaatschap van je gebruiker in Pocket ID."
+  },
+  "ID-Token und UserInfo bestätigen unterschiedliche Benutzer.": {
+    "en": "ID token and UserInfo identify different users.",
+    "nl": "ID-token en UserInfo bevestigen verschillende gebruikers."
+  },
+  "Der Anbieter hat keine verifizierte OIDC-Identität geliefert. Den openid-Scope und die OIDC-Anwendung prüfen.": {
+    "en": "The provider supplied no verified OIDC identity. Check the openid scope and OIDC application.",
+    "nl": "De provider heeft geen geverifieerde OIDC-identiteit geleverd. Controleer de openid-scope en OIDC-applicatie."
+  },
+  "Datum benötigt eine Zeitzone.": {
+    "en": "Date requires a time zone.",
+    "nl": "Datum vereist een tijdzone."
+  },
+  "Fahrtzeitraum muss positiv und höchstens 90 Tage lang sein.": {
+    "en": "Trip period must be positive and no longer than 90 days.",
+    "nl": "De ritperiode moet positief zijn en mag maximaal 90 dagen duren."
+  },
+  "Bitte einen Namen angeben.": {
+    "en": "Please enter a name.",
+    "nl": "Voer een naam in."
+  },
+  "Benutzer nicht gefunden.": {
+    "en": "User not found.",
+    "nl": "Gebruiker niet gevonden."
+  },
+  "Zur Bestätigung den aktuellen Benutzernamen exakt eingeben.": {
+    "en": "Enter the exact current username to confirm.",
+    "nl": "Voer ter bevestiging de huidige gebruikersnaam exact in."
+  },
+  "RouteLine enthält eine unvollständige oder ungültige Polyline.": {
+    "en": "RouteLine contains an incomplete or invalid polyline.",
+    "nl": "RouteLine bevat een onvolledige of ongeldige polyline."
+  },
+  "RouteLine benötigt mindestens zwei Punkte.": {
+    "en": "RouteLine requires at least two points.",
+    "nl": "RouteLine vereist minstens twee punten."
+  },
+  "RouteLine benötigt gültiges Base64 mit einer Polyline in Genauigkeit 6.": {
+    "en": "RouteLine requires valid Base64 with a polyline at precision 6.",
+    "nl": "RouteLine vereist geldige Base64 met een polyline op precisie 6."
+  },
+  "RouteLine enthält ungültige Koordinaten.": {
+    "en": "RouteLine contains invalid coordinates.",
+    "nl": "RouteLine bevat ongeldige coördinaten."
+  },
+  "RouteLine enthält mehr als 20.000 Punkte.": {
+    "en": "RouteLine contains more than 20,000 points.",
+    "nl": "RouteLine bevat meer dan 20.000 punten."
+  },
+  "Zielkoordinaten müssen zusammen angegeben werden.": {
+    "en": "Destination coordinates must be provided together.",
+    "nl": "Bestemmingscoördinaten moeten samen worden opgegeven."
+  },
+  "Eine aktive Navigation benötigt einen Zielnamen oder Zielkoordinaten.": {
+    "en": "Active navigation requires a destination name or coordinates.",
+    "nl": "Actieve navigatie vereist een bestemmingsnaam of coördinaten."
+  },
+  "Bei beendeter Navigation müssen Ziel, Kennzahlen und RouteLine entfallen.": {
+    "en": "When navigation ends, destination, metrics and RouteLine must be omitted.",
+    "nl": "Bij beëindigde navigatie moeten bestemming, meetgegevens en RouteLine worden weggelaten."
+  },
+  "Nur Fahrer mit eigenem ausgewähltem Fahrzeug können die Komfortsteuerung freigeben.": {
+    "en": "Only drivers with their own selected vehicle can permit comfort controls.",
+    "nl": "Alleen bestuurders met een eigen gekozen voertuig kunnen comfortbediening toestaan."
+  },
+  "Die Fahrt oder Leitung ist nicht mehr aktiv.": {
+    "en": "The trip or leadership is no longer active.",
+    "nl": "De rit of leiding is niet meer actief."
+  },
+  "Die Freigabe für dieses Fahrzeug wurde widerrufen oder das Fahrzeug gewechselt.": {
+    "en": "Permission for this vehicle was revoked or the vehicle changed.",
+    "nl": "Toestemming voor dit voertuig is ingetrokken of het voertuig is gewijzigd."
+  },
+  "Von Tesla bestätigt; den tatsächlichen Zustand am Auto prüfen.": {
+    "en": "Confirmed by Tesla; check the actual state on the car.",
+    "nl": "Bevestigd door Tesla; controleer de werkelijke toestand bij de auto."
+  },
+  "Eindeutige Fahrzeug-IDs erforderlich.": {
+    "en": "Unique vehicle IDs required.",
+    "nl": "Unieke voertuig-ID’s vereist."
+  },
+  "Tesla hat den Befehl nicht bestätigt; Ergebnis bitte am Auto prüfen.": {
+    "en": "Tesla did not confirm the command; please check the result on the car.",
+    "nl": "Tesla heeft het commando niet bevestigd; controleer het resultaat bij de auto."
+  },
+  "Keine eindeutige Bestätigung; bitte am Auto prüfen, nicht automatisch wiederholen.": {
+    "en": "No clear confirmation; check the car, do not repeat automatically.",
+    "nl": "Geen duidelijke bevestiging; controleer de auto en herhaal niet automatisch."
+  },
+  "Fahrzeug hat den Befehl abgelehnt oder unterstützt ihn nicht.": {
+    "en": "The vehicle rejected the command or does not support it.",
+    "nl": "Het voertuig heeft het commando geweigerd of ondersteunt het niet."
+  },
+  "Eine Gruppenaktion läuft bereits. Bitte auf deren Ergebnis warten.": {
+    "en": "A group action is already running. Please wait for its result.",
+    "nl": "Er loopt al een groepsactie. Wacht op het resultaat."
+  },
+  "Fahrzeugliste oder Freigaben haben sich geändert. Bitte die Übersicht aktualisieren.": {
+    "en": "Vehicle list or permissions changed. Please refresh the overview.",
+    "nl": "De voertuiglijst of toestemmingen zijn gewijzigd. Vernieuw het overzicht."
+  },
+  "Parkstellung und Stillstand konnten nicht aktuell bestätigt werden.": {
+    "en": "Parked state and standstill could not be confirmed with current data.",
+    "nl": "Parkeerstand en stilstand konden niet met actuele gegevens worden bevestigd."
+  },
+  "Parkdaten sind inzwischen zu alt; kein Befehl gesendet.": {
+    "en": "Parking data is now too old; no command sent.",
+    "nl": "Parkeergegevens zijn inmiddels te oud; geen commando verstuurd."
+  },
+  "Diese Auftrags-ID wurde bereits für eine andere Aktion verwendet.": {
+    "en": "This request ID was already used for a different action.",
+    "nl": "Deze opdracht-ID is al voor een andere actie gebruikt."
+  },
+  "Aktuelle Kofferraumposition ist nicht eindeutig bekannt.": {
+    "en": "Current boot position is not clearly known.",
+    "nl": "De huidige kofferbakpositie is niet duidelijk bekend."
+  },
+  "vehicle_cmds oder der virtuelle Fahrzeugschlüssel fehlt.": {
+    "en": "vehicle_cmds or the virtual vehicle key is missing.",
+    "nl": "vehicle_cmds of de virtuele voertuigsleutel ontbreekt."
+  },
+  "Fahrzeug nicht erreichbar; Ergebnis bitte am Auto prüfen.": {
+    "en": "Vehicle unreachable; please check the result on the car.",
+    "nl": "Voertuig niet bereikbaar; controleer het resultaat bij de auto."
+  },
+  "Server wurde unterbrochen; Ergebnis am Auto prüfen. Kein automatischer Wiederholungsversuch.": {
+    "en": "Server interrupted; check the car. No automatic retry.",
+    "nl": "Server onderbroken; controleer de auto. Geen automatische herhaling."
+  },
+  "Ergebnis steht noch aus; denselben Auftrag nicht erneut auslösen.": {
+    "en": "Result pending; do not trigger the same request again.",
+    "nl": "Resultaat nog niet bekend; start dezelfde opdracht niet opnieuw."
+  },
+  "Verbindung unterbrochen; Ergebnis am Auto prüfen. Kein automatischer Wiederholungsversuch.": {
+    "en": "Connection interrupted; check the car. No automatic retry.",
+    "nl": "Verbinding onderbroken; controleer de auto. Geen automatische herhaling."
+  },
+  "Die Tesla-Befehlsanbindung ist derzeit nicht nutzbar.": {
+    "en": "The Tesla command integration is currently unavailable.",
+    "nl": "De Tesla-commandokoppeling is momenteel niet beschikbaar."
+  },
+  "Routensteuerung ist nur während der aktiven Fahrt möglich.": {
+    "en": "Route controls are only available during the active trip.",
+    "nl": "Routebediening is alleen beschikbaar tijdens de actieve rit."
+  },
+  "Fahrzeug ist kein aktives Fahrerfahrzeug dieser Fahrt.": {
+    "en": "Vehicle is not an active driver vehicle in this trip.",
+    "nl": "Het voertuig is geen actief bestuurdersvoertuig in deze rit."
+  },
+  "Eine übernommene Fahrzeugroute weicht ab oder kann nicht gefahren werden. Bitte Routenübersicht prüfen.": {
+    "en": "An accepted vehicle route differs or cannot be driven. Please check the route overview.",
+    "nl": "Een overgenomen voertuigroute wijkt af of kan niet worden gereden. Controleer het routeoverzicht."
+  },
+  "Das Browser-Abonnement ist abgelaufen. Benachrichtigungen erneut aktivieren.": {
+    "en": "The browser subscription expired. Enable notifications again.",
+    "nl": "Het browserabonnement is verlopen. Schakel meldingen opnieuw in."
+  },
+  "Der Push-Dienst hat die Testnachricht abgelehnt (HTTP {0}). VAPID-Konfiguration und Verbindung prüfen.": {
+    "en": "The push service rejected the test notification (HTTP {0}). Check VAPID settings and connection.",
+    "nl": "De pushdienst heeft de testmelding geweigerd (HTTP {0}). Controleer VAPID-instellingen en verbinding."
+  },
+  "Tesla/Proxy HTTP {0}: {1}": {
+    "en": "Tesla/Proxy HTTP {0}: {1}",
+    "nl": "Tesla/Proxy HTTP {0}: {1}"
+  },
+  "Nur Demo, kein Fahrzeugbefehl.": {
+    "en": "Demo only, no vehicle command.",
+    "nl": "Alleen demo, geen voertuigcommando."
+  },
+  "SQLite / persistentes Volume": {
+    "en": "SQLite / persistent volume",
+    "nl": "SQLite / persistent volume"
+  },
+  "Breite und Länge müssen zusammen angegeben werden.": {
+    "en": "Latitude and longitude must be provided together.",
+    "nl": "Breedte- en lengtegraad moeten samen worden opgegeven."
+  },
+  "Benutzername: 3–30 Buchstaben, Ziffern, _ oder -.": {
+    "en": "Username: 3–30 letters, digits, _ or -.",
+    "nl": "Gebruikersnaam: 3–30 letters, cijfers, _ of -."
+  },
+  "Nicht gefunden.": {
+    "en": "Not found.",
+    "nl": "Niet gevonden."
+  },
+  "Das ist dein eigenes Konto.": {
+    "en": "That is your own account.",
+    "nl": "Dat is je eigen account."
+  },
+  "Fahrtende muss in der Zukunft liegen.": {
+    "en": "The trip must end in the future.",
+    "nl": "Het einde van de rit moet in de toekomst liggen."
+  },
+  "Chat ist nach Fahrtende nur lesbar.": {
+    "en": "Chat is read-only after the trip ends.",
+    "nl": "De chat is alleen leesbaar na afloop van de rit."
+  },
+  "Neuere Navigationsdaten sind bereits vorhanden.": {
+    "en": "Newer navigation data already exists.",
+    "nl": "Er zijn al nieuwere navigatiegegevens."
+  },
+  "Dieses Auto liefert derzeit keine aktuelle aktive Navigation.": {
+    "en": "This car currently provides no recent active navigation.",
+    "nl": "Deze auto levert momenteel geen actuele actieve navigatie."
+  },
+  "Nachricht ist leer.": {
+    "en": "Message is empty.",
+    "nl": "Bericht is leeg."
+  },
+  "Navigationsdaten sind zu alt oder liegen in der Zukunft.": {
+    "en": "Navigation data is too old or in the future.",
+    "nl": "Navigatiegegevens zijn te oud of liggen in de toekomst."
+  },
+  "Frunk ist bereits offen.": {
+    "en": "Frunk is already open.",
+    "nl": "Frunk is al open."
+  },
+  "Simuliert; kein echter Fahrzeugbefehl gesendet.": {
+    "en": "Simulated; no real vehicle command sent.",
+    "nl": "Gesimuleerd; geen echt voertuigcommando verstuurd."
+  }
+}

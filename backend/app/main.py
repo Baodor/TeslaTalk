@@ -702,7 +702,7 @@ def request_friend(body:Query, identity:Identity=Depends(current_user)):
         raise HTTPException(400,'Das ist dein eigenes Konto.')
     low,high=sorted([uid,other['id']])
     db.execute('INSERT INTO friendships VALUES (?,?,?,?,?)',(low,high,uid,'pending',time.time()))
-    push.enqueue(other['id'],identity.user['display_name']+' möchte sich mit dir verbinden.','/', 'friend-'+uid)
+    push.enqueue(other['id'],identity.user['display_name']+' möchte sich mit dir verbinden.','/', 'friend-'+uid,message_key='friend_request',parameters={'name':identity.user['display_name']})
     return {'ok':True}
 
 
@@ -780,7 +780,7 @@ def invite(trip_id:str,body:Query,identity:Identity=Depends(current_user)):
     other=lookup(body.query)
     inserted=db.execute('INSERT INTO invites VALUES (?,?,?) ON CONFLICT DO NOTHING',(trip_id,other['id'],time.time()))
     if inserted:
-        push.enqueue(other['id'],'Du bist zur Fahrt „'+trip['title']+'“ eingeladen.','/','invite-'+trip_id)
+        push.enqueue(other['id'],'Du bist zur Fahrt „'+trip['title']+'“ eingeladen.','/','invite-'+trip_id,message_key='trip_invite',parameters={'title':trip['title']})
     return {'ok':True,'user':user_public(other)}
 
 
@@ -964,7 +964,7 @@ async def post_message(trip_id:str,body:Message,identity:Identity=Depends(curren
              'created_at':time.time(),'display_name':identity.user['display_name']}
     db.execute('INSERT INTO messages VALUES (?,?,?,?,?)',tuple(message[key] for key in ('id','trip_id','user_id','text','created_at')))
     for row in db.all_rows('SELECT user_id FROM members WHERE trip_id=? AND user_id!=? AND left_at IS NULL',(trip_id,identity.user['id'])):
-        push.enqueue(row['user_id'],identity.user['display_name']+': neue Nachricht in „'+trip['title']+'“.','/trip/'+trip_id,'chat-'+trip_id,trip_id)
+        push.enqueue(row['user_id'],identity.user['display_name']+': neue Nachricht in „'+trip['title']+'“.','/trip/'+trip_id,'chat-'+trip_id,trip_id,message_key='chat',parameters={'name':identity.user['display_name'],'title':trip['title']})
     await hub.broadcast(trip_id,{'type':'message','message':message})
     return message
 

@@ -3,3 +3,4 @@ body{margin:0;background:#101a20;color:#f5edef;font:17px/1.7 system-ui;min-heigh
 .brand-logo{background:none;padding:0}
 
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-height:100svh;overscroll-behavior:none}a{touch-action:manipulation}main{padding-top:max(30px,env(safe-area-inset-top));padding-bottom:max(30px,env(safe-area-inset-bottom))}
+#language-label{font-size:13px}#offline-language{margin:0 0 24px 8px;padding:8px;max-width:220px;color:inherit;background:#172630;border:1px solid #34444c;border-radius:8px;font:inherit;font-size:13px}

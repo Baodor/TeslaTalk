@@ -1,5 +1,5 @@
 /* Cache public assets only. Accounts, trips, chat and GPS are never cached. */
-const CACHE = 'teslatalk-public-v6';
+const CACHE = 'teslatalk-public-v7';
 const PUBLIC_ASSETS = ['/offline.html', '/offline.css', '/offline.js', '/viewport.js', '/favicon.svg', '/favicon.ico', '/favicon-32-v6.png', '/favicon-64-v6.png', '/icons/icon-192.png', '/icons/apple-touch-icon.png', '/apple-touch-icon.png', '/apple-touch-icon-v4.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(PUBLIC_ASSETS)));
@@ -34,7 +34,9 @@ self.addEventListener('fetch', event => {
   }
 });
 self.addEventListener('push', event => {
-  let data = { title: 'TeslaTalk', body: 'Es gibt Neuigkeiten für deine Fahrt.', url: '/', tag: 'teslatalk' };
+  const language = (navigator.languages || [navigator.language]).map(value => value.toLowerCase().split('-')[0]).find(value => ['de','en','nl'].includes(value)) || 'en';
+  const fallback = {de:'Es gibt Neuigkeiten für deine Fahrt.',en:'There are updates for your trip.',nl:'Er is nieuws over je rit.'};
+  let data = { title: 'TeslaTalk', body: fallback[language], url: '/', tag: 'teslatalk' };
   try { data = { ...data, ...event.data.json() }; } catch (_) {}
   // Replacing a grouped message should alert again. renotify requires a nonempty tag.
   const tag = typeof data.tag === 'string' && data.tag.trim() ? data.tag : 'teslatalk';

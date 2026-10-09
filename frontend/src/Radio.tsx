@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import { useEffect, useRef, useState } from 'react';
 import { Room, RoomEvent, Track, LocalAudioTrack, createLocalAudioTrack } from 'livekit-client';
 import { Mic, MicOff, Radio as RadioIcon, Power, Waves } from 'lucide-react';
@@ -37,7 +38,7 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
       if (track.current === mic) {
         mic.mediaStreamTrack.enabled = false;
         sendingRef.current = false; setSending(false);
-        setError('Das Mikrofon konnte nicht umgeschaltet werden. Bitte den Funk neu verbinden.');
+        setError(t("Das Mikrofon konnte nicht umgeschaltet werden. Bitte den Funk neu verbinden."));
       }
     }
   }
@@ -63,7 +64,7 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
     let voiceHost = '';
     let step = 'permission';
     try {
-      if (!navigator.mediaDevices?.getUserMedia) throw new Error('Mikrofonzugriff benötigt HTTPS und einen unterstützten Browser.');
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error(t("Mikrofonzugriff benötigt HTTPS und einen unterstützten Browser."));
       // This invokes getUserMedia directly from the tap, before any network await.
       const mic = await createLocalAudioTrack({ echoCancellation: true, noiseSuppression: true, autoGainControl: true });
       if (generation.current !== current) { mic.stop(); return; }
@@ -83,10 +84,10 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
         if (remote.kind === Track.Kind.Audio) { const el = remote.attach(); audioElements.current.add(el); document.body.appendChild(el); }
       });
       next.on(RoomEvent.TrackUnsubscribed, remote => remote.detach().forEach(el => { audioElements.current.delete(el); el.remove(); }));
-      next.on(RoomEvent.ActiveSpeakersChanged, values => setSpeakers(values.map(p => p.name || 'Teilnehmer')));
+      next.on(RoomEvent.ActiveSpeakersChanged, values => setSpeakers(values.map(p => p.name || t("Teilnehmer"))));
       next.on(RoomEvent.Disconnected, () => {
         if (room.current !== next || !established) return;
-        setError('Die Funkverbindung wurde getrennt. Bitte erneut verbinden.');
+        setError(t("Die Funkverbindung wurde getrennt. Bitte erneut verbinden."));
         void disconnect();
       });
       next.on(RoomEvent.Reconnecting, () => {
@@ -108,16 +109,16 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
       established = true; setConnected(true); setPhase('ready');
     } catch (e) {
       if (generation.current !== current) return;
-      const message = (e as Error).message || 'Die Sprachverbindung ist fehlgeschlagen.';
+      const message = (e as Error).message || t("Die Sprachverbindung ist fehlgeschlagen.");
       const name = (e as Error).name;
       setError(step === 'permission' && /NotAllowedError|PermissionDeniedError/.test(name)
-        ? 'Mikrofonzugriff wurde nicht erlaubt. Erlaube TeslaTalk den Mikrofonzugriff in den Website-Einstellungen deines Browsers und versuche es erneut.'
+        ? t("Mikrofonzugriff wurde nicht erlaubt. Erlaube TeslaTalk den Mikrofonzugriff in den Website-Einstellungen deines Browsers und versuche es erneut.")
         : step === 'permission' && /NotFoundError|DevicesNotFoundError|NotReadableError/.test(name)
-        ? 'Kein nutzbares Mikrofon gefunden. Prüfe dein Mikrofon und ob es von einer anderen Anwendung blockiert wird.'
+        ? t("Kein nutzbares Mikrofon gefunden. Prüfe dein Mikrofon und ob es von einer anderen Anwendung blockiert wird.")
         : /\bpc connection\b|\bICE\b|\bPeerConnection\b/i.test(message)
-        ? `Die Audioverbindung zu ${voiceHost || 'deinem Sprachserver'} ist gescheitert. Der Betreiber muss die direkten Audio-Ports, NAT und gegebenenfalls TURN prüfen.`
+        ? t("Die Audioverbindung zu {0} ist gescheitert. Der Betreiber muss die direkten Audio-Ports, NAT und gegebenenfalls TURN prüfen.", {0: voiceHost || t("deinem Sprachserver")})
         : /signal connection|Load failed|Failed to fetch|NetworkError/i.test(message) && voiceHost
-        ? `Sprachserver ${voiceHost} nicht erreichbar. Der Betreiber muss das HTTPS-Zertifikat, die öffentliche LiveKit-Adresse und den WebSocket-Router prüfen.`
+        ? t("Sprachserver {0} nicht erreichbar. Der Betreiber muss das HTTPS-Zertifikat, die öffentliche LiveKit-Adresse und den WebSocket-Router prüfen.", {0: voiceHost})
         : message);
       await disconnect();
     }
@@ -156,26 +157,26 @@ export default function Radio({ tripId, active, endsAt }: { tripId: string; acti
     return () => { clearInterval(timer); window.removeEventListener('blur', mute); document.removeEventListener('visibilitychange', mute); void disconnect(); };
   }, [tripId, endsAt]);
   useEffect(() => { if (!active) void disconnect(); }, [active]);
-  const status = phase === 'permission' ? 'Mikrofonfreigabe wird angefragt'
-    : phase === 'connecting' ? 'Funkverbindung wird aufgebaut'
-    : phase === 'reconnecting' ? 'Verbindung wird wiederhergestellt'
-    : !connected ? 'FUNK AUS' : sending ? 'DU SENDEST · MIKROFON AN'
-    : mode === 'vox' ? 'FUNK AN · SPRACHERKENNUNG AN' : 'FUNK AN · MIKROFON AUS';
+  const status = phase === 'permission' ? t("Mikrofonfreigabe wird angefragt")
+    : phase === 'connecting' ? t("Funkverbindung wird aufgebaut")
+    : phase === 'reconnecting' ? t("Verbindung wird wiederhergestellt")
+    : !connected ? t("FUNK AUS") : sending ? t("DU SENDEST · MIKROFON AN")
+    : mode === 'vox' ? t("FUNK AN · SPRACHERKENNUNG AN") : t("FUNK AN · MIKROFON AUS");
   return <section className={`radio-panel ${connected ? 'radio-connected' : ''} ${sending ? 'radio-sending' : ''}`}>
-    <div className="radio-title"><RadioIcon size={19} /><div><strong>Sprechfunk</strong><small>{connected ? 'Verbunden · mehrere Sprecher möglich' : 'Deine Gruppe auf einer Frequenz'}</small></div>
-      <button className={`icon-button ${connected ? 'selected' : ''}`} aria-label={connected ? 'Funk trennen' : 'Funk verbinden'} aria-pressed={connected} disabled={!active || busy || phase === 'reconnecting'} onClick={() => void (connected ? disconnect() : connect())}><Power size={19} /></button>
+    <div className="radio-title"><RadioIcon size={19} /><div><strong>{t("Sprechfunk")}</strong><small>{connected ? t("Verbunden · mehrere Sprecher möglich") : t("Deine Gruppe auf einer Frequenz")}</small></div>
+      <button className={`icon-button ${connected ? 'selected' : ''}`} aria-label={connected ? t("Funk trennen") : t("Funk verbinden")} aria-pressed={connected} disabled={!active || busy || phase === 'reconnecting'} onClick={() => void (connected ? disconnect() : connect())}><Power size={19} /></button>
     </div>
-    <div className={`radio-status ${connected ? 'ready' : ''} ${sending ? 'sending' : ''}`} role="status" aria-live="polite"><span />{status}</div>
-    <div className="radio-permission">{connected ? <small>Mikrofon freigegeben. Empfang läuft; Senden steuerst du unten.</small> : <button disabled={!active || busy || phase === 'reconnecting'} onClick={() => void connect()}><Mic size={18} />{busy ? 'Bitte warten …' : 'Mikrofon erlauben & Funk verbinden'}</button>}</div>
-    <div className="segmented"><button className={mode === 'tap' ? 'selected' : ''} onClick={() => setMode('tap')}>Antippen</button><button className={mode === 'vox' ? 'selected' : ''} onClick={() => setMode('vox')}>Sprachaktivierung</button></div>
+    <div className={`radio-status ${connected ? 'ready' : ''} ${sending ? 'sending' : ''}`} role="status" aria-live="polite"><span />{t(status)}</div>
+    <div className="radio-permission">{connected ? <small>{t("Mikrofon freigegeben. Empfang läuft; Senden steuerst du unten.")}</small> : <button disabled={!active || busy || phase === 'reconnecting'} onClick={() => void connect()}><Mic size={18} />{busy ? t("Bitte warten …") : t("Mikrofon erlauben & Funk verbinden")}</button>}</div>
+    <div className="segmented"><button className={mode === 'tap' ? 'selected' : ''} onClick={() => setMode('tap')}>{t("Antippen")}</button><button className={mode === 'vox' ? 'selected' : ''} onClick={() => setMode('vox')}>{t("Sprachaktivierung")}</button></div>
     <button className={`talk-button ${sending ? 'transmitting' : ''}`} disabled={!connected || mode !== 'tap'}
-      aria-pressed={sending} aria-label={mode === 'vox' ? 'Sprachaktivierung aktiv' : sending ? 'Mikrofon ausschalten' : 'Mikrofon einschalten'}
+      aria-pressed={sending} aria-label={mode === 'vox' ? t("Sprachaktivierung aktiv") : sending ? t("Mikrofon ausschalten") : t("Mikrofon einschalten")}
       onClick={() => void transmit(!sendingRef.current)}
       onKeyDown={e => { if ((e.key === ' ' || e.key === 'Enter') && e.repeat) e.preventDefault(); }}>
-      {sending ? <Waves size={32} /> : mode === 'vox' && connected ? <Mic size={32} /> : <MicOff size={32} />}<span>{sending ? 'Mikrofon an · Du sendest' : mode === 'vox' && connected ? 'Spracherkennung an · Wartet auf dich' : 'Mikrofon aus'}</span>
-      {mode === 'tap' && <small>{sending ? 'Antippen zum Ausschalten' : 'Antippen zum Sprechen'}</small>}
+      {sending ? <Waves size={32} /> : mode === 'vox' && connected ? <Mic size={32} /> : <MicOff size={32} />}<span>{sending ? t("Mikrofon an · Du sendest") : mode === 'vox' && connected ? t("Spracherkennung an · Wartet auf dich") : t("Mikrofon aus")}</span>
+      {mode === 'tap' && <small>{sending ? t("Antippen zum Ausschalten") : t("Antippen zum Sprechen")}</small>}
     </button>
-    <small className="radio-footer">{speakers.length ? speakers.join(', ') + ' spricht' : connected ? 'Bereit. Empfang läuft auch bei stummem Mikrofon.' : active ? 'Funk einschalten und Mikrofon freigeben.' : 'Funk ist nur im Fahrtzeitraum verfügbar.'}</small>
-    {error && <p className="error" role="alert">{error}</p>}
+    <small className="radio-footer">{speakers.length ? speakers.join(', ') + t(" spricht") : connected ? t("Bereit. Empfang läuft auch bei stummem Mikrofon.") : active ? t("Funk einschalten und Mikrofon freigeben.") : t("Funk ist nur im Fahrtzeitraum verfügbar.")}</small>
+    {error && <p className="error" role="alert">{t(error)}</p>}
   </section>;
 }

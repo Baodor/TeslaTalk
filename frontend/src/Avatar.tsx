@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import { useState } from 'react';
 
 export const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map(part => Array.from(part)[0] || '').join('').toUpperCase() || '?';
@@ -10,7 +11,7 @@ export function avatarSource(url?: string | null) {
 export default function Avatar({ name, url, className = '' }: { name: string; url?: string | null; className?: string }) {
   const [failed, setFailed] = useState('');
   const source = avatarSource(url);
-  return <div className={`avatar ${className}`} role="img" aria-label={`Profilbild von ${name}`}>
+  return <div className={`avatar ${className}`} role="img" aria-label={t("Profilbild von {0}", {0: name})}>
     <span>{initials(name)}</span>
     {source && source !== failed && <img src={source} alt="" referrerPolicy="no-referrer" onError={() => setFailed(source)} />}
   </div>;

@@ -3,7 +3,7 @@ import path from 'node:path';
 const proxyUrl=process.env.HTTPS_PROXY ? new URL(process.env.HTTPS_PROXY) : null;
 export default defineConfig({
   testDir: './e2e', workers: 1, timeout: 30000,
-  use: { baseURL: 'http://localhost:8780', viewport: { width: 1440, height: 960 }, trace: 'retain-on-failure',
+  use: { baseURL: 'http://localhost:8780', locale: 'de-DE', viewport: { width: 1440, height: 960 }, trace: 'retain-on-failure',
     ignoreHTTPSErrors: Boolean(proxyUrl),
     launchOptions: { executablePath: process.env.TT_BROWSER_PATH || undefined,
       proxy: proxyUrl ? { server: proxyUrl.origin, bypass: 'localhost,127.0.0.1', username: decodeURIComponent(proxyUrl.username), password: decodeURIComponent(proxyUrl.password) } : undefined,

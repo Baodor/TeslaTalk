@@ -11,7 +11,7 @@ test('two microphones can publish concurrently in a real LiveKit room', async ({
   const leaderLogin=await page.request.post('/api/demo/login',{headers:origin,data:{query:'Voice leader '+Date.now()}});
   expect(leaderLogin.status()).toBe(200);
   const trip=await (await page.request.post('/api/trips',{headers:origin,data:{title:'Voice test',starts_at:new Date(Date.now()-60000).toISOString(),ends_at:new Date(Date.now()+600000).toISOString()}})).json();
-  const secondContext=await browser.newContext();
+  const secondContext=await browser.newContext({locale:'de-DE'});
   await mockMapTiles(secondContext);
   const second=await secondContext.newPage();
   await second.goto('/');
@@ -41,6 +41,16 @@ test('two microphones can publish concurrently in a real LiveKit room', async ({
   }
   await expect.poll(()=>page.locator('audio').count()).toBeGreaterThan(0);
   await expect.poll(()=>second.locator('audio').count()).toBeGreaterThan(0);
+  const audioBefore=await page.locator('audio').count();
+  let languageTokenRequests=0;
+  const countToken=(request: import('@playwright/test').Request)=>{if(request.url().endsWith('/voice-token'))languageTokenRequests++;};
+  page.on('request',countToken);
+  await page.getByRole('combobox',{name:'Sprache',exact:true}).selectOption('nl');
+  await expect(page.locator('.radio-status')).toHaveText('JE ZENDT · MICROFOON AAN');
+  await expect(page.getByRole('button',{name:'Microfoon uitschakelen',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('audio')).toHaveCount(audioBefore);
+  expect(languageTokenRequests).toBe(0);page.off('request',countToken);
+  await page.getByRole('combobox',{name:'Taal',exact:true}).selectOption('de');
   await page.getByRole('button',{name:'Mikrofon ausschalten',exact:true}).click();
   await second.getByRole('button',{name:'Mikrofon ausschalten',exact:true}).press('Space');
   for(const client of [page,second]) await expect(client.getByRole('button',{name:'Mikrofon einschalten',exact:true})).toHaveAttribute('aria-pressed','false');
