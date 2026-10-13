@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS tesla_profile_links (
  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
  tesla_subject TEXT NOT NULL, linked_at REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS abrp_accounts (user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, encrypted_session TEXT NOT NULL, expires_at REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS abrp_requests (trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE, request_id TEXT NOT NULL, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, payload TEXT NOT NULL, result TEXT NOT NULL, created_at REAL NOT NULL, PRIMARY KEY(trip_id,request_id));
 CREATE TABLE IF NOT EXISTS vehicles (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), name TEXT NOT NULL, model TEXT NOT NULL, data TEXT NOT NULL DEFAULT '{}');
 CREATE TABLE IF NOT EXISTS friendships (low_id TEXT NOT NULL, high_id TEXT NOT NULL, requester TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', created_at REAL NOT NULL, PRIMARY KEY (low_id, high_id));
 CREATE TABLE IF NOT EXISTS trips (

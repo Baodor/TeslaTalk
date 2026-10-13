@@ -27,6 +27,11 @@ class Stop(BaseModel):
     operator: str = Field(default='',max_length=100)
     address: str = Field(default='',max_length=300)
     google_place_id: str | None = Field(default=None,max_length=256,pattern='^[A-Za-z0-9_-]+$')
+    charger_id: int | None = Field(default=None,gt=0)
+    network_id: int | None = Field(default=None,gt=0)
+    arrival_soc: float | None = Field(default=None,ge=0,le=100,allow_inf_nan=False)
+    departure_soc: float | None = Field(default=None,ge=0,le=100,allow_inf_nan=False)
+    charge_minutes: float | None = Field(default=None,ge=0,le=100000,allow_inf_nan=False)
 
     @field_validator('name')
     @classmethod
@@ -40,6 +45,17 @@ class Plan(BaseModel):
     model_config=ConfigDict(extra='forbid')
     title: str = Field(min_length=1,max_length=200)
     stops: list[Stop] = Field(min_length=1,max_length=50)
+    source: Literal['import','abrp'] = 'import'
+    origin: Stop | None = None
+    route_points: list[tuple[float,float]] = Field(default_factory=list,max_length=20000)
+    distance_km: float | None = Field(default=None,ge=0,le=100000,allow_inf_nan=False)
+    duration_minutes: float | None = Field(default=None,ge=0,le=100000,allow_inf_nan=False)
+    @field_validator('route_points')
+    @classmethod
+    def valid_route(cls,points):
+        import math
+        if any(not math.isfinite(lat+lon) or not -90<=lat<=90 or not -180<=lon<=180 for lat,lon in points):raise ValueError('Ungültige Routenlinie.')
+        return points
     @field_validator('title')
     @classmethod
     def title_not_blank(cls,value):
@@ -82,7 +98,7 @@ def parse_upload(upload):
             document=json.loads(upload.content)
             if not isinstance(document,dict):raise ValueError()
             # Our lossless interchange format; raw ABRP responses are not guessed.
-            return Plan.model_validate({'title':document['title'],'stops':document['stops']}).model_dump()
+            return Plan.model_validate({key:document[key] for key in ('title','stops','source','origin','route_points','distance_km','duration_minutes') if key in document}).model_dump()
         if extension!='gpx':
             raise HTTPException(422,'Bitte eine GPX-, Excel-, CSV-Datei oder einen TeslaTalk-JSON-Export hochladen.')
         if re.search(r'<!\s*(DOCTYPE|ENTITY)',upload.content,re.I):raise ValueError()

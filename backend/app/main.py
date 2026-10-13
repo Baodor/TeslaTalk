@@ -3,6 +3,7 @@ import base64
 import contextlib
 import json
 import logging
+import html
 import secrets
 import sqlite3
 import time
@@ -15,10 +16,12 @@ from zoneinfo import ZoneInfo
 import httpx
 from authlib.integrations.starlette_client import OAuth
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from . import db, fleet, push, api_documentation, route_planning, accounts, vehicle_controls, tour, charging_plans
+from . import db, fleet, push, api_documentation, route_planning, accounts, vehicle_controls, tour, charging_plans, abrp
 from .config import settings
 from .metrics import ranking
 from .middleware import BodyLimitMiddleware, MAX_REQUEST_BYTES
@@ -237,6 +240,14 @@ async def integrity_error(request, error):
     return JSONResponse({'detail':'Dieser Name, dieses Kennzeichen oder dieser Eintrag existiert bereits.'}, status_code=409)
 
 
+@app.exception_handler(RequestValidationError)
+async def invalid_request(request, error):
+    if request.url.path == '/api/me/abrp':
+        # Never echo an invalid account password as Pydantic's error input.
+        return JSONResponse({'detail':[{key:entry[key] for key in ('loc','msg','type')} for entry in error.errors()]},status_code=422)
+    return await request_validation_exception_handler(request,error)
+
+
 @app.exception_handler(httpx.HTTPError)
 async def upstream_error(request, error):
     return JSONResponse({'detail':'Externer Dienst derzeit nicht erreichbar.'}, status_code=502)
@@ -287,7 +298,12 @@ async def push_test(body:PushTest,request:Request,identity:Identity=Depends(curr
 
 
 @app.get('/auth/tesla')
-def tesla_login():
+def tesla_login(request:Request):
+    if request.headers.get('host','').casefold()!=urlparse(settings.app_url).netloc.casefold():
+        # Bind the cookie on the configured callback host, including when the
+        # PWA was opened using a LAN IP or alternate hostname behind Traefik.
+        return RedirectResponse(settings.app_url+'/auth/tesla',status_code=303)
+    limiter.check(('tesla-login',request.client.host),20,60)
     return start_tesla_auth('openid offline_access user_data vehicle_device_data vehicle_location'+(' vehicle_cmds' if settings.navigation_commands or settings.group_controls_ready else ''))
 
 
@@ -326,15 +342,31 @@ def start_tesla_auth(scope, user_id=None, trip_id=None, session_hash=None):
                   'code_challenge':challenge,'code_challenge_method':'S256','locale':'de-DE','require_requested_scopes':'true'}
     response = RedirectResponse('https://auth.tesla.com/oauth2/v3/authorize?'+urlencode(parameters))
     response.set_cookie('tt_oauth',binding,max_age=600,httponly=True,secure=settings.secure,samesite='lax')
+    # Separate bindings prevent a second tab/login attempt overwriting the first.
+    response.set_cookie('tt_oauth_'+digest(state)[:20],binding,max_age=600,httponly=True,secure=settings.secure,samesite='lax',path='/auth/tesla/callback')
     return response
+
+
+def tesla_auth_error(message='Anmeldung abgelaufen oder ungültig. Bitte neu starten.',status=400):
+    # A stale callback must remain recoverable in Safari/PWA without raw JSON or
+    # retaining authorization codes in the next application URL.
+    return HTMLResponse('<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TeslaTalk · Anmeldung</title><body><main><h1>TeslaTalk</h1><p>'+html.escape(message)+'</p><p>Bitte die Anmeldung im selben Browserfenster abschließen.</p><p><a href="/auth/tesla">Mit Tesla neu anmelden</a></p><p><a href="/">Zur Startseite</a></p></main></body></html>',status_code=status)
 
 
 @app.get('/auth/tesla/callback')
 async def tesla_callback(request:Request, state:str='', code:str=''):
     with db.connect() as connection:
+        connection.execute('BEGIN IMMEDIATE')
         pending = connection.execute('SELECT * FROM oauth_states WHERE state_hash=?', (digest(state),)).fetchone()
-        if not pending or pending['expires_at']<time.time() or pending['binding_hash']!=digest(request.cookies.get('tt_oauth','')):
-            raise HTTPException(400, 'Anmeldung abgelaufen oder ungültig. Bitte neu starten.')
+        if not pending:
+            try:
+                authenticate({},request.cookies)
+                return RedirectResponse('/',status_code=303)  # existing session only; no code exchange
+            except HTTPException:
+                return tesla_auth_error()
+        binding=request.cookies.get('tt_oauth_'+digest(state)[:20],request.cookies.get('tt_oauth',''))
+        if pending['expires_at']<time.time() or pending['binding_hash']!=digest(binding):
+            return tesla_auth_error()
         passenger_state = connection.execute('SELECT * FROM passenger_profile_states WHERE state_hash=?',(digest(state),)).fetchone()
         connection.execute('DELETE FROM oauth_states WHERE state_hash=?', (digest(state),))
     if pending['purpose'] == 'passenger_profile' and not passenger_state:
@@ -344,17 +376,18 @@ async def tesla_callback(request:Request, state:str='', code:str=''):
     if not code:
         response = RedirectResponse(('/trip/'+passenger_state['trip_id'] if passenger_state else '/')+'?error=tesla_cancelled')
         response.delete_cookie('tt_oauth')
+        response.delete_cookie('tt_oauth_'+digest(state)[:20],path='/auth/tesla/callback')
         return response
     async with httpx.AsyncClient(timeout=25) as client:
         result = await client.post(fleet.TOKEN_URL, data={'grant_type':'authorization_code','client_id':settings.tesla_client_id,
                                     'client_secret':settings.tesla_client_secret,'code':code,'code_verifier':pending['verifier'],
                                     'audience':settings.fleet_url,'redirect_uri':settings.app_url+'/auth/tesla/callback'})
         if result.status_code!=200:
-            raise HTTPException(502, 'Tesla-Anmeldung fehlgeschlagen. Bitte erneut versuchen.')
+            return tesla_auth_error('Tesla-Anmeldung fehlgeschlagen. Bitte erneut versuchen.',502)
         token = result.json()
         account = await client.get(settings.fleet_url+'/api/1/users/me',headers={'Authorization':'Bearer '+token['access_token']})
         if account.status_code!=200:
-            raise HTTPException(502, 'Tesla-Konto konnte nicht gelesen werden.')
+            return tesla_auth_error('Tesla-Konto konnte nicht gelesen werden.',502)
         profile = account.json().get('response') or {}
     if not isinstance(profile,dict) or not profile.get('email') and not profile.get('id'):
         raise HTTPException(502, 'Tesla lieferte keine eindeutige Kontoidentität.')
@@ -369,6 +402,7 @@ async def tesla_callback(request:Request, state:str='', code:str=''):
         # Profile-only tokens are discarded. The original PIN session and deadline stay.
         response = RedirectResponse('/trip/'+trip['id'],status_code=303)
         response.delete_cookie('tt_oauth')
+        response.delete_cookie('tt_oauth_'+digest(state)[:20],path='/auth/tesla/callback')
         await hub.broadcast(trip['id'],{'type':'participants','participants':participants(trip['id'])})
         return response
     user = db.one('SELECT * FROM users WHERE subject=?', ('tesla:'+subject,))
@@ -382,6 +416,7 @@ async def tesla_callback(request:Request, state:str='', code:str=''):
     fleet.save_token(uid,token)
     response=RedirectResponse('/',status_code=303)
     response.delete_cookie('tt_oauth')
+    response.delete_cookie('tt_oauth_'+digest(state)[:20],path='/auth/tesla/callback')
     set_session(response,uid)
     return response
 
@@ -1090,6 +1125,67 @@ def editable_charging_plan(trip_id,identity):
     return trip
 
 
+def abrp_browser(request,identity):
+    driver(identity)
+    if request.headers.get('authorization'):
+        raise HTTPException(403,'ABRP-Kontoverbindung benötigt eine Fahrer-Browsersitzung.')
+
+
+@app.get('/api/me/abrp')
+def abrp_account_status(identity:Identity=Depends(current_user)):
+    driver(identity)
+    return abrp.account_status(identity.user['id'])
+
+
+@app.post('/api/me/abrp')
+async def connect_abrp(body:abrp.AccountLogin,request:Request,identity:Identity=Depends(current_user)):
+    abrp_browser(request,identity)
+    limiter.check(('abrp-login',identity.user['id']),3,60)
+    result=await abrp.connect(identity.user['id'],body,lambda:authenticate(request.headers,request.cookies))
+    authenticate(request.headers,request.cookies)
+    return result
+
+
+@app.delete('/api/me/abrp')
+def disconnect_abrp(request:Request,identity:Identity=Depends(current_user)):
+    abrp_browser(request,identity)
+    db.execute('DELETE FROM abrp_accounts WHERE user_id=?',(identity.user['id'],))
+    abrp.cache.pop(('models',identity.user['id']),None)
+    return abrp.account_status(identity.user['id'])
+
+
+@app.get('/api/abrp/catalog')
+async def abrp_catalog(identity:Identity=Depends(current_user)):
+    driver(identity)
+    limiter.check(('abrp-catalog',identity.user['id']),10,60)
+    return await abrp.catalog(identity.user['id'])
+
+
+@app.post('/api/trips/{trip_id}/abrp/link')
+async def prepare_abrp_link(trip_id:str,body:abrp.PlanLink,identity:Identity=Depends(current_user)):
+    editable_charging_plan(trip_id,identity)
+    limiter.check(('abrp-link',identity.user['id']),5,60)
+    result=await abrp.prepare_link(identity.user['id'],body)
+    editable_charging_plan(trip_id,identity)
+    return result
+
+
+@app.post('/api/trips/{trip_id}/abrp/plan')
+async def calculate_abrp_plan(trip_id:str,body:abrp.Calculate,request:Request,identity:Identity=Depends(current_user)):
+    trip=editable_charging_plan(trip_id,identity)
+    limiter.check(('abrp-plan',identity.user['id']),5,60)
+    def guard():editable_charging_plan(trip_id,authenticate(request.headers,request.cookies))
+    return await abrp.calculate(trip,body,guard)
+
+
+@app.get('/api/trips/{trip_id}/abrp/requests/{request_id}')
+def abrp_plan_status(trip_id:str,request_id:uuid.UUID,identity:Identity=Depends(current_user)):
+    access(trip_id,identity,leader=True)
+    row=db.one('SELECT result FROM abrp_requests WHERE trip_id=? AND request_id=? AND user_id=?',(trip_id,str(request_id),identity.user['id']))
+    if not row:raise HTTPException(404,'ABRP-Auftrag nicht gefunden; die Abfrage berechnet keine neue Route.')
+    return json.loads(row['result'])
+
+
 @app.post('/api/trips/{trip_id}/charging-plan/preview')
 def preview_charging_plan(trip_id:str,body:charging_plans.Upload,identity:Identity=Depends(current_user)):
     editable_charging_plan(trip_id,identity)
@@ -1126,7 +1222,7 @@ def export_charging_plan(trip_id:str,identity:Identity=Depends(current_user)):
     access(trip_id,identity)
     plan=charging_plans.snapshot(trip_id)
     if not plan:raise HTTPException(404,'Kein importierter Ladeplan vorhanden.')
-    return JSONResponse({'format':'teslatalk-route','version':1,'title':plan['title'],'stops':plan['stops']},
+    return JSONResponse({'format':'teslatalk-route','version':1,**{key:plan[key] for key in ('title','stops','source','origin','route_points','distance_km','duration_minutes') if key in plan}},
                         headers={'Content-Disposition':'attachment; filename="teslatalk-route.json"'})
 
 

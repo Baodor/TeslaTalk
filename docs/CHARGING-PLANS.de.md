@@ -56,7 +56,7 @@ Die [Tesla-API](https://developer.tesla.com/docs/fleet-api/endpoints/vehicle-com
 
 ## ABRP-Zugänge und weitere Planung
 
-Normale ABRP-Teilen-Links werden noch nicht als gespeicherter Plan abgerufen. Eine Neuberechnung ist kein Import desselben Plans. Die [offizielle API-Seite](https://abetterrouteplanner.com/resources/api) unterscheidet OAuth `get_plan`, kostenpflichtige Planning API und Telemetry API; Antwortschema und Freigabe müssen vor einem direkten Planabruf verifiziert werden. Ein Telemetrie-Schlüssel ersetzt keinen Planungszugang.
+ABRP-Teilen-Links mit Plan-UUID können nach Kontoverbindung als ursprüngliche **Planungsparameter** übernommen werden. Der Reiter **Ladeplanung** berechnet anschließend eine neue Route über die Iternio-v2-Planning-API. Dies ist ausdrücklich keine identische Übernahme einer bereits gespeicherten berechneten Route. Die Fahrzeugvariante und mehrere Ladenetze können gewählt werden; EXCLUSIVE beschränkt auf die gewählten Netze. Eine vorhandene Iternio-Ladestations-ID wird zur Google-Places-ID aufgelöst, soweit der Anbieter eine Zuordnung liefert. [Einrichtung, Kosten und Tests](ABRP.de.md).
 
 In ABRP können [Netze bevorzugt/vermieden](https://abrp.featurebase.app/help/articles/4671857-avoid-and-prefer) und [Ladekarten](https://abrp.featurebase.app/help/articles/5884894-charge-cards) berücksichtigt werden. Die dort exportierten konkreten Stationen können nach Prüfung über die Datei übernommen werden. TeslaTalk berechnet derzeit keine Ladezeiten/Reserven für die ganze Gruppe und garantiert keine freien Ladeplätze oder identischen Ladebeginn. Live-Belegungsanzeigen bleiben Roadmap.
 

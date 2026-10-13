@@ -32,9 +32,9 @@ def test_gpx_preview_retains_stop_order_reference_and_never_sends_commands(owner
     assert saved['current_stop'] is None and saved['confirmations']==[] and sent==[]
     exported=owner.get(root+'/charging-plan/export')
     assert exported.status_code==200
-    assert set(exported.json())=={'format','version','title','stops'}
+    assert set(exported.json())=={'format','version','title','stops','source','origin','route_points','distance_km','duration_minutes'}
     imported=owner.post(root+'/charging-plan/preview',json={'filename':'saved.json','content':exported.text})
-    assert imported.json()=={'title':saved['title'],'stops':saved['stops']}
+    assert imported.json()=={key:exported.json()[key] for key in ('title','stops','source','origin','route_points','distance_km','duration_minutes')}
 
 
 @pytest.mark.parametrize('content',[

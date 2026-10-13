@@ -106,7 +106,7 @@ DETAILS.update({'request_toilet': ('Fahrt und Pausen',
                           'Nur Fahrtleiter. Beendet automatische Übernahme; bereits im Auto aktive Navigation wird nicht abgebrochen.'),
  'export_charging_plan': ('Ladeplanung',
                           'Geprüften Ladeplan als wieder importierbares JSON exportieren.',
-                          'Eigene Mitgliedschaft. Nur Titel und Stopps, keine Fahrzeug-IDs, Tokens oder Stationsbestätigungen.'),
+                          'Eigene Mitgliedschaft. Titel, Stopps und vorhandene ABRP-Geometrie/Prognosen; keine Fahrzeug-IDs, Tokens oder Stationsbestätigungen.'),
  'send_charging_stop': ('Ladeplanung',
                         'Den ausgewählten nächsten Halt an freigegebene Gruppenautos senden.',
                         'Nur Fahrtleiter, aktive Fahrt. Navigation_request über bestehenden Proxy; kein Aufwecken. UUID und Planversion '
@@ -120,9 +120,19 @@ DETAILS.update({'request_toilet': ('Fahrt und Pausen',
                            'Aktiver Fahrer mit eigenem Mitgliedsfahrzeug; Version und aktueller Stopp müssen passen. Manuelle Rückmeldung, '
                            'kein Heizbefehl und keine automatisch behauptete Erkennung.')})
 
+DETAILS.update({
+ 'abrp_account_status': ('Ladeplanung','Status der eigenen ABRP-Verbindung lesen.','configured,connected,username,expires_at,daily_limit; keine Tokens/Passwörter.'),
+ 'connect_abrp': ('Ladeplanung','Eigenes ABRP-Konto über Iternio verbinden.','Nur Fahrer-Browsersitzung. Veröffentlichter v2 auth/login; Sitzung verschlüsselt, kein Passwort/Refresh-Token gespeichert. 3/Minute. Zugang/Freigabe bei Iternio erforderlich.'),
+ 'disconnect_abrp': ('Ladeplanung','Eigene ABRP-Verbindung entfernen.','Lokale Sitzung und Modellcache entfernt. Kein Tesla-Kontowechsel.'),
+ 'abrp_catalog': ('Ladeplanung','Iternio-Ladenetze und Fahrzeugvarianten lesen.','Netze mit IDs, exakte ABRP-Typecodes/Modellnamen. Planning-Key nötig; Fahrzeugkatalog braucht eigene ABRP-Sitzung. Begrenzter Cache; keine Planberechnung.'),
+ 'prepare_abrp_link': ('Ladeplanung','Als Fahrtleiter Parameter eines ABRP-Teilen-Links übernehmen.','Nur erlaubter ABRP-Host und UUID; kein URL-Fetch. Eigene ABRP-Sitzung erforderlich. GET original plan request, keine vollständige gespeicherte berechnete Route. Start/Ziele/Modell/SoC/ausgewählte Netze; Neuberechnung separat, weitere ABRP-Einstellungen werden nicht behauptet.'),
+ 'calculate_abrp_plan': ('Ladeplanung','Als Fahrtleiter eine Iternio-Laderoute mit gewähltem Gruppenfahrzeug berechnen.','Nur vor Fahrtende. Plan UUID, SoC, Modell-Typecode, Start/Ziel/Zwischenhalte, network_ids und exclusive. costs_confirmed erforderlich. Instance-Tageslimit; Auftrags-ID vor I/O gespeichert, gleiche ID nie erneut berechnen. Ergebnis: geprüfte Stopps, ABRP-Geometrie und echte verfügbare Google-Places-Stationsreferenzen. Noch kein Fahrzeugbefehl; separat prüfen/speichern/senden.'),
+ 'abrp_plan_status': ('Ladeplanung','Gespeicherten ABRP-Auftragsstatus lesen.','Nur Fahrtleiter; keine Iternio- oder Tesla-Abfrage, keine erneute Berechnung.')
+})
+
 PUBLIC = {'health','config','tesla_login','tesla_callback','admin_login','admin_callback','logout','demo_login','guest_info','guest_register','guest_login','public_trip','tesla_public_key','view_spectator'}
-DRIVERS = {'confirm_charging_stop','preview_charging_plan','save_charging_plan','remove_charging_plan','send_charging_stop','charging_request_result','profile','refresh_tesla_profile','vehicles','sync_vehicles','select_vehicle','refresh_vehicle','refresh_navigation','import_navigation_telemetry','friends','request_friend','accept_friend','delete_friend','create_trip','join_trip','invite','accept_invite','add_passenger','keys','create_key','delete_key','import_trip_navigation','accept_route','stop_following_route','plan_route','adopt_vehicle_route','report_route_problem'}
-LEADERS = {'invite','add_passenger','finish_trip','share_trip','revoke_share','import_trip_navigation','plan_route','adopt_vehicle_route','confirm_toilet','create_spectator','revoke_spectator','preview_charging_plan','save_charging_plan','remove_charging_plan','send_charging_stop','charging_request_result'}
+DRIVERS = {'abrp_account_status','abrp_catalog','connect_abrp','disconnect_abrp','prepare_abrp_link','calculate_abrp_plan','abrp_plan_status','confirm_charging_stop','preview_charging_plan','save_charging_plan','remove_charging_plan','send_charging_stop','charging_request_result','profile','refresh_tesla_profile','vehicles','sync_vehicles','select_vehicle','refresh_vehicle','refresh_navigation','import_navigation_telemetry','friends','request_friend','accept_friend','delete_friend','create_trip','join_trip','invite','accept_invite','add_passenger','keys','create_key','delete_key','import_trip_navigation','accept_route','stop_following_route','plan_route','adopt_vehicle_route','report_route_problem'}
+LEADERS = {'prepare_abrp_link','calculate_abrp_plan','abrp_plan_status','invite','add_passenger','finish_trip','share_trip','revoke_share','import_trip_navigation','plan_route','adopt_vehicle_route','confirm_toilet','create_spectator','revoke_spectator','preview_charging_plan','save_charging_plan','remove_charging_plan','send_charging_stop','charging_request_result'}
 
 
 def documented_routes(app):
@@ -137,6 +147,8 @@ def access_info(name):
         return 'admin', 'Separate OIDC-Admin-Browsersitzung (tt_admin); Fahrer-Bearer genügt nicht.'
     if name in {'allow_vehicle_controls','revoke_vehicle_controls','send_vehicle_controls','vehicle_control_result'}:
         return 'browser', 'Aktuelle Fahrer-Browsersitzung (tt_session), aktive Fahrt und eigenes Mitgliedsfahrzeug; kein API-Schlüssel. Gruppenbefehle und Auftragsstatus zusätzlich nur Fahrtleiter.'
+    if name in {'connect_abrp','disconnect_abrp'}:
+        return 'browser', 'Aktuelle Fahrer-Browsersitzung (tt_session); keine Mitfahrer, kein API-Schlüssel.'
     if name in {'push_subscribe','push_test','tesla_passenger_login','unlink_passenger_tesla'}:
         return 'browser', 'Aktuelle Fahrer-/Mitfahrer-Browsersitzung (tt_session); kein API-Schlüssel. Gäste nur während ihrer Fahrt.'
     if name == 'import_navigation_telemetry':

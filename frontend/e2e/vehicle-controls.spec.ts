@@ -24,7 +24,7 @@ test('leader confirms separate comfort buttons and only sends the displayed cons
   await page.goto('/trip/control-trip');
   const panel=page.getByRole('region',{name:'Komfortsteuerung der Gruppe'});
   await expect(panel).toHaveCount(0);
-  await expect(page.locator('.trip-tabs button')).toHaveText(['Karte','Chat','Fotos & Mitfahrer','Verlauf','Fahrzeugsteuerung']);
+  await expect(page.locator('.trip-tabs button')).toHaveText(['Karte','Ladeplanung','Chat','Fotos & Mitfahrer','Verlauf','Fahrzeugsteuerung']);
   await page.getByRole('button',{name:'Fahrzeugsteuerung',exact:true}).click();
   await expect(panel).toContainText('1 von 2 Fahrzeugen freigegeben');
   await expect(panel.getByRole('button',{name:'Klima an',exact:true})).toBeVisible();await expect(panel.getByRole('button',{name:'Klima aus',exact:true})).toBeVisible();

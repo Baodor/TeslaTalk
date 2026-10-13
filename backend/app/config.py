@@ -22,6 +22,8 @@ class Settings:
     livekit_secret: str = field(default_factory=lambda: os.getenv('LIVEKIT_API_SECRET', ''))
     poll_interval: int = field(default_factory=lambda: max(60, int(os.getenv('FLEET_POLL_INTERVAL', '120'))))
     navigation_poll_interval: int = field(default_factory=lambda: max(60, int(os.getenv('NAVIGATION_POLL_INTERVAL', '600'))))
+    abrp_api_key: str = field(default_factory=lambda: os.getenv('ABRP_PLANNING_API_KEY','').strip())
+    abrp_daily_limit: int = field(default_factory=lambda: max(1,int(os.getenv('ABRP_DAILY_PLAN_LIMIT','20'))))
     oidc_issuer: str = field(default_factory=lambda: os.getenv('OIDC_ISSUER', '').rstrip('/'))
     oidc_client_id: str = field(default_factory=lambda: os.getenv('OIDC_CLIENT_ID', ''))
     oidc_client_secret: str = field(default_factory=lambda: os.getenv('OIDC_CLIENT_SECRET', ''))

@@ -211,3 +211,13 @@ Chat returns the latest 100 messages in chronological order. Use `before=<create
 WebSocket payloads contain a `type`: `participants`, `message`, `navigation`, `heartbeat`, or `ended`. A navigation event is `{"type":"navigation","navigation":<snapshot or null>}`. Authentication and guest expiry are checked at connection, periodically and before broadcasts. Audio is carried by LiveKit, not this WebSocket.
 
 Photo uploads, Immich, full native waypoint itineraries and automatic extraction of Tesla charging-stop lists remain unimplemented. Browser GPS, viewer links, pause requests, reviewed file imports and consented next-stop sharing are implemented.
+
+### Iternio calculation and optional ABRP account session
+
+Driver-only `GET /api/me/abrp` returns readiness/connection/expiry/quota, no credentials. Browser-only `POST /api/me/abrp` connects through published Iternio v2 `auth/login`; `DELETE` removes the local encrypted session. `GET /api/abrp/catalog` provides valid network IDs and exact model typecodes. The model list needs an ABRP session.
+
+Leader-only `POST /api/trips/{id}/abrp/link` takes `{url}` and returns **original planning parameters only**, without calculating. Allowed full ABRP links carry a plan UUID; arbitrary URLs/short-link redirects are not fetched. It requires the leader's own ABRP session.
+
+`POST /api/trips/{id}/abrp/plan` requires leader, driver and a trip before its end. Body: `request_id` UUID, `planner_user_id` (current group driver), `typecode`, `departure_soc`/`arrival_soc` percent, `network_ids`, `exclusive`, `destinations` (`value`, optional `charger_id`, `stay_minutes`), and `costs_confirmed:true`. It makes one explicit Iternio v2 `/plan` call with model/SOC/destinations and network preferences. Results are preview data; saving and Tesla commands are separate actions. The source is `abrp`, never falsely a Tesla route. Available provider charger/place references, real polyline geometry and planning-car SOC/time forecasts are retained. Never infer charging stations from geometry.
+
+`GET /api/trips/{id}/abrp/requests/{request_id}` reads a stored leader result; it never calls the provider. Duplicate request IDs return the original result, mismatched payloads give 409. An instance daily limit includes unconfirmed requests. Unknown outcomes never cause automatic calculation retries. Account secrets/passwords, provider bodies and API keys are absent from documentation exports. [Setup](ABRP.de.md).

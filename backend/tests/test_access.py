@@ -148,7 +148,7 @@ def test_oauth_state_is_bound_and_single_use(owner,monkeypatch):
     stranger=new_driver('Fremder')
     assert stranger.get('/auth/tesla/callback',params={'state':state,'code':'wrong'}).status_code==400
     assert owner.get('/auth/tesla/callback',params={'state':state},follow_redirects=False).status_code==307
-    assert owner.get('/auth/tesla/callback',params={'state':state}).status_code==400
+    assert owner.get('/auth/tesla/callback',params={'state':state},follow_redirects=False).status_code==303  # existing session, no reused code
 
 
 def test_raw_tokens_not_returned_and_credentials_encrypted(owner):

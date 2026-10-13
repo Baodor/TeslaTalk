@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BatteryCharging, Download, Upload } from 'lucide-react';
 import { api } from './api';
 import { t } from './i18n';
+const TripMap=lazy(()=>import('./TripMap'));
 
-type Stop={name:string;latitude:number;longitude:number;kind:string;operator:string;address:string;google_place_id:string|null};
-type Plan={title:string;stops:Stop[];version:string;current_stop:number|null;confirmations:{user_id:string;version:string;stop_index:number;recognized:boolean;preconditioning:boolean}[]};
-export default function ChargingPlan({tripId,userId,leader,active,finished,driver,plan,vehicles,update,notify}: {
-  tripId:string;userId:string;leader:boolean;active:boolean;finished:boolean;driver:boolean;plan:Plan|null;
+type Stop={name:string;latitude:number;longitude:number;kind:string;operator:string;address:string;google_place_id:string|null;arrival_soc?:number|null;departure_soc?:number|null;charge_minutes?:number|null};
+type Draft={title:string;stops:Stop[];source?:string;origin?:Stop|null;route_points?:[number,number][];distance_km?:number;duration_minutes?:number};
+type Plan=Draft&{version:string;current_stop:number|null;confirmations:{user_id:string;version:string;stop_index:number;recognized:boolean;preconditioning:boolean}[]};
+export default function ChargingPlan({tripId,userId,leader,active,finished,driver,plan,vehicles,update,notify,calculatedPlan}: {
+  calculatedPlan?:any;tripId:string;userId:string;leader:boolean;active:boolean;finished:boolean;driver:boolean;plan:Plan|null;
   vehicles:{user_id:string;display_name:string;vehicle_name:string;accepted:boolean}[];
   update:(plan:Plan|null)=>void;notify:(message:string)=>void;
 }) {
-  const [preview,setPreview]=useState<{title:string;stops:Stop[]}|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
+  const [preview,setPreview]=useState<Draft|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
+  useEffect(()=>{if(calculatedPlan)setPreview(calculatedPlan);},[calculatedPlan]);
   const [result,setResult]=useState<any>(null),[uncertain,setUncertain]=useState<string|null>(null);
   async function upload(file:File) {
     if(busy)return;setBusy(true);setError('');
@@ -53,6 +56,7 @@ export default function ChargingPlan({tripId,userId,leader,active,finished,drive
     <p>{t('ABRP-Excel-Export oder eine GPX-/CSV-Datei mit benannten Stopps und Stationskoordinaten hochladen. TeslaTalk-JSON kann ebenfalls eingelesen werden.')}</p>
     <p className="hint">{t('Die Gruppe erhält denselben nächsten Halt. Tesla berechnet den Abschnitt selbst. Koordinaten allein bestätigen keine Ladestation oder Vorkonditionierung.')}</p>
     {leader&&!finished&&<label className="field"><span><Upload size={16}/> {t('Routen-Datei hochladen')}</span><input type="file" accept=".gpx,.json,.xlsx,.csv" disabled={busy} onChange={event=>{const file=event.target.files?.[0];if(file)void upload(file);event.target.value='';}}/></label>}
+    {(preview??plan)?.source==='abrp'&&<><p>{t('Berechnete ABRP-Route')} · {Math.round((preview??plan)?.distance_km||0)} km · {Math.round((preview??plan)?.duration_minutes||0)} {t('Minuten')}</p><Suspense fallback={<p>{t("Fahrt wird geladen …")}</p>}><TripMap participants={[]} itinerary={preview??plan}/></Suspense></>}
     {preview&&<div className="plan-preview"><h4>{t('Import vor dem Speichern prüfen')}</h4><label className="field"><span>{t('Name des Ladeplans')}</span><input value={preview.title} maxLength={200} onChange={event=>setPreview({...preview,title:event.target.value})}/></label>
       {preview.stops.map((stop,index)=><div className="plan-stop" key={index}><strong>{index+1}.</strong><label className="field"><span>{t('Name des Stopps')}</span><input value={stop.name} maxLength={200} onChange={event=>edit(index,'name',event.target.value)}/></label>
         <label className="field"><span>{t('Art des Stopps')}</span><select value={stop.kind} onChange={event=>edit(index,'kind',event.target.value)}><option value="charging">{t('Ladestation')}</option><option value="waypoint">{t('Zwischenstopp')}</option><option value="destination">{t('Ziel')}</option></select></label>
@@ -61,6 +65,7 @@ export default function ChargingPlan({tripId,userId,leader,active,finished,drive
       </div>)}<div className="header-actions"><button className="primary" disabled={busy||!preview.title.trim()} onClick={()=>void save()}>{t('Geprüften Ladeplan speichern')}</button><button disabled={busy} onClick={()=>setPreview(null)}>{t('Abbrechen')}</button></div></div>}
     {plan&&<><h4>{plan.title}</h4><ol className="planned-stops">{plan.stops.map((stop,index)=><li className={plan.current_stop===index?'selected-stop':''} key={index}>
       <strong>{stop.name}</strong><small>{stop.kind==='charging'?t('Ladestation'):stop.kind==='destination'?t('Ziel'):t('Zwischenstopp')} · {stop.operator||stop.address}</small>
+      {(stop.arrival_soc!=null||stop.charge_minutes!=null)&&<small>{t('Prognose für das Planungsfahrzeug: ')}{stop.arrival_soc!=null&&<>{t('Ankunftsakku')} {Math.round(stop.arrival_soc)}% · </>}{stop.departure_soc!=null&&<>{t('Abfahrtsakku')} {Math.round(stop.departure_soc)}% · </>}{stop.charge_minutes!=null&&<>{Math.round(stop.charge_minutes)} {t('Minuten')} {t('Ladezeit')}</>}</small>}
       {stop.kind==='charging'&&<small>{stop.google_place_id?t('Stationsreferenz vorhanden; Erkennung im Auto prüfen.'):t('Keine eindeutige Stationsreferenz. Zuordnung im Tesla prüfen.')}</small>}
       {leader&&active&&<button disabled={busy||!!uncertain} onClick={()=>void send(index)}>{t('Diesen Halt an die freigegebenen Autos senden')}</button>}
     </li>)}</ol><div className="header-actions"><a className="button" href={`/api/trips/${tripId}/charging-plan/export`}><Download size={16}/>{t('Ladeplan exportieren')}</a>{leader&&!finished&&<button disabled={busy} onClick={()=>void save(true)}>{t('Importierten Ladeplan löschen')}</button>}</div></>}

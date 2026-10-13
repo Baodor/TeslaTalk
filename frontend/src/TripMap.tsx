@@ -74,7 +74,7 @@ function Controls({ positions, live, own, focusKey }: { positions: [number, numb
     <button aria-pressed={mode==='off'} onClick={()=>setMode(mode==='off'?'group':'off')}>{mode==='off'?t('Karte mitlaufen lassen'):t('Kartenverfolgung pausieren')}</button></div>;
 }
 
-export default function TripMap({ participants, traces = [], navigation = null,ownUserId }: { participants: Participant[]; traces?: any[]; navigation?: NavigationData | null;ownUserId?:string }) {
+export default function TripMap({ participants, traces = [], navigation = null,ownUserId,itinerary }: { participants: Participant[]; traces?: any[]; navigation?: NavigationData | null;ownUserId?:string;itinerary?:{stops:{name:string;latitude:number;longitude:number;kind:string}[];origin?:{latitude:number;longitude:number}|null;route_points?:[number,number][]}|null }) {
   const [now,setNow]=useState(Date.now()/1000);
   useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()/1000),10000);return()=>clearInterval(timer);},[]);
   const present = participants.filter(p => p.left_at === null);
@@ -92,7 +92,7 @@ export default function TripMap({ participants, traces = [], navigation = null,o
   const positions: [number, number][] = [
     ...vehicles.map(p => [p.data.latitude, p.data.longitude] as [number, number]),
     ...people.map(p => [p.personal_location!.latitude, p.personal_location!.longitude] as [number, number]),
-    ...(destination ? [destination] : []), ...(route?.route_points || [])
+    ...(destination ? [destination] : []), ...(route?.route_points || []),...(itinerary?.stops.map(stop=>[stop.latitude,stop.longitude] as [number,number])||[]),...(itinerary?.route_points||[])
   ];
   const grouped: Record<string, { userId: string; personal: boolean; points: [number, number][] }> = {};
   traces.forEach(row => {
@@ -105,6 +105,8 @@ export default function TripMap({ participants, traces = [], navigation = null,o
     {/* Leaflet's zoom transition timer can outlive map.remove() when changing tabs. */}
     <MapContainer center={[50.1109, 8.6821]} zoom={8} zoomControl={false} zoomAnimation={false} scrollWheelZoom className="trip-map">
       <MapTiles />
+      {itinerary?.route_points&&itinerary.route_points.length>1&&<Polyline positions={itinerary.route_points} pathOptions={{color:'#95b9ff',weight:4}}/>}
+      {itinerary?.stops.map((stop,index)=><Marker key={'stop:'+index} position={[stop.latitude,stop.longitude]} icon={destinationIcon}><Popup><strong>{index+1}. {stop.name}</strong><br/>{stop.kind==='charging'?t('Ladestation'):t('Zwischenstopp')}</Popup></Marker>)}
       {destination && <Marker position={destination} icon={destinationIcon} title={'Navigationsziel: ' + (route?.destination || t("Ziel"))}>
         <Popup><strong>{t("Navigationsziel des Planungsfahrzeugs")}</strong><br />{route?.destination || t("Ziel aus dem Auto")}</Popup>
       </Marker>}
@@ -116,9 +118,9 @@ export default function TripMap({ participants, traces = [], navigation = null,o
         <Popup><strong>{t("Person · ")}{p.display_name}</strong><br />{p.role === 'passenger' ? t("Mitfahrer") : t("Fahrer")} {t(" · geteilter Browser-Standort")}<br />{t("Aktualisiert: ")}{new Date(p.personal_location!.updated_at * 1000).toLocaleTimeString(getLocale())}</Popup>
       </Marker>)}
       {Object.entries(grouped).map(([key, trace]) => <Polyline key={key} positions={trace.points} pathOptions={{ color: color(trace.userId), weight: 3, dashArray: trace.personal ? '5 7' : undefined }} />)}
-      <Controls positions={positions} live={live} own={own} focusKey={markerKey+':'+(route ? `${route.destination}:${destination}:${route.route_points.length}` : 'group')} />
+      <Controls positions={positions} live={live} own={own} focusKey={JSON.stringify(itinerary?.stops||[])+markerKey+':'+(route ? `${route.destination}:${destination}:${route.route_points.length}` : 'group')} />
     </MapContainer>
-    <div className="map-label"><span className="status-dot" /> {t(" NUR DEINE FAHRT")}</div>
+    <div className="map-label"><span className="status-dot" /> {itinerary?t('ABRP-Ladeplan'):t(" NUR DEINE FAHRT")}</div>
     {(positions.length > 0 || traces.length > 0) && <div className="map-legend"><span className="legend-person" />{t("Person")}<span className="legend-car" />{t("Fahrzeug")}{destination && <><span className="legend-destination" />{t("Ziel")}</>}{route && route.route_points.length > 1 && <><span className="legend-route" />{t("Route")}</>}</div>}
     {!positions.length && !traces.length && <div className="map-empty"><MapPin size={22} /><span>{t("Noch keine Standortdaten.")}<small>{t('Bitte Browser-Standort aktivieren und die Seite während der Fahrt geöffnet lassen.')}</small></span></div>}
   </div>{driverVehicles.length > 0 && <p className="hint" aria-live="polite">{t("Fahrzeugpositionen: ")}{vehicles.length} {t(" von ")}{driverVehicles.length}.{missingVehicles.length > 0 && <> {t(" Position fehlt für ")}{missingVehicles.map(p => p.vehicle_name || p.display_name).join(', ')}. {t('Bitte Browser-Standort aktivieren und die Seite während der Fahrt geöffnet lassen.')}</>}</p>}</>;

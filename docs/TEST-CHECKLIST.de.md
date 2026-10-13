@@ -15,7 +15,7 @@ Nach dem Update mit einem Fahrer-Konto testen. Die automatisierten Tests verwend
 - [ ] QR-Mitfahrer verbindet in **Mein Profil** sein Tesla-Konto: Bild erscheint, Name/PIN und Mitfahrerrolle bleiben. Nach Abmelden über denselben QR-Link anmelden; Bild bleibt. Verknüpfung entfernen: PIN funktioniert weiter, kein Fahrzeugzugriff.
 - [ ] Im Adminmenü mit einem eigens angelegten Testkonto **Löschen** wählen. Falsche Groß-/Kleinschreibung im Bestätigungsnamen hält den Knopf gesperrt; Abbrechen löscht nichts. Erst mit exaktem Namen bestätigen. Konto und eigene geleitete Testfahrten verschwinden, seine alten Sitzungen/API-Schlüssel funktionieren nicht mehr, fremde Fahrten bleiben bestehen.
 - [ ] Logo aus Profil/Fahrt/Admin anklicken: Startseite. Mac/Safari neu laden und Desktop-Favicon prüfen; gegebenenfalls alten Safari-Favicon-Cache abwarten. Auf dem Arbeitsplatz-PC OSM-Karte prüfen: bei Netzwerksperre verständliche Fehlermeldung und erneutes Laden. Der Referrer enthält nur die Domain, keinen Fahrtpfad.
-- [ ] ABRP-Excel-Export oder GPX/CSV mit benannten Stopps und Koordinaten lässt sich prüfen und speichern; reine Tracks werden abgewiesen. TeslaTalk-JSON exportieren und wieder hochladen: Reihenfolge, Stationstyp und vorhandene Places-ID bleiben erhalten. Normale ABRP-Teilen-Links werden weiterhin nicht als Plan abgerufen.
+- [ ] ABRP-Excel-Export oder GPX/CSV mit benannten Stopps und Koordinaten lässt sich prüfen und speichern; reine Tracks werden abgewiesen. TeslaTalk-JSON exportieren und wieder hochladen: Reihenfolge, Stationstyp und vorhandene Places-ID bleiben erhalten. ABRP-Teilen-Links können im Reiter Ladeplanung mit verbundenem Konto als ursprüngliche Planungsparameter abgerufen werden; die neue Berechnung bleibt ein eigener Schritt.
 
 ## Tesla-Erstanmeldung und Administration
 
@@ -94,3 +94,14 @@ Diese Checkliste ergänzt automatisierte Backend-, Browser- und Containerprüfun
 - [ ] Verbindung beim Senden unterbrechen: Auftragsstatus lesen und Auto prüfen, keine automatische Doppelübertragung. Danach ausdrücklich erneut freigeben, wenn ein weiterer Versuch gewünscht ist.
 
 - [ ] Einen echten aktuellen ABRP-Excel-Export hochladen: benannte Stationen, Reihenfolge und Koordinaten/Stationslinks prüfen. Fehlen Koordinaten, Latitude/Longitude-Spalten ergänzen. Nicht enthaltene Stationen/Referenzen werden nicht erfunden. Excel mit mehreren Routentabellen oder übergroßen entpackten Daten wird abgewiesen.
+
+## Tesla-Anmeldung und direkter ABRP-Reiter
+
+- [ ] Tesla-Anmeldung aus installierter iPhone-Web-App über die öffentliche Domain abschließen; anschließend PWA neu öffnen. Kein roher JSON-Fehler. Anmeldung über eine alternative Adresse/LAN-IP startet zuerst auf der konfigurierten öffentlichen Domain.
+- [ ] Zwei Tesla-Anmeldungen parallel beginnen und beide Rücksprünge testen; sie überschreiben ihre Bindungen nicht. Abgelaufener oder in anderem Browser geöffneter Rücksprung zeigt Neustart-Link mit korrekten Umlauten. Bereits angemeldeter alter Rücksprung führt ohne neuen Codeaustausch nach Hause.
+- [ ] **Ladeplanung** ist ein eigener Reiter. Ohne Iternio-Key klare Einrichtungsinformation, keine Berechnung. Mit gültigem Planning-Key ABRP verbinden, genaue Fahrzeugvariante laden; gespeicherte/angezeigte Daten enthalten kein Passwort oder Token.
+- [ ] Fahrzeug mit geringster Reichweite wählen, Abfahrtsakku prüfen, Start/Ziel und Zwischenhalt samt Aufenthalt setzen. Zwei Netze wie IONITY/EnBW auswählen und **Ausschließlich** aktivieren. Eine unmögliche Netzvorgabe wird gemeldet.
+- [ ] ABRP-Linkparameter übernehmen: kein `/plan`-Aufruf, Hinweise zur Neuberechnung sichtbar. Erst nach Kostenbestätigung berechnen; Karte, Stoppreihenfolge und Prognosen für das Planungsauto prüfen.
+- [ ] Berechnete Route prüfen und speichern: noch kein Fahrzeugbefehl. Danach nächsten gemeinsamen Ladehalt an die freigegebenen Autos senden. Im Tesla Stationszuordnung und Vorkonditionierung prüfen, einschließlich mindestens eines Fremdladers.
+- [ ] Netzverbindung beim Berechnen unterbrechen, Reiter wechseln und Status abrufen: keine automatische zweite Berechnung. Bewusste neue Berechnung verlangt erneute Kostenbestätigung; Tageslimit wird eingehalten.
+- [ ] ABRP-Verbindung entfernen/ablaufen lassen: gespeicherte Pläne bleiben sichtbar, geschützter Link-/Modellabruf verlangt erneute Verbindung. Andere Fahrer/Mitfahrer/Zuschauer können nicht im Namen des Leiters planen oder senden.

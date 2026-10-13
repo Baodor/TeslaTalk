@@ -3938,5 +3938,375 @@
     "en": "The route table is invalid or too large. Please use a plan with named stops and coordinates.",
     "nl": "De routetabel is ongeldig of te groot. Gebruik een plan met benoemde stops en coördinaten.",
     "de-AT": "De Routentabelle is ungültig oder z groß. Nimm bitte an Plan mit benannten Stopps und Koordinaten."
+  },
+  "ABRP-Route berechnet. Ladehalte prüfen und anschließend speichern; es wurden keine Fahrzeugbefehle gesendet.": {
+    "en": "ABRP route calculated. Review the charging stops and save; no vehicle commands were sent.",
+    "nl": "ABRP-route berekend. Controleer de laadstops en sla op; er zijn geen voertuigcommando's verzonden.",
+    "de-AT": "ABRP-Route berechnet. Schau de Ladehalte an und speicher's dann; es san no kane Autobefehle rausgangen."
+  },
+  "Berechnung nicht bestätigt. Status abrufen; es wird nicht automatisch erneut berechnet.": {
+    "en": "Calculation not confirmed. Retrieve its status; it will not be calculated again automatically.",
+    "nl": "Berekening niet bevestigd. Vraag de status op; er wordt niet automatisch opnieuw berekend.",
+    "de-AT": "Berechnung ned bestätigt. Status abrufen; automatisch wird ned no amal gerechnet."
+  },
+  "Der Fahrtleiter plant die gemeinsamen Ladehalte. Du kannst deinen eigenen Tesla für die Zielübernahme freigeben.": {
+    "en": "The trip leader plans the shared charging stops. You can allow destination transfer to your own Tesla.",
+    "nl": "De rit leider plant de gezamenlijke laadstops. Je kunt je eigen Tesla vrijgeven voor het overnemen van doelen.",
+    "de-AT": "Da Fahrtleiter plant de gemeinsamen Ladehalte. Du kannst dein Tesla für de Zielübernahme freigeben."
+  },
+  "ABRP-Ladeplanung": {
+    "en": "ABRP charging planning",
+    "nl": "ABRP-laadplanning",
+    "de-AT": "ABRP-Ladeplanung"
+  },
+  "Fahrzeug und Ladenetze auswählen, Route in TeslaTalk berechnen und die gemeinsamen Stopps an freigegebene Autos senden.": {
+    "en": "Choose a vehicle and charging networks, calculate the route in TeslaTalk, then send shared stops to consenting cars.",
+    "nl": "Kies een voertuig en laadnetwerken, bereken de route in TeslaTalk en stuur gezamenlijke stops naar vrijgegeven auto's.",
+    "de-AT": "Auto und Ladenetze aussuchen, Route in TeslaTalk ausrechnen und de gemeinsamen Stopps an freigegebene Autos schicken."
+  },
+  "Der Betreiber muss zuerst den Iternio-Planning-Zugang einrichten.": {
+    "en": "The operator must first configure Iternio Planning access.",
+    "nl": "De beheerder moet eerst toegang tot Iternio Planning instellen.",
+    "de-AT": "Da Betreiber muss erst den Iternio-Planning-Zugang einrichten."
+  },
+  "ABRP-Konto und Fahrzeugkatalog": {
+    "en": "ABRP account and vehicle catalogue",
+    "nl": "ABRP-account en voertuigcatalogus",
+    "de-AT": "ABRP-Konto und Fahrzeugkatalog"
+  },
+  "ABRP verbunden:": {
+    "en": "ABRP connected:",
+    "nl": "ABRP verbonden:",
+    "de-AT": "ABRP verbunden:"
+  },
+  "ABRP-Verbindung entfernen": {
+    "en": "Remove ABRP connection",
+    "nl": "ABRP-verbinding verwijderen",
+    "de-AT": "ABRP-Verbindung entfernen"
+  },
+  "Fahrzeugkatalog und Ladenetze laden": {
+    "en": "Load vehicle catalogue and charging networks",
+    "nl": "Voertuigcatalogus en laadnetwerken laden",
+    "de-AT": "Fahrzeugkatalog und Ladenetze laden"
+  },
+  "Die Anmeldung wird über Iternios veröffentlichte Schnittstelle gesendet. TeslaTalk speichert die Sitzung verschlüsselt und speichert kein ABRP-Passwort. Bei Ablauf erneut verbinden.": {
+    "en": "Sign-in uses Iternio's published interface. TeslaTalk encrypts the session and stores no ABRP password. Reconnect when it expires.",
+    "nl": "Aanmelden verloopt via Iternio's gepubliceerde interface. TeslaTalk versleutelt de sessie en bewaart geen ABRP-wachtwoord. Verbind opnieuw na afloop.",
+    "de-AT": "De Anmeldung geht über Iternios veröffentlichte Schnittstelle. TeslaTalk speichert de Sitzung verschlüsselt und ka ABRP-Passwort. Wenn's abläuft, no amal verbinden."
+  },
+  "ABRP-E-Mail oder Benutzername": {
+    "en": "ABRP email or username",
+    "nl": "ABRP-e-mailadres of gebruikersnaam",
+    "de-AT": "ABRP-Mail oder Benutzername"
+  },
+  "ABRP-Passwort": {
+    "en": "ABRP password",
+    "nl": "ABRP-wachtwoord",
+    "de-AT": "ABRP-Passwort"
+  },
+  "ABRP-Konto verbinden": {
+    "en": "Connect ABRP account",
+    "nl": "ABRP-account verbinden",
+    "de-AT": "ABRP-Konto verbinden"
+  },
+  "ABRP-Teilen-Link": {
+    "en": "ABRP share link",
+    "nl": "ABRP-deellink",
+    "de-AT": "ABRP-Teilen-Link"
+  },
+  "Planungsparameter aus Link übernehmen": {
+    "en": "Load planning parameters from link",
+    "nl": "Planningsparameters uit link overnemen",
+    "de-AT": "Planungsparameter aus'm Link übernehmen"
+  },
+  "Der Linkabruf berechnet nichts. Eine anschließende Neuberechnung kann vom gespeicherten ABRP-Plan abweichen.": {
+    "en": "Loading the link does not calculate a route. Recalculation can differ from the saved ABRP plan.",
+    "nl": "De link ophalen berekent geen route. Een herberekening kan afwijken van het opgeslagen ABRP-plan.",
+    "de-AT": "Da Linkabruf rechnet nix. A Neuberechnung kann vom gespeicherten ABRP-Plan abweichen."
+  },
+  "Geringste Reichweite": {
+    "en": "Lowest range",
+    "nl": "Kleinste bereik",
+    "de-AT": "Geringste Reichweite"
+  },
+  "Niedrigster Akku": {
+    "en": "Lowest battery",
+    "nl": "Laagste accuniveau",
+    "de-AT": "Niedrigster Akku"
+  },
+  "Fahrzeug für die Berechnung": {
+    "en": "Vehicle used for calculation",
+    "nl": "Voertuig voor de berekening",
+    "de-AT": "Auto für de Berechnung"
+  },
+  "Fahrzeugmodell in ABRP": {
+    "en": "Vehicle model in ABRP",
+    "nl": "Voertuigmodel in ABRP",
+    "de-AT": "Fahrzeugmodell in ABRP"
+  },
+  "Modell suchen": {
+    "en": "Search model",
+    "nl": "Model zoeken",
+    "de-AT": "Modell suchen"
+  },
+  "Genaue Fahrzeugvariante auswählen": {
+    "en": "Choose exact vehicle variant",
+    "nl": "Kies de exacte voertuigvariant",
+    "de-AT": "De genaue Autovariante aussuchen"
+  },
+  "Tesla-Modellnamen allein bestimmen keine Batterie- oder Antriebsvariante. Die passende ABRP-Variante bewusst auswählen.": {
+    "en": "Tesla model names alone do not identify the battery or drivetrain variant. Choose the matching ABRP variant deliberately.",
+    "nl": "Tesla-modelnamen bepalen niet de accu- of aandrijvingsvariant. Kies bewust de juiste ABRP-variant.",
+    "de-AT": "Da Tesla-Modellname allein verrät ned de Batterie- oder Antriebsvariante. Such de passende ABRP-Variante bewusst aus."
+  },
+  "Akku bei Abfahrt (%)": {
+    "en": "Departure battery (%)",
+    "nl": "Accu bij vertrek (%)",
+    "de-AT": "Akku bei Abfahrt (%)"
+  },
+  "Reserve am Ziel (%)": {
+    "en": "Destination reserve (%)",
+    "nl": "Reserve op bestemming (%)",
+    "de-AT": "Reserve am Ziel (%)"
+  },
+  "Start": {
+    "en": "Start",
+    "nl": "Start",
+    "de-AT": "Start"
+  },
+  "Für dieses Fahrzeug fehlt ein aktueller Browserstandort. Startadresse eingeben.": {
+    "en": "This vehicle has no current browser position. Enter a starting address.",
+    "nl": "Voor dit voertuig ontbreekt een actuele browserlocatie. Voer een startadres in.",
+    "de-AT": "Für des Auto fehlt a aktueller Browserstandort. Startadresse eingeben."
+  },
+  "Browserstandort als Start": {
+    "en": "Use browser position as start",
+    "nl": "Browserlocatie als start gebruiken",
+    "de-AT": "Browserstandort als Start"
+  },
+  "Aufenthalt (Minuten)": {
+    "en": "Stay (minutes)",
+    "nl": "Verblijf (minuten)",
+    "de-AT": "Aufenthalt (Minuten)"
+  },
+  "Entfernen": {
+    "en": "Remove",
+    "nl": "Verwijderen",
+    "de-AT": "Weg damit"
+  },
+  "Zwischenstopp hinzufügen": {
+    "en": "Add waypoint",
+    "nl": "Tussenstop toevoegen",
+    "de-AT": "Zwischenstopp hinzufügen"
+  },
+  "Ladenetze": {
+    "en": "Charging networks",
+    "nl": "Laadnetwerken",
+    "de-AT": "Ladenetze"
+  },
+  "Ausschließlich bei den ausgewählten Ladenetzen laden": {
+    "en": "Charge exclusively at the selected networks",
+    "nl": "Uitsluitend bij de geselecteerde laadnetwerken laden",
+    "de-AT": "Nur bei de ausgewählten Ladenetze laden"
+  },
+  "Ohne Auswahl sind alle passenden Ladenetze erlaubt. Mit Auswahl werden Netze bevorzugt oder ausdrücklich ausschließlich verwendet.": {
+    "en": "Without selection, all matching networks are allowed. Selected networks are preferred or explicitly used exclusively.",
+    "nl": "Zonder selectie zijn alle passende laadnetwerken toegestaan. Geselecteerde netwerken krijgen voorkeur of worden expliciet uitsluitend gebruikt.",
+    "de-AT": "Ohne Auswahl san alle passenden Ladenetze erlaubt. Ausgewählte Netze werdn bevorzugt oder ausdrücklich ausschließlich verwendet."
+  },
+  "Ich bestätige die mögliche kostenpflichtige Iternio-Berechnung. Standort und Planungsdaten werden an Iternio gesendet.": {
+    "en": "I confirm the potentially paid Iternio calculation. Location and planning data will be sent to Iternio.",
+    "nl": "Ik bevestig de mogelijk betaalde Iternio-berekening. Locatie- en planningsgegevens worden naar Iternio gestuurd.",
+    "de-AT": "I bestätig de möglicherweise kostenpflichtige Iternio-Berechnung. Standort und Planungsdaten gehn an Iternio."
+  },
+  "Laderoute berechnen": {
+    "en": "Calculate charging route",
+    "nl": "Laadroute berekenen",
+    "de-AT": "Laderoute ausrechnen"
+  },
+  "Berechnungsstatus abrufen": {
+    "en": "Retrieve calculation status",
+    "nl": "Berekeningsstatus ophalen",
+    "de-AT": "Berechnungsstatus abrufen"
+  },
+  "ABRP-Ladeplan": {
+    "en": "ABRP charging plan",
+    "nl": "ABRP-laadplan",
+    "de-AT": "ABRP-Ladeplan"
+  },
+  "Berechnete ABRP-Route": {
+    "en": "Calculated ABRP route",
+    "nl": "Berekende ABRP-route",
+    "de-AT": "Berechnete ABRP-Route"
+  },
+  "Minuten": {
+    "en": "minutes",
+    "nl": "minuten",
+    "de-AT": "Minuten"
+  },
+  "Prognose für das Planungsfahrzeug:": {
+    "en": "Forecast for the planning vehicle:",
+    "nl": "Prognose voor het planningsvoertuig:",
+    "de-AT": "Prognose für's Planungsauto:"
+  },
+  "Ankunftsakku": {
+    "en": "Arrival battery",
+    "nl": "Accu bij aankomst",
+    "de-AT": "Ankunftsakku"
+  },
+  "Abfahrtsakku": {
+    "en": "Departure battery",
+    "nl": "Accu bij vertrek",
+    "de-AT": "Abfahrtsakku"
+  },
+  "Ladezeit": {
+    "en": "Charging time",
+    "nl": "Laadtijd",
+    "de-AT": "Ladezeit"
+  },
+  "Ladeplanung": {
+    "en": "Charging planning",
+    "nl": "Laadplanning",
+    "de-AT": "Ladeplanung"
+  },
+  "Iternio lieferte keine gültige Kontositzung.": {
+    "en": "Iternio did not return a valid account session.",
+    "nl": "Iternio heeft geen geldige accountsessie geleverd.",
+    "de-AT": "Iternio hat ka gültige Kontositzung geliefert."
+  },
+  "Für den ABRP-Linkabruf zuerst das ABRP-Konto verbinden.": {
+    "en": "Connect your ABRP account before retrieving a shared ABRP link.",
+    "nl": "Verbind je ABRP-account voordat je een ABRP-deellink ophaalt.",
+    "de-AT": "Für'n ABRP-Linkabruf erst des ABRP-Konto verbinden."
+  },
+  "Der gespeicherte ABRP-Plan enthält keine gültige Zielliste.": {
+    "en": "The saved ABRP plan does not contain a valid destination list.",
+    "nl": "Het opgeslagen ABRP-plan bevat geen geldige doelenlijst.",
+    "de-AT": "Da gespeicherte ABRP-Plan hat ka gültige Zielliste."
+  },
+  "Iternio findet mit diesen Vorgaben keine fahrbare Route.": {
+    "en": "Iternio cannot find a viable route with these settings.",
+    "nl": "Iternio vindt met deze instellingen geen haalbare route.",
+    "de-AT": "Iternio findet mit den Vorgaben ka fahrbare Route."
+  },
+  "Iternio lieferte keine vollständige Stoppfolge.": {
+    "en": "Iternio did not return a complete sequence of stops.",
+    "nl": "Iternio heeft geen volledige stopvolgorde geleverd.",
+    "de-AT": "Iternio hat ka vollständige Stoppfolge geliefert."
+  },
+  "Die mögliche kostenpflichtige Iternio-Berechnung zuerst bestätigen.": {
+    "en": "Confirm the potentially paid Iternio calculation first.",
+    "nl": "Bevestig eerst de mogelijk betaalde Iternio-berekening.",
+    "de-AT": "De möglicherweise kostenpflichtige Iternio-Berechnung erst bestätigen."
+  },
+  "Bitte Start, Ziel und Zwischenstopps vollständig angeben.": {
+    "en": "Please provide complete start, destination and waypoint details.",
+    "nl": "Vul start, bestemming en tussenstops volledig in.",
+    "de-AT": "Bitte Start, Ziel und Zwischenstopps vollständig angeben."
+  },
+  "Iternio ist nicht erreichbar oder lieferte eine ungültige Antwort. Eine Berechnung wird nicht automatisch wiederholt.": {
+    "en": "Iternio is unavailable or returned invalid data. Calculation is never automatically repeated.",
+    "nl": "Iternio is onbereikbaar of heeft ongeldige gegevens geleverd. De berekening wordt niet automatisch herhaald.",
+    "de-AT": "Iternio is ned erreichbar oder hat a ungültige Antwort geliefert. Automatisch wird ned no amal gerechnet."
+  },
+  "Bitte einen ABRP-Teilen-Link mit Plan-ID einsetzen; Kurzlinks werden nicht automatisch geöffnet.": {
+    "en": "Please enter an ABRP share link with a plan ID; short links are not opened automatically.",
+    "nl": "Voer een ABRP-deellink met plan-ID in; korte links worden niet automatisch geopend.",
+    "de-AT": "Bitte an ABRP-Teilen-Link mit Plan-ID einsetzen; Kurzlinks werdn ned automatisch geöffnet."
+  },
+  "Iternio lieferte eine ungültige Route. Es werden keine Ladehalte geraten.": {
+    "en": "Iternio returned an invalid route. Charging stops are never guessed.",
+    "nl": "Iternio heeft een ongeldige route geleverd. Laadstops worden niet geraden.",
+    "de-AT": "Iternio hat a ungültige Route geliefert. Ladehalte werdn ned erraten."
+  },
+  "Bitte gültige Ladenetze aus der Liste auswählen.": {
+    "en": "Choose valid charging networks from the list.",
+    "nl": "Kies geldige laadnetwerken uit de lijst.",
+    "de-AT": "Bitte gültige Ladenetze aus da Liste aussuchen."
+  },
+  "Für ausschließliches Laden mindestens ein Ladenetz auswählen.": {
+    "en": "Choose at least one charging network for exclusive charging.",
+    "nl": "Kies minimaal één laadnetwerk voor uitsluitend laden.",
+    "de-AT": "Für ausschließliches Laden mindestens a Ladenetz aussuchen."
+  },
+  "Diese Auftrags-ID gehört zu einer anderen ABRP-Berechnung.": {
+    "en": "This request ID belongs to another ABRP calculation.",
+    "nl": "Dit verzoek-ID hoort bij een andere ABRP-berekening.",
+    "de-AT": "De Auftrags-ID gehört zu ana anderen ABRP-Berechnung."
+  },
+  "Das tägliche Iternio-Planungslimit dieser Instanz ist erreicht.": {
+    "en": "This instance's daily Iternio planning limit has been reached.",
+    "nl": "De dagelijkse Iternio-planningslimiet van deze instantie is bereikt.",
+    "de-AT": "Des tägliche Iternio-Planungslimit von der Instanz is erreicht."
+  },
+  "Das Planungsfahrzeug wurde gewechselt. Berechnung bitte prüfen.": {
+    "en": "The planning vehicle has changed. Please review the calculation.",
+    "nl": "Het planningsvoertuig is gewijzigd. Controleer de berekening.",
+    "de-AT": "Des Planungsauto is gewechselt wordn. Schau de Berechnung bitte an."
+  },
+  "Iternio konnte die Anfrage nicht abschließen. Eine Berechnung wird nicht automatisch wiederholt.": {
+    "en": "Iternio could not complete the request. Calculation is never automatically repeated.",
+    "nl": "Iternio kon het verzoek niet afronden. De berekening wordt niet automatisch herhaald.",
+    "de-AT": "Iternio hat de Anfrage ned abschließen können. Automatisch wird ned no amal gerechnet."
+  },
+  "Der gespeicherte ABRP-Plan enthält ein nicht unterstütztes Ziel.": {
+    "en": "The saved ABRP plan contains an unsupported destination.",
+    "nl": "Het opgeslagen ABRP-plan bevat een niet-ondersteund doel.",
+    "de-AT": "Da gespeicherte ABRP-Plan hat a ned unterstütztes Ziel."
+  },
+  "Ungültige Planungskoordinaten.": {
+    "en": "Invalid planning coordinates.",
+    "nl": "Ongeldige planningscoördinaten.",
+    "de-AT": "Ungültige Planungskoordinaten."
+  },
+  "Iternio hat den Zugang abgelehnt. ABRP-Verbindung und Planning-API-Freigabe prüfen.": {
+    "en": "Iternio denied access. Check your ABRP connection and Planning API permissions.",
+    "nl": "Iternio heeft toegang geweigerd. Controleer je ABRP-verbinding en Planning-API-toegang.",
+    "de-AT": "Iternio hat den Zugang abgelehnt. ABRP-Verbindung und Planning-API-Freigabe prüfen."
+  },
+  "Der ABRP-Plan oder die Station wurde nicht gefunden.": {
+    "en": "The ABRP plan or station was not found.",
+    "nl": "Het ABRP-plan of station is niet gevonden.",
+    "de-AT": "Da ABRP-Plan oder de Station is ned gefunden wordn."
+  },
+  "Iternio-Anfragelimit erreicht. Bitte später erneut versuchen.": {
+    "en": "Iternio request limit reached. Please try again later.",
+    "nl": "Iternio-aanvraaglimiet bereikt. Probeer later opnieuw.",
+    "de-AT": "Iternio-Anfragelimit erreicht. Bitte später no amal probieren."
+  },
+  "Iternio-Antwort ist zu groß.": {
+    "en": "The Iternio response is too large.",
+    "nl": "Het Iternio-antwoord is te groot.",
+    "de-AT": "De Iternio-Antwort is z groß."
+  },
+  "Start, Ziele, Fahrzeug, Akku und ausgewählte Ladenetze wurden übernommen. Weitere ABRP-Einstellungen bleiben in ABRP. Eine neue Berechnung kann vom gespeicherten Plan abweichen.": {
+    "en": "Start, destinations, vehicle, battery and selected networks were loaded. Other ABRP settings remain in ABRP. Recalculation can differ from the saved plan.",
+    "nl": "Start, doelen, voertuig, accu en geselecteerde netwerken zijn overgenomen. Andere ABRP-instellingen blijven in ABRP. Een nieuwe berekening kan afwijken van het opgeslagen plan.",
+    "de-AT": "Start, Ziele, Auto, Akku und ausgewählte Ladenetze san übernommen. Weitere ABRP-Einstellungen bleibn in ABRP. A Neuberechnung kann vom gespeicherten Plan abweichen."
+  },
+  "ABRP-Kontoverbindung benötigt eine Fahrer-Browsersitzung.": {
+    "en": "ABRP account linking requires a driver browser session.",
+    "nl": "Een ABRP-account koppelen vereist een bestuurderssessie in de browser.",
+    "de-AT": "ABRP-Kontoverbindung braucht a Fahrer-Browsersitzung."
+  },
+  "ABRP-Auftrag nicht gefunden; die Abfrage berechnet keine neue Route.": {
+    "en": "ABRP request not found; this status check never calculates a new route.",
+    "nl": "ABRP-verzoek niet gevonden; deze statusaanvraag berekent geen nieuwe route.",
+    "de-AT": "ABRP-Auftrag ned gefunden; de Abfrage rechnet ka neue Route."
+  },
+  "Eine neue Berechnung kann erneut Kosten verursachen. Den bisherigen Auftrag zuerst prüfen.": {
+    "en": "A new calculation may incur another charge. Check the existing request first.",
+    "nl": "Een nieuwe berekening kan opnieuw kosten veroorzaken. Controleer eerst het bestaande verzoek.",
+    "de-AT": "A neue Berechnung kann no amal was kosten. Schau erst den bisherigen Auftrag an."
+  },
+  "Neue Berechnung bewusst starten": {
+    "en": "Deliberately start a new calculation",
+    "nl": "Bewust een nieuwe berekening starten",
+    "de-AT": "Bewusst a neue Berechnung starten"
+  },
+  "Ladehalte gemeinsam planen und Pausen abstimmen. Immich-Alben stehen als Nächstes auf der Roadmap.": {
+    "en": "Plan shared charging stops and coordinate breaks. Immich albums are next on the roadmap.",
+    "nl": "Plan samen laadstops en stem pauzes af. Immich-albums staan als volgende op de roadmap.",
+    "de-AT": "Zamm Ladestopps planan und Pausn ausmachn. Immich-Albn san als Nächstes dran."
   }
 }
