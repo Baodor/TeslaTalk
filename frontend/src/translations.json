@@ -4313,5 +4313,160 @@
     "en": "The JSON file must not exceed 900 KB.",
     "nl": "Het JSON-bestand mag maximaal 900 KB groot zijn.",
     "de-AT": "Die JSON-Datei derf höchstens 900 KB groß sein."
+  },
+  "Bitte Start und Ziel sowie höchstens 23 Zwischenstopps eingeben.": {
+    "en": "Enter a start, a destination and at most 23 waypoints.",
+    "nl": "Voer een start, bestemming en maximaal 23 tussenstops in.",
+    "de-AT": "Start und Zü und höchstens 23 Zwischenstopps eingebn."
+  },
+  "Bitte alle Routenpunkte vollständig eingeben.": {
+    "en": "Complete every route point.",
+    "nl": "Vul alle routepunten volledig in.",
+    "de-AT": "Bitte olle Routenpunkte vollständig eingebn."
+  },
+  "Der ABRP-Link ist zu lang. Bitte weniger oder kürzere Routenpunkte verwenden.": {
+    "en": "The ABRP link is too long. Use fewer or shorter route points.",
+    "nl": "De ABRP-link is te lang. Gebruik minder of kortere routepunten.",
+    "de-AT": "Da ABRP-Link is z'lang. Nimm weniger oder kürzere Routenpunkte."
+  },
+  "Für diesen langen Link ist kein QR-Code möglich. Den Direktlink verwenden.": {
+    "en": "This link is too long for a QR code. Use the direct link.",
+    "nl": "Deze link is te lang voor een QR-code. Gebruik de directe link.",
+    "de-AT": "Da Link is z'lang für an QR-Code. Nimm den direkten Link."
+  },
+  "Kopiert.": {
+    "en": "Copied.",
+    "nl": "Gekopieerd.",
+    "de-AT": "Kopiert."
+  },
+  "Bitte den sichtbaren Wert manuell kopieren.": {
+    "en": "Copy the displayed value manually.",
+    "nl": "Kopieer de zichtbare waarde handmatig.",
+    "de-AT": "Den angezeigtn Wert bitte selber kopiern."
+  },
+  "ABRP ohne Planning-Key": {
+    "en": "ABRP without a Planning key",
+    "nl": "ABRP zonder Planning-key",
+    "de-AT": "ABRP ohne Planning-Key"
+  },
+  "Mit deinem ABRP-Konto planen": {
+    "en": "Plan with your ABRP account",
+    "nl": "Plan met je ABRP-account",
+    "de-AT": "Mit deim ABRP-Konto planan"
+  },
+  "ABRP im eigenen Konto öffnen und dort mit deinen Ladekarten und Wünschen berechnen. TeslaTalk benötigt dafür keinen Planning-Key.": {
+    "en": "Open ABRP in your own account and plan there using your charge cards and preferences. TeslaTalk needs no Planning key for this.",
+    "nl": "Open ABRP in je eigen account en plan daar met je laadpassen en voorkeuren. TeslaTalk heeft hiervoor geen Planning-key nodig.",
+    "de-AT": "ABRP mit deim Konto aufmachn und dort mit deine Ladekartn und Wünsche planan. TeslaTalk braucht dafür kan Planning-Key."
+  },
+  "Planungsfahrzeug aus TeslaTalk": {
+    "en": "Planning vehicle from TeslaTalk",
+    "nl": "Planningsvoertuig uit TeslaTalk",
+    "de-AT": "Planungsauto aus TeslaTalk"
+  },
+  "Fahrzeugdaten vom": {
+    "en": "Vehicle data from",
+    "nl": "Voertuiggegevens van",
+    "de-AT": "Autodatn vom"
+  },
+  "Die Fahrzeugdaten sind älter als fünf Minuten. Den aktuellen Akku prüfen; es erfolgt kein zusätzlicher Tesla-Abruf.": {
+    "en": "Vehicle data is over five minutes old. Check the current battery; no extra Tesla request is made.",
+    "nl": "De voertuiggegevens zijn ouder dan vijf minuten. Controleer de huidige accu; er wordt geen extra Tesla-aanvraag gedaan.",
+    "de-AT": "Die Autodatn san älter als fünf Minutn. Schau aufn aktuellen Akku; Tesla wird dafür ned extra abgfragt."
+  },
+  "In ABRP das passende gespeicherte Fahrzeug auswählen und den Abfahrtsakku aus TeslaTalk übernehmen. Der Öffnen-Link synchronisiert keine Fahrzeugdaten und meldet dich nicht in TeslaTalk bei ABRP an.": {
+    "en": "Select the matching saved vehicle in ABRP and enter the departure battery from TeslaTalk. The opening link does not sync vehicle data or connect your ABRP account to TeslaTalk.",
+    "nl": "Selecteer het juiste opgeslagen voertuig in ABRP en neem de vertrekaccu uit TeslaTalk over. De link synchroniseert geen voertuiggegevens en koppelt je ABRP-account niet aan TeslaTalk.",
+    "de-AT": "In ABRP des passende gspeicherte Auto auswähln und den Abfahrtsakku aus TeslaTalk übernehmn. Da Öffnen-Link gleicht kane Autodatn ab und verknüpft dei ABRP-Konto ned mit TeslaTalk."
+  },
+  "Abfahrtsakku kopieren": {
+    "en": "Copy departure battery",
+    "nl": "Vertrekaccu kopiëren",
+    "de-AT": "Abfahrtsakku kopiern"
+  },
+  "Adresse oder Breitengrad, Längengrad": {
+    "en": "Address or latitude, longitude",
+    "nl": "Adres of breedtegraad, lengtegraad",
+    "de-AT": "Adress oder Breitengrad, Längengrad"
+  },
+  "Ich möchte diese Start-, Ziel- und Zwischenstoppdaten per Link oder QR-Code in ABRP öffnen.": {
+    "en": "I want to open this start, destination and waypoint data in ABRP using a link or QR code.",
+    "nl": "Ik wil deze start-, bestemmings- en tussenstopgegevens in ABRP openen via een link of QR-code.",
+    "de-AT": "I möcht die Start-, Zü- und Zwischenstoppdatn per Link oder QR-Code in ABRP aufmachn."
+  },
+  "ABRP-Link und QR-Code vorbereiten": {
+    "en": "Prepare ABRP link and QR code",
+    "nl": "ABRP-link en QR-code voorbereiden",
+    "de-AT": "ABRP-Link und QR-Code vorbereitn"
+  },
+  "QR-Code zum Öffnen der Route in ABRP": {
+    "en": "QR code to open the route in ABRP",
+    "nl": "QR-code om de route in ABRP te openen",
+    "de-AT": "QR-Code zum Aufmachn der Route in ABRP"
+  },
+  "Route in ABRP öffnen": {
+    "en": "Open route in ABRP",
+    "nl": "Route openen in ABRP",
+    "de-AT": "Route in ABRP aufmachn"
+  },
+  "Vorbereiteter ABRP-Link": {
+    "en": "Prepared ABRP link",
+    "nl": "Voorbereide ABRP-link",
+    "de-AT": "Vorbereiteter ABRP-Link"
+  },
+  "ABRP-Link kopieren": {
+    "en": "Copy ABRP link",
+    "nl": "ABRP-link kopiëren",
+    "de-AT": "ABRP-Link kopiern"
+  },
+  "Mit der ABRP-App per QR anmelden": {
+    "en": "Sign in by QR using the ABRP app",
+    "nl": "Aanmelden via QR met de ABRP-app",
+    "de-AT": "Mit da ABRP-App per QR anmeldn"
+  },
+  "ABRP auf dem Gerät öffnen, auf dem du planen möchtest. Dort „Login mit ABRP-App“ wählen.": {
+    "en": "Open ABRP on the device where you want to plan. Select “Login with ABRP app” there.",
+    "nl": "Open ABRP op het apparaat waarop je wilt plannen. Kies daar “Login with ABRP app”.",
+    "de-AT": "ABRP auf dem Gerät aufmachn, wo du planan willst. Dort „Login mit ABRP-App“ auswähln."
+  },
+  "Auf dem angemeldeten Handy in ABRP die Kontoeinstellungen und „Login remote app“ öffnen. Den dort von ABRP angezeigten Login-QR-Code scannen.": {
+    "en": "On the signed-in phone, open ABRP account settings and “Login remote app”. Scan the login QR code displayed by ABRP on the other device.",
+    "nl": "Open op de aangemelde telefoon de ABRP-accountinstellingen en “Login remote app”. Scan de login-QR-code die ABRP op het andere apparaat toont.",
+    "de-AT": "Am angemeldeten Handy in ABRP die Kontoeinstellungen und „Login remote app“ aufmachn. Den Login-QR-Code scannen, den ABRP am andern Gerät zeigt."
+  },
+  "Das passende Fahrzeug, den Abfahrtsakku sowie Ladekarten und Ladenetze in ABRP prüfen. Anschließend dort berechnen.": {
+    "en": "Check the vehicle, departure battery, charge cards and charging networks in ABRP. Then calculate there.",
+    "nl": "Controleer het voertuig, de vertrekaccu, laadpassen en laadnetwerken in ABRP. Bereken daarna daar de route.",
+    "de-AT": "Des passende Auto, den Abfahrtsakku und die Ladekartn und Ladenetze in ABRP prüfn. Dann dort berechnen."
+  },
+  "Der TeslaTalk-QR-Code öffnet die Route. Der Anmelde-QR-Code wird von ABRP selbst erzeugt. Diese Anmeldung verbindet dein ABRP-Konto nicht mit dem TeslaTalk-Server.": {
+    "en": "The TeslaTalk QR code opens the route. ABRP generates its own login QR code. This login does not connect your ABRP account to the TeslaTalk server.",
+    "nl": "De TeslaTalk-QR-code opent de route. ABRP genereert zelf de login-QR-code. Deze aanmelding koppelt je ABRP-account niet aan de TeslaTalk-server.",
+    "de-AT": "Da TeslaTalk-QR-Code macht die Route auf. Den Anmelde-QR-Code macht ABRP selber. Die Anmeldung verknüpft dei ABRP-Konto ned mitm TeslaTalk-Server."
+  },
+  "Danach den Plan in ABRP nach Excel exportieren und unten als Routen-Datei hochladen. Die geprüften Ladehalte können anschließend an die freigegebenen Gruppenfahrzeuge gesendet werden.": {
+    "en": "Then export the plan to Excel in ABRP and upload it below as a route file. Reviewed charging stops can then be sent to the consenting group vehicles.",
+    "nl": "Exporteer het plan daarna in ABRP naar Excel en upload het hieronder als routebestand. Gecontroleerde laadstops kunnen vervolgens naar de vrijgegeven groepsvoertuigen worden gestuurd.",
+    "de-AT": "Dann den Plan in ABRP nach Excel exportiern und unten als Routen-Datei hochladn. Die geprüften Ladestopps kannst danach an die freigegebnen Gruppenautos schickn."
+  },
+  "Ein ABRP-Teilen-Link allein liefert ohne freigegebenen API-Zugang keine fertige Route an TeslaTalk. Ladenetze und Ladekarten werden in ABRP eingestellt; die hier angezeigten Fahrzeugwerte sind ein Datenstand.": {
+    "en": "An ABRP share link alone does not deliver a finished route to TeslaTalk without approved API access. Set networks and charge cards in ABRP; the vehicle values shown here are a snapshot.",
+    "nl": "Een ABRP-deellink alleen levert zonder goedgekeurde API-toegang geen berekende route aan TeslaTalk. Stel laadnetwerken en laadpassen in ABRP in; de voertuigwaarden hier zijn een momentopname.",
+    "de-AT": "A ABRP-Teilen-Link liefert ohne freigegebnen API-Zugang kane fertige Route an TeslaTalk. Ladenetze und Ladekartn stellst in ABRP ein; die Autowerte da san a Datenstand."
+  },
+  "Optionale kostenpflichtige API anzeigen": {
+    "en": "Show optional paid API",
+    "nl": "Optionele betaalde API tonen",
+    "de-AT": "Optionale kostenpflichtige API anzeigen"
+  },
+  "Optionale kostenpflichtige API ausblenden": {
+    "en": "Hide optional paid API",
+    "nl": "Optionele betaalde API verbergen",
+    "de-AT": "Optionale kostenpflichtige API ausblenden"
+  },
+  "Karte der geplanten Stopps": {
+    "en": "Map of planned stops",
+    "nl": "Kaart van geplande stops",
+    "de-AT": "Kartn von die geplanten Stopps"
   }
 }

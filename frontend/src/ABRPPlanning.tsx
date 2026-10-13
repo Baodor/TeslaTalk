@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api, ApiError } from './api';
 import { t } from './i18n';
+import ABRPBrowserPlanning from './ABRPBrowserPlanning';
 
 type Destination={value:string;stay_minutes:number;charger_id?:number|null};
 type Vehicle={user_id:string;display_name:string;vehicle_name:string;battery_pct?:number|null;range_km?:number|null};
-export default function ABRPPlanning({tripId,userId,leader,finished,vehicles,participants,recommendations,preview}: {
+function IternioPlanning({tripId,userId,leader,finished,vehicles,participants,recommendations,preview}: {
   tripId:string;userId:string;leader:boolean;finished:boolean;vehicles:Vehicle[];participants:any[];
   recommendations:{lowest_range_user_id?:string;lowest_battery_user_id?:string};preview:(value:any)=>void;
 }) {
@@ -75,4 +76,13 @@ export default function ABRPPlanning({tripId,userId,leader,finished,vehicles,par
     </>}
     {notice&&<p role="status">{t(notice)}</p>}{error&&<p className="error" role="alert">{t(error)}</p>}
   </section>;
+}
+
+
+export default function ABRPPlanning(props:Parameters<typeof IternioPlanning>[0]) {
+  const [apiOpened,setAPIOpened]=useState(false),[apiVisible,setAPIVisible]=useState(false);
+  return <><ABRPBrowserPlanning {...props}/>{props.leader&&!props.finished&&<>
+    <button aria-expanded={apiVisible} onClick={()=>{setAPIOpened(true);setAPIVisible(value=>!value);}}>{t(apiVisible?'Optionale kostenpflichtige API ausblenden':'Optionale kostenpflichtige API anzeigen')}</button>
+    {apiOpened&&<div hidden={!apiVisible}><IternioPlanning {...props}/></div>}
+  </>}</>;
 }

@@ -99,9 +99,21 @@ Diese Checkliste ergänzt automatisierte Backend-, Browser- und Containerprüfun
 
 - [ ] Tesla-Anmeldung aus installierter iPhone-Web-App über die öffentliche Domain abschließen; anschließend PWA neu öffnen. Kein roher JSON-Fehler. Anmeldung über eine alternative Adresse/LAN-IP startet zuerst auf der konfigurierten öffentlichen Domain.
 - [ ] Zwei Tesla-Anmeldungen parallel beginnen und beide Rücksprünge testen; sie überschreiben ihre Bindungen nicht. Abgelaufener oder in anderem Browser geöffneter Rücksprung zeigt Neustart-Link mit korrekten Umlauten. Bereits angemeldeter alter Rücksprung führt ohne neuen Codeaustausch nach Hause.
-- [ ] **Ladeplanung** ist ein eigener Reiter. Ohne Iternio-Key klare Einrichtungsinformation, keine Berechnung. Mit gültigem Planning-Key ABRP verbinden, genaue Fahrzeugvariante laden; gespeicherte/angezeigte Daten enthalten kein Passwort oder Token.
+- [ ] **Ladeplanung** ist ein eigener Reiter. Ohne Iternio-Key kostenlose Link-/QR-Übergabe und Dateiimport verfügbar. Die optionale API bleibt separat. Mit gültigem Planning-Key dort ABRP verbinden, genaue Fahrzeugvariante laden; gespeicherte/angezeigte Daten enthalten kein Passwort oder Token.
 - [ ] Fahrzeug mit geringster Reichweite wählen, Abfahrtsakku prüfen, Start/Ziel und Zwischenhalt samt Aufenthalt setzen. Zwei Netze wie IONITY/EnBW auswählen und **Ausschließlich** aktivieren. Eine unmögliche Netzvorgabe wird gemeldet.
 - [ ] ABRP-Linkparameter übernehmen: kein `/plan`-Aufruf, Hinweise zur Neuberechnung sichtbar. Erst nach Kostenbestätigung berechnen; Karte, Stoppreihenfolge und Prognosen für das Planungsauto prüfen.
 - [ ] Berechnete Route prüfen und speichern: noch kein Fahrzeugbefehl. Danach nächsten gemeinsamen Ladehalt an die freigegebenen Autos senden. Im Tesla Stationszuordnung und Vorkonditionierung prüfen, einschließlich mindestens eines Fremdladers.
 - [ ] Netzverbindung beim Berechnen unterbrechen, Reiter wechseln und Status abrufen: keine automatische zweite Berechnung. Bewusste neue Berechnung verlangt erneute Kostenbestätigung; Tageslimit wird eingehalten.
 - [ ] ABRP-Verbindung entfernen/ablaufen lassen: gespeicherte Pläne bleiben sichtbar, geschützter Link-/Modellabruf verlangt erneute Verbindung. Andere Fahrer/Mitfahrer/Zuschauer können nicht im Namen des Leiters planen oder senden.
+
+
+## Kostenfreie ABRP-Übergabe
+
+- [ ] Ohne `ABRP_PLANNING_API_KEY` als Fahrtleiter **Ladeplanung** öffnen: Gruppenfahrzeug, gecachter Akku und Reichweite sichtbar; kein Katalog-/Login-/Planaufruf an Iternio. Keine zusätzlichen Tesla-Abrufe.
+- [ ] Empfehlungen prüfen, Gruppenfahrzeug wechseln: Akku passt zum ausgewählten Auto. Alter/fehlender Akku wird geprüft oder manuell übernommen, nicht als Livewert dargestellt.
+- [ ] Mit frischem Browserstandort Start setzen, Ziel und Zwischenstopp angeben, Übermittlung bestätigen: Link und QR enthalten die richtigen geordneten Routenpunkte. Ungültige Koordinaten werden abgewiesen. Nach einer Eingabeänderung verschwindet der alte Link/QR.
+- [ ] Link am Handy und QR auf einem zweiten Gerät testen: ABRP übernimmt Start/Ziel/Zwischenstopps. Bei Adressproblemen Koordinaten einsetzen. Das passende gespeicherte ABRP-Fahrzeug auswählen und den Akku aus TeslaTalk mit dem Kopierknopf übernehmen; keine automatische SoC-/Kontoverknüpfung behauptet.
+- [ ] Echte Anmeldung in ABRP mit **Login mit ABRP-App** und **Login remote app** durchführen. Der Login-QR kommt von ABRP, der TeslaTalk-QR öffnet die Route. Keine ABRP-Zugangsdaten in TeslaTalk nötig.
+- [ ] In ABRP die eigenen Ladekarten, bevorzugten Netze und Fremdlader prüfen, dort berechnen, nach Excel exportieren und in TeslaTalk hochladen. Stoppkarte, Reihenfolge und Stationsreferenzen vor dem Speichern prüfen.
+- [ ] Ladehalt an freigegebene Gruppenfahrzeuge senden und Stationszuordnung/Vorkonditionierung in den Teslas prüfen. Andere Fahrer/Mitfahrer/Zuschauer sehen keine Planungs-/Sendeknöpfe.
+- [ ] Optionale kostenpflichtige API bleibt geschlossen. Auch Öffnen oder Scannen des kostenlosen Links löst keinen TeslaTalk-Planning-Auftrag aus. ABRP Premium-Funktionen hängen weiterhin vom eigenen ABRP-Konto ab.

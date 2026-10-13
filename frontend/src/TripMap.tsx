@@ -120,7 +120,7 @@ export default function TripMap({ participants, traces = [], navigation = null,o
       {Object.entries(grouped).map(([key, trace]) => <Polyline key={key} positions={trace.points} pathOptions={{ color: color(trace.userId), weight: 3, dashArray: trace.personal ? '5 7' : undefined }} />)}
       <Controls positions={positions} live={live} own={own} focusKey={JSON.stringify(itinerary?.stops||[])+markerKey+':'+(route ? `${route.destination}:${destination}:${route.route_points.length}` : 'group')} />
     </MapContainer>
-    <div className="map-label"><span className="status-dot" /> {itinerary?t('ABRP-Ladeplan'):t(" NUR DEINE FAHRT")}</div>
+    <div className="map-label"><span className="status-dot" /> {itinerary?t('Gemeinsamer Ladeplan'):t(" NUR DEINE FAHRT")}</div>
     {(positions.length > 0 || traces.length > 0) && <div className="map-legend"><span className="legend-person" />{t("Person")}<span className="legend-car" />{t("Fahrzeug")}{destination && <><span className="legend-destination" />{t("Ziel")}</>}{route && route.route_points.length > 1 && <><span className="legend-route" />{t("Route")}</>}</div>}
     {!positions.length && !traces.length && <div className="map-empty"><MapPin size={22} /><span>{t("Noch keine Standortdaten.")}<small>{t('Bitte Browser-Standort aktivieren und die Seite während der Fahrt geöffnet lassen.')}</small></span></div>}
   </div>{driverVehicles.length > 0 && <p className="hint" aria-live="polite">{t("Fahrzeugpositionen: ")}{vehicles.length} {t(" von ")}{driverVehicles.length}.{missingVehicles.length > 0 && <> {t(" Position fehlt für ")}{missingVehicles.map(p => p.vehicle_name || p.display_name).join(', ')}. {t('Bitte Browser-Standort aktivieren und die Seite während der Fahrt geöffnet lassen.')}</>}</p>}</>;
