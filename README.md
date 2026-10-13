@@ -48,7 +48,7 @@ TeslaTalk verbindet Freunde, die gemeinsam mit ihren Teslas unterwegs sind. Eine
 | API | Persönliche, widerrufbare API-Schlüssel; vollständige Endpunktübersicht unter `/api-docs` mit Suche, Schemas und Kopierbutton für den gesamten LLM-Kontext |
 | Teilen | Widerrufbarer Live-Zuschauerlink mit Fahrerpositionen; separater Leselink nach Fahrtende; Albumzugriff folgt mit Immich |
 | Pausen | Toilettenknopf meldet Bedarf beim Fahrtleiter; bestätigte Abfahrt als Gruppenhinweis, Chatnachricht und Hinweiston |
-| Ladeplan | GPX mit benannten Stopps hochladen, prüfen und als TeslaTalk-JSON exportieren; nächsten gemeinsamen Supercharger/Fremdlader an zustimmende Autos senden |
+| Ladeplan | ABRP-Excel/CSV oder GPX mit benannten Stopps und Koordinaten hochladen, prüfen und als TeslaTalk-JSON exportieren; nächsten gemeinsamen Supercharger/Fremdlader an zustimmende Autos senden |
 
 ## Browser-GPS, Zuschauer und Toilettenpause
 
@@ -176,7 +176,7 @@ In der aktiven Fahrt stehen **geringste gemeldete Reichweite** und **niedrigster
 
 Das ausgewählte Auto erhält eine Zieladresse und berechnet seine Navigation. Seine aktuelle Antwort/Telemetrie wird danach automatisch als Gruppenroute angezeigt. Andere Fahrer können die automatische Zielübernahme in ihrem eigenen Auto für diese Fahrt erlauben und jederzeit beenden. Abweichender Straßenverlauf oder eine gemeldete nicht fahrbare Route wird dem Fahrtleiter angezeigt; er kann die aktuelle Route dieses Autos als neuen Ausgangspunkt übernehmen. Die Route bleibt innerhalb der berechtigten Gruppe; öffentliche Leselinks enthalten keine Navigation.
 
-**Gemeinsame Ladehalte:** Der Fahrtleiter kann einen GPX-Plan mit benannten Stopps hochladen, prüfen und Halt für Halt an zustimmende Autos senden, einschließlich Superchargern und anderen Ladestationen. Vorhandene Google-Places-Stationsreferenzen bleiben erhalten. Ein TeslaTalk-JSON-Export lässt sich vollständig wieder einlesen. Jeder Tesla berechnet den Abschnitt selbst. Eine bestätigte Übertragung beweist weder Stationszuordnung noch Vorkonditionierung; jeder Fahrer bestätigt diese Anzeigen im Auto. Die vollständige Tesla-Ladehaltefolge und eine komplette native Zwischenzielliste werden weiterhin nicht automatisch ausgelesen/übertragen. [Import und Stationsprüfung](docs/CHARGING-PLANS.de.md).
+**Gemeinsame Ladehalte:** Der Fahrtleiter kann einen ABRP-Excel-/CSV-/GPX-Plan mit benannten Stopps und Koordinaten hochladen, prüfen und Halt für Halt an zustimmende Autos senden, einschließlich Superchargern und anderen Ladestationen. Vorhandene Google-Places-Stationsreferenzen bleiben erhalten. Ein TeslaTalk-JSON-Export lässt sich vollständig wieder einlesen. Jeder Tesla berechnet den Abschnitt selbst. Eine bestätigte Übertragung beweist weder Stationszuordnung noch Vorkonditionierung; jeder Fahrer bestätigt diese Anzeigen im Auto. Die vollständige Tesla-Ladehaltefolge und eine komplette native Zwischenzielliste werden weiterhin nicht automatisch ausgelesen/übertragen. [Import und Stationsprüfung](docs/CHARGING-PLANS.de.md).
 
 Unter **Mein Profil → Route aus deinem Auto** liest du Navigation weiterhin privat. Echte Zielbefehle erfordern `TESLA_NAVIGATION_COMMANDS=true`, Freigabe von `vehicle_cmds` in der Tesla-Anwendung und erneutes Verbinden jedes Tesla-Kontos. Diese Routenfreigabe erlaubt ausschließlich Navigationsziele und kein Aufwecken. Die [Routenanleitung](docs/ROUTES.de.md) erklärt Datenquellen, Rechte und Grenzen.
 

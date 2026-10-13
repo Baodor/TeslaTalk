@@ -117,7 +117,7 @@ Mobile page zoom is suppressed and input text is at least 16 px to avoid iOS foc
 
 ## Personal and vehicle locations
 
-In an active trip, drivers allow browser location for their own selected car. Named passengers can optionally share a separate personal dot. Driver GPS is enabled initially and can be stopped with **Standort stoppen**; the choice is stored on this device for the trip. Keep the browser/PWA open; screen wake lock is requested where supported, but locked/background phones can stop GPS. Stale car markers turn grey after 90 seconds and expire after five minutes. Stopping sharing removes the live dot; recorded history stays private. Browser samples are excluded from vehicle consumption rankings. [Tour tools](TOUR-FEATURES.de.md).
+In an active trip, drivers allow browser location for their own selected car. Named passengers can optionally share a separate personal dot. Driver GPS is enabled initially and can be stopped with **Standortfreigabe stoppen**; the choice is stored on this device for the trip. Keep the browser/PWA open; screen wake lock is requested where supported, but locked/background phones can stop GPS. Stale car markers turn grey after 90 seconds and expire after five minutes. Stopping sharing removes the live dot; recorded history stays private. Browser samples are excluded from vehicle consumption rankings. [Tour tools](TOUR-FEATURES.de.md).
 
 ## Personal API keys
 

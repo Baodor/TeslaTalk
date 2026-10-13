@@ -9,6 +9,7 @@ import json
 import re
 import time
 import uuid
+from typing import Literal
 from urllib.parse import urlencode
 from xml.etree import ElementTree
 import httpx
@@ -49,7 +50,8 @@ class Plan(BaseModel):
 
 class Upload(BaseModel):
     filename: str = Field(min_length=1,max_length=200)
-    content: str = Field(min_length=1,max_length=500_000)
+    content: str = Field(min_length=1,max_length=700_000)
+    encoding: Literal['text','base64'] = 'text'
 
 
 class SendStop(BaseModel):
@@ -72,13 +74,17 @@ def parse_upload(upload):
     """Only supplied local text is parsed; no fetching of links or XML entities."""
     extension=upload.filename.lower().rsplit('.',1)[-1]
     try:
+        if extension in ('xlsx','csv'):
+            from .route_uploads import table_plan
+            return Plan.model_validate(table_plan(upload)).model_dump()
+        if upload.encoding!='text' or len(upload.content.encode())>500_000:raise ValueError()
         if extension=='json':
             document=json.loads(upload.content)
             if not isinstance(document,dict):raise ValueError()
             # Our lossless interchange format; raw ABRP responses are not guessed.
             return Plan.model_validate({'title':document['title'],'stops':document['stops']}).model_dump()
         if extension!='gpx':
-            raise HTTPException(422,'Bitte eine GPX-Datei mit benannten Stopps oder einen TeslaTalk-JSON-Export hochladen.')
+            raise HTTPException(422,'Bitte eine GPX-, Excel-, CSV-Datei oder einen TeslaTalk-JSON-Export hochladen.')
         if re.search(r'<!\s*(DOCTYPE|ENTITY)',upload.content,re.I):raise ValueError()
         root=ElementTree.fromstring(upload.content)
         if local(root.tag)!='gpx':raise ValueError()

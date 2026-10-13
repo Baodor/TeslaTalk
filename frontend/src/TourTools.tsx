@@ -29,7 +29,7 @@ export default function TourTools({tripId,userId,leader,active,canShare,requests
   return <section className="panel tour-tools" aria-label={t('Fahrt und Pausen')}>
     <div className="header-actions">
       <button disabled={!active||busy||pending} onClick={()=>void request()}><Toilet size={18}/>{pending?t('Toilettenpause angefragt'):t('Ich muss aufs Klo')}</button>
-      <button aria-pressed={enabled&&ready} onClick={()=>setSounds(!enabled||!ready)}>{enabled&&ready?<Bell size={17}/>:<BellOff size={17}/>} {enabled&&ready?t('Hinweistöne an'):t('Hinweistöne aktivieren')}</button>
+      <button data-alert-sound-control="" aria-pressed={enabled&&ready} onClick={()=>setSounds(!enabled||!ready)}>{enabled&&ready?<Bell size={17}/>:<BellOff size={17}/>} {enabled&&ready?t('Hinweistöne an'):t('Hinweistöne aktivieren')}</button>
     </div>
     {active&&requests.length>0&&<div className="pause-notice" role={leader?'alert':'status'}>
       <strong>{t('Toilettenpause angefragt')}</strong><p>{requests.map(row=>row.display_name).join(', ')}</p>

@@ -92,6 +92,8 @@ test('Tesla avatars appear on person markers and fall back to initials without c
   expect(vehicleSample.ok()).toBe(true);
   const personSample=await page.request.post(`/api/trips/${created.id}/samples`,{headers,data:{source:'browser',latitude:49.872,longitude:8.651}});
   expect(personSample.ok()).toBe(true);
+  await page.evaluate(id=>localStorage.setItem('teslatalk-gps-'+id,'off'),created.id);
+  expect((await page.request.post(`/api/trips/${created.id}/samples`,{headers,data:{source:'browser_vehicle',latitude:49.871,longitude:8.65}})).ok()).toBe(true);
   await page.goto('/trip/'+created.id);
   await expect(page.locator('.person-marker img')).toHaveAttribute('src',picture);
   await expect.poll(()=>page.locator('.person-marker img').evaluate((image:HTMLImageElement)=>image.naturalWidth)).toBeGreaterThan(0);
@@ -173,6 +175,7 @@ test('two drivers chat live; named guest expires and public sharing stays privat
     const me=await (await client.request.get('/api/me')).json();
     await client.request.post(`/api/vehicles/${me.favorite_vehicle}/refresh`,{headers:csrf});
   }
+  for(const [client,latitude,longitude] of [[page,49.8728,8.6512],[friend,49.891,8.68]] as const) expect((await client.request.post(`/api/trips/${tripId}/samples`,{headers:csrf,data:{source:'browser_vehicle',latitude,longitude}})).ok()).toBe(true);
   await page.request.post(`/api/trips/${tripId}/samples`,{headers:csrf,data:{source:'browser',latitude:49.8728,longitude:8.6512}});
   await friend.request.post(`/api/trips/${tripId}/samples`,{headers:csrf,data:{source:'browser',latitude:49.891,longitude:8.68}});
   await page.getByRole('button', { name: 'Karte', exact: true }).click();

@@ -44,7 +44,7 @@ test('driver browser GPS updates car position and can stop without paid vehicle 
   await expect(page.getByRole('button',{name:'Meinen Standort verfolgen',exact:true})).toHaveAttribute('aria-pressed','true');
   await page.getByRole('button',{name:'Kartenverfolgung pausieren',exact:true}).click();
   await expect(page.getByRole('button',{name:'Karte mitlaufen lassen',exact:true})).toHaveAttribute('aria-pressed','true');
-  await page.getByRole('button',{name:'Standort stoppen',exact:true}).click();
+  await page.getByRole('button',{name:'Standortfreigabe stoppen',exact:true}).click();
   await expect.poll(()=>data.deletes.length).toBe(1);expect(data.deletes[0]).toContain('source=browser_vehicle');expect(data.deletes[0]).toContain('device_id=');expect(paid).toBe(0);
 });
 
@@ -84,13 +84,15 @@ test('reviewed file plan keeps station references, sends next stop and requires 
   await page.route('**/api/trips/tour-test/charging-plan/send',route=>{sends++;expect(route.request().postDataJSON()).toMatchObject({version:'plan-version',stop_index:0});data.trip.charging_plan.current_stop=0;return route.fulfill({json:{request_id:'saved',status:'completed',vehicles:[{user_id:data.user.id,status:'accepted',message:'Navi-Befehl angenommen; Ladestation und Vorkonditionierung im Auto prüfen.'}]}});});
   await page.route('**/api/trips/tour-test/charging-plan/confirm',route=>{const body=route.request().postDataJSON();data.trip.charging_plan.confirmations=[{...body,user_id:data.user.id}];return route.fulfill({json:data.trip.charging_plan});});
   await page.goto('/trip/tour-test');const panel=page.getByRole('region',{name:'Gemeinsamer Ladeplan'});
-  await panel.getByLabel('Routen-Datei hochladen').setInputFiles({name:'abrp.gpx',mimeType:'application/gpx+xml',buffer:Buffer.from('<gpx><wpt lat="50.1" lon="8.7"><name>IONITY Teststation</name></wpt></gpx>')});
-  await expect(panel.getByLabel('Google-Places-ID (optional)')).toHaveValue('ChIJ_Test');expect(previewBody.filename).toBe('abrp.gpx');expect(sends).toBe(0);
+  await panel.getByLabel('Routen-Datei hochladen').setInputFiles({name:'ABRP.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from('isolated Excel fixture')});
+  await expect(panel.getByLabel('Google-Places-ID (optional)')).toHaveValue('ChIJ_Test');expect(previewBody.filename).toBe('ABRP.xlsx');expect(previewBody.encoding).toBe('base64');expect(Buffer.from(previewBody.content,'base64').toString()).toBe('isolated Excel fixture');expect(sends).toBe(0);
   await panel.getByRole('button',{name:'Geprüften Ladeplan speichern',exact:true}).click();expect(sends).toBe(0);
   await panel.getByRole('button',{name:'Diesen Halt an die freigegebenen Autos senden',exact:true}).click();
   await expect(panel.getByLabel('Vorkonditionierung wird im Auto angezeigt.')).toBeDisabled();
-  await panel.getByLabel('Tesla zeigt diesen Halt als Ladestation.').check();
-  await panel.getByLabel('Vorkonditionierung wird im Auto angezeigt.').check();
+  await panel.getByLabel('Tesla zeigt diesen Halt als Ladestation.').click();
+  await expect(panel.getByLabel('Tesla zeigt diesen Halt als Ladestation.')).toBeChecked();
+  await panel.getByLabel('Vorkonditionierung wird im Auto angezeigt.').click();
+  await expect(panel.getByLabel('Vorkonditionierung wird im Auto angezeigt.')).toBeChecked();
   await expect(panel).toContainText('Vorkonditionierung bestätigt');expect(sends).toBe(1);
   await expect(panel.getByRole('link',{name:'Ladeplan exportieren',exact:true})).toHaveAttribute('href','/api/trips/tour-test/charging-plan/export');
 });

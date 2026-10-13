@@ -3903,5 +3903,40 @@
     "en": "Route retrieval interval while the group trip is open",
     "nl": "Interval voor route-opvragen bij een geopende groepsrit",
     "de-AT": "Routenabfrage-Takt bei offener Gruppenfahrt"
+  },
+  "ABRP-Excel-Export oder eine GPX-/CSV-Datei mit benannten Stopps und Stationskoordinaten hochladen. TeslaTalk-JSON kann ebenfalls eingelesen werden.": {
+    "en": "Upload an ABRP Excel export or a GPX/CSV file with named stops and station coordinates. TeslaTalk JSON can also be imported.",
+    "nl": "Upload een ABRP-Excel-export of een GPX-/CSV-bestand met benoemde stops en stationscoördinaten. TeslaTalk-JSON kan ook worden ingelezen.",
+    "de-AT": "Lad an ABRP-Excel-Export oder a GPX-/CSV-Datei mit benannten Stopps und Stationskoordinaten hoch. TeslaTalk-JSON geht aa."
+  },
+  "Die Datei konnte nicht gelesen werden.": {
+    "en": "The file could not be read.",
+    "nl": "Het bestand kon niet worden gelezen.",
+    "de-AT": "De Datei hat si ned lesen lassn."
+  },
+  "Bitte eine GPX-, Excel-, CSV-Datei oder einen TeslaTalk-JSON-Export hochladen.": {
+    "en": "Please upload a GPX, Excel, CSV file or a TeslaTalk JSON export.",
+    "nl": "Upload een GPX-, Excel-, CSV-bestand of een TeslaTalk-JSON-export.",
+    "de-AT": "Lad bitte a GPX-, Excel-, CSV-Datei oder an TeslaTalk-JSON-Export hoch."
+  },
+  "Bitte genau eine Routentabelle in der Excel-Datei verwenden.": {
+    "en": "Please use exactly one route table in the Excel file.",
+    "nl": "Gebruik precies één routetabel in het Excel-bestand.",
+    "de-AT": "Bitte genau ane Routentabelle in da Excel-Datei verwenden."
+  },
+  "Die Tabelle benötigt eine Spalte Wegpunkt/Name und Stationskoordinaten oder Google-Maps-Links.": {
+    "en": "The table needs a Waypoint/Name column and station coordinates or Google Maps links.",
+    "nl": "De tabel heeft een kolom Wegpunt/Naam en stationscoördinaten of Google-Maps-links nodig.",
+    "de-AT": "De Tabelle braucht a Wegpunkt/Name-Spalte und Stationskoordinaten oder Google-Maps-Links."
+  },
+  "Für einen Tabellenstopp fehlen eindeutige Stationskoordinaten. Breitengrad und Längengrad ergänzen; Namen werden nicht automatisch geocodiert.": {
+    "en": "A table stop lacks explicit station coordinates. Add latitude and longitude; names are not automatically geocoded.",
+    "nl": "Bij een tabelstop ontbreken duidelijke stationscoördinaten. Voeg breedte- en lengtegraad toe; namen worden niet automatisch gegeocodeerd.",
+    "de-AT": "Bei an Tabellenstopp fehlen eindeutige Stationskoordinaten. Breitengrad und Längengrad ergänzn; Namen werdn ned automatisch geocodiert."
+  },
+  "Die Routentabelle ist ungültig oder zu groß. Bitte einen Plan mit benannten Stopps und Koordinaten verwenden.": {
+    "en": "The route table is invalid or too large. Please use a plan with named stops and coordinates.",
+    "nl": "De routetabel is ongeldig of te groot. Gebruik een plan met benoemde stops en coördinaten.",
+    "de-AT": "De Routentabelle is ungültig oder z groß. Nimm bitte an Plan mit benannten Stopps und Koordinaten."
   }
 }

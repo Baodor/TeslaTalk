@@ -15,7 +15,9 @@ export default function ChargingPlan({tripId,userId,leader,active,finished,drive
   async function upload(file:File) {
     if(busy)return;setBusy(true);setError('');
     try {if(file.size>500000)throw new Error(t('Die Datei darf höchstens 500 KB groß sein.'));
-      setPreview(await api(`/api/trips/${tripId}/charging-plan/preview`,'POST',{filename:file.name,content:await file.text()}));
+      const binary=file.name.toLowerCase().endsWith('.xlsx');
+      const content=binary?await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(new Error(t('Die Datei konnte nicht gelesen werden.')));reader.readAsDataURL(file);}):await file.text();
+      setPreview(await api(`/api/trips/${tripId}/charging-plan/preview`,'POST',{filename:file.name,content,encoding:binary?'base64':'text'}));
     }catch(error){setError((error as Error).message);}finally{setBusy(false);}
   }
   async function save(remove=false) {
@@ -48,9 +50,9 @@ export default function ChargingPlan({tripId,userId,leader,active,finished,drive
   const ownConfirmation=plan?.confirmations?.find(row=>row.user_id===userId&&row.version===plan.version&&row.stop_index===plan.current_stop);
   return <section className="panel charging-plan" aria-label={t('Gemeinsamer Ladeplan')}>
     <div className="panel-heading"><BatteryCharging size={21}/><h3>{t('Gemeinsamer Ladeplan')}</h3></div>
-    <p>{t('ABRP-Plan als GPX mit benannten Stopps exportieren und hier hochladen. Ein TeslaTalk-JSON-Export kann ebenfalls eingelesen werden.')}</p>
+    <p>{t('ABRP-Excel-Export oder eine GPX-/CSV-Datei mit benannten Stopps und Stationskoordinaten hochladen. TeslaTalk-JSON kann ebenfalls eingelesen werden.')}</p>
     <p className="hint">{t('Die Gruppe erhält denselben nächsten Halt. Tesla berechnet den Abschnitt selbst. Koordinaten allein bestätigen keine Ladestation oder Vorkonditionierung.')}</p>
-    {leader&&!finished&&<label className="field"><span><Upload size={16}/> {t('Routen-Datei hochladen')}</span><input type="file" accept=".gpx,.json" disabled={busy} onChange={event=>{const file=event.target.files?.[0];if(file)void upload(file);event.target.value='';}}/></label>}
+    {leader&&!finished&&<label className="field"><span><Upload size={16}/> {t('Routen-Datei hochladen')}</span><input type="file" accept=".gpx,.json,.xlsx,.csv" disabled={busy} onChange={event=>{const file=event.target.files?.[0];if(file)void upload(file);event.target.value='';}}/></label>}
     {preview&&<div className="plan-preview"><h4>{t('Import vor dem Speichern prüfen')}</h4><label className="field"><span>{t('Name des Ladeplans')}</span><input value={preview.title} maxLength={200} onChange={event=>setPreview({...preview,title:event.target.value})}/></label>
       {preview.stops.map((stop,index)=><div className="plan-stop" key={index}><strong>{index+1}.</strong><label className="field"><span>{t('Name des Stopps')}</span><input value={stop.name} maxLength={200} onChange={event=>edit(index,'name',event.target.value)}/></label>
         <label className="field"><span>{t('Art des Stopps')}</span><select value={stop.kind} onChange={event=>edit(index,'kind',event.target.value)}><option value="charging">{t('Ladestation')}</option><option value="waypoint">{t('Zwischenstopp')}</option><option value="destination">{t('Ziel')}</option></select></label>

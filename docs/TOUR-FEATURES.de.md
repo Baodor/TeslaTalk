@@ -2,7 +2,7 @@
 
 ## Standort ohne Tesla-GPS-Abfragen
 
-1. In der aktiven Fahrt wählt jeder Fahrer sein Auto und erlaubt den Standortzugriff im Handy-/Fahrzeugbrowser. Fahrer-GPS ist zunächst eingeschaltet; der Knopf **Standort stoppen** beendet die Freigabe. Die Auswahl bleibt auf diesem Gerät für diese Fahrt gespeichert. Ein PC ohne brauchbares GPS ist keine geeignete Fahrzeugquelle.
+1. In der aktiven Fahrt wählt jeder Fahrer sein Auto und erlaubt den Standortzugriff im Handy-/Fahrzeugbrowser. Fahrer-GPS ist zunächst eingeschaltet; der Knopf **Standortfreigabe stoppen** beendet die Freigabe. Die Auswahl bleibt auf diesem Gerät für diese Fahrt gespeichert. Ein PC ohne brauchbares GPS ist keine geeignete Fahrzeugquelle.
 2. Das eigene ausgewählte Auto erhält die Browserposition. Mitfahrer können optional ihren persönlichen Standort teilen, haben aber keine Fahrzeugrechte. Zwei Geräte eines Fahrers werden nach dem jüngsten echten Messzeitpunkt behandelt.
 3. GPS-Messwerte werden höchstens alle zehn Sekunden übertragen. Die App fragt bei unveränderter Position weiterhin nach frischen Messwerten. Es gibt keinen automatischen Tesla-GPS-Fallback und keine erfundenen Akkudaten.
 4. Auf der Karte **Gruppe**, **Ich** oder **Aus** wählen. Manuelles Verschieben/Zoomen pausiert das Folgen kurz. Nach 90 Sekunden ohne frischen Messwert wird ein Auto grau; nach fünf Minuten wird seine Live-Position entfernt. Aufgezeichnete Fahrthistorie bleibt privat.

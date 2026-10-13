@@ -92,3 +92,5 @@ Diese Checkliste ergänzt automatisierte Backend-, Browser- und Containerprüfun
 - [ ] An jedem echten Tesla prüfen, ob die konkrete Station als **Ladestation** erkannt wird und ob **Vorkonditionierung** angezeigt wird. Erst dann entsprechende Rückmeldung setzen; fehlende Erkennung bleibt unbestätigt. Sowohl Supercharger als auch mindestens einen unterstützten Fremdlader testen.
 - [ ] Nächsten Halt senden, Stationsanzeige erneut prüfen. Plan-/Fahrzeugwechsel entfernt alte Bestätigungen. Nicht freigegebene Fahrzeuge, Mitfahrer, Zuschauer und beendete Fahrten können keine Befehle senden.
 - [ ] Verbindung beim Senden unterbrechen: Auftragsstatus lesen und Auto prüfen, keine automatische Doppelübertragung. Danach ausdrücklich erneut freigeben, wenn ein weiterer Versuch gewünscht ist.
+
+- [ ] Einen echten aktuellen ABRP-Excel-Export hochladen: benannte Stationen, Reihenfolge und Koordinaten/Stationslinks prüfen. Fehlen Koordinaten, Latitude/Longitude-Spalten ergänzen. Nicht enthaltene Stationen/Referenzen werden nicht erfunden. Excel mit mehreren Routentabellen oder übergroßen entpackten Daten wird abgewiesen.

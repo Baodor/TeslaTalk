@@ -14,8 +14,14 @@ export function unlockSounds() {
     void context!.resume().then(notify).catch(notify);
   } catch {notify();}
 }
-document.addEventListener('pointerdown',unlockSounds,{capture:true});
-document.addEventListener('keydown',unlockSounds,{capture:true});
+const unlockFromGesture=(event:Event)=>{
+  // The explicit sound button manages its own activation. Unlocking before
+  // its click can change the displayed toggle and accidentally turn it off.
+  if(event.target instanceof Element&&event.target.closest('[data-alert-sound-control]'))return;
+  unlockSounds();
+};
+document.addEventListener('pointerdown',unlockFromGesture,{capture:true});
+document.addEventListener('keydown',unlockFromGesture,{capture:true});
 export function setSounds(value:boolean) {
   enabled=value;
   try {localStorage.setItem('teslatalk-alert-sound',value?'on':'off');} catch {}

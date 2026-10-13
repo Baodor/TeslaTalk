@@ -135,3 +135,53 @@ def test_trip_ending_mid_batch_stops_further_vehicle_commands(owner,monkeypatch)
     assert len(sent)==1
     assert owner.post(root+'/charging-plan/send',json=command).status_code==403
     assert len(sent)==1
+
+
+def test_csv_table_preview_uses_explicit_coordinates_and_preserves_charger_place_id(owner):
+    ride=trip(owner);root='/api/trips/'+ride['id']
+    csv='Wegpunkt;Breitengrad;Längengrad;Ladedauer;Link\nIONITY Teststation;50.1;8.7;00:20;https://www.google.com/maps/search/?api=1&query=50.1,8.7&query_place_id=ChIJ_Test\nHamburg;53.55;10;00:00;\n'
+    response=owner.post(root+'/charging-plan/preview',json={'filename':'ABRP.csv','content':csv})
+    assert response.status_code==200,response.text
+    assert response.json()['stops'][0]['kind']=='charging'
+    assert response.json()['stops'][0]['google_place_id']=='ChIJ_Test'
+    assert response.json()['stops'][1]['kind']=='destination'
+    assert not db.one('SELECT * FROM charging_plans')
+
+
+def excel_file(*,linked=True,entity=False):
+    import base64,io
+    from zipfile import ZipFile
+    data=io.BytesIO()
+    with ZipFile(data,'w') as archive:
+        archive.writestr('xl/workbook.xml','<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="ABRP" sheetId="1" r:id="rId1"/></sheets></workbook>')
+        archive.writestr('xl/_rels/workbook.xml.rels','<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>')
+        archive.writestr('xl/worksheets/sheet1.xml',('''<!DOCTYPE worksheet [<!ENTITY x "unsafe">]>''' if entity else '')+'''<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Wegpunkt</t></is></c><c r="B1" t="inlineStr"><is><t>Ladedauer</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>Test Supercharger</t></is></c><c r="B2"><v>20</v></c></row></sheetData><hyperlinks><hyperlink ref="A2" r:id="rId2"/></hyperlinks></worksheet>''')
+        if linked:archive.writestr('xl/worksheets/_rels/sheet1.xml.rels','<Relationships><Relationship Id="rId2" Target="https://www.google.com/maps/search/?api=1&amp;query=50.1,8.7&amp;query_place_id=ChIJ_Excel_Test" TargetMode="External"/></Relationships>')
+    return base64.b64encode(data.getvalue()).decode()
+
+
+def test_excel_preview_reads_station_hyperlink_without_fetching_it(owner,monkeypatch):
+    import httpx
+    async def no_network(*args,**kwargs):raise AssertionError('Import fetched a link')
+    monkeypatch.setattr(httpx.AsyncClient,'get',no_network)
+    ride=trip(owner)
+    response=owner.post('/api/trips/'+ride['id']+'/charging-plan/preview',json={'filename':'ABRP.xlsx','encoding':'base64','content':excel_file()})
+    assert response.status_code==200,response.text
+    stop=response.json()['stops'][0]
+    assert stop['latitude']==50.1 and stop['longitude']==8.7 and stop['kind']=='charging'
+    assert stop['google_place_id']=='ChIJ_Excel_Test'
+
+
+@pytest.mark.parametrize('content',[excel_file(linked=False),excel_file(entity=True),'not-base64'])
+def test_excel_without_coordinates_or_with_invalid_xml_is_rejected(owner,content):
+    ride=trip(owner)
+    assert owner.post('/api/trips/'+ride['id']+'/charging-plan/preview',json={'filename':'ABRP.xlsx','encoding':'base64','content':content}).status_code==422
+
+
+def test_excel_archive_size_limit_is_checked_before_decompression(owner):
+    import base64,io
+    from zipfile import ZipFile,ZIP_DEFLATED
+    data=io.BytesIO()
+    with ZipFile(data,'w',compression=ZIP_DEFLATED) as archive:archive.writestr('xl/huge.xml',b'x'*2_000_001)
+    ride=trip(owner)
+    assert owner.post('/api/trips/'+ride['id']+'/charging-plan/preview',json={'filename':'bad.xlsx','encoding':'base64','content':base64.b64encode(data.getvalue()).decode()}).status_code==422

@@ -1,6 +1,6 @@
 # Gemeinsame Ladepläne und ABRP
 
-Stand: 13. Oktober 2026. Import, Vorschau, JSON-Rückexport und Übertragung des nächsten gemeinsamen Halts sind implementiert. Eine komplette native Tesla-Zwischenzielliste und das automatische Auslesen sämtlicher Tesla-Ladehalte sind weiterhin offen.
+Stand: 13. Oktober 2026. Excel-/CSV-/GPX-Import, Vorschau, JSON-Rückexport und Übertragung des nächsten gemeinsamen Halts sind implementiert. Eine komplette native Tesla-Zwischenzielliste und das automatische Auslesen sämtlicher Tesla-Ladehalte sind weiterhin offen.
 
 ## Datei hochladen
 
@@ -8,12 +8,15 @@ Unter **Fahrt → Karte → Gemeinsamer Ladeplan** lädt der Fahrtleiter eine Da
 
 | Format | Inhalt |
 | --- | --- |
+| ABRP Excel (.xlsx) / CSV | Routentabelle mit Wegpunkt/Name und expliziten Latitude/Longitude-Spalten oder Google-Maps-Stationslinks mit Zielkoordinaten; genau eine Excel-Tabelle |
 | GPX | Genau eine Route mit benannten `rtept`-Stopps oder eine geordnete Liste benannter `wpt`-Wegpunkte; Koordinaten verpflichtend |
 | TeslaTalk JSON | Der eigene verlustfreie Export mit `title` und `stops`; kein beliebiges proprietäres ABRP-JSON |
 
-Maximal 500 KB und 50 Stopps. Reine `trkpt`-Tracks werden abgewiesen: Straßenpunkte sind keine sicheren Ladehalte. XML-Entitäten werden nicht aufgelöst; URLs werden beim Import nicht geöffnet. Falls dein ABRP-Export nur einen Track oder keine benannten Ladehalte enthält, ist er für diesen Import ungeeignet. Das konkrete Exportangebot hängt von ABRP-Version und Konto ab; eine Menüfolge wird hier nicht vorausgesetzt.
+Maximal 500 KB und 50 Stopps. Reine `trkpt`-Tracks werden abgewiesen: Straßenpunkte sind keine sicheren Ladehalte. XML-Entitäten werden nicht aufgelöst; URLs werden beim Import nicht geöffnet. Falls dein ABRP-Export nur einen Track oder keine benannten Ladehalte enthält, ist er für diesen Import ungeeignet. ABRP bietet **Nach Excel exportieren** an (siehe [offizielle Oberflächentexte](https://github.com/Iternio-Planning-AB/abrp-translations/blob/master/de.json)). Diesen Export in TeslaTalk hochladen. Fehlen eindeutige Koordinaten/Stationslinks, Breitengrad/Längengrad in der Tabelle ergänzen; Namen werden nicht automatisch geocodiert. Unser Parser unterstützt das Standard-XLSX-Format samt Zell-Hyperlinks und zwischengespeicherten Werten; ein echter Export deiner aktuellen ABRP-Version muss noch getestet werden. GPX ist ein zusätzliches Austauschformat; eine native ABRP-GPX-Exportfunktion wird hier nicht vorausgesetzt.
 
 Die Vorschau zeigt Reihenfolge, Namen, Koordinaten, Stationstyp und vorhandene Adresse/Google-Places-ID. Bekannte Stationsnamen dienen nur als Vorschlag für den Typ: vor dem Speichern prüfen und nötigenfalls korrigieren. Eine echte Places-ID kann ergänzt werden; keine ID erfinden. **Geprüften Ladeplan speichern** speichert nur Daten und sendet keinen Fahrzeugbefehl. **Ladeplan exportieren** erstellt einen TeslaTalk-JSON-Export, der dieselben Stationen und Referenzen wieder einlesen kann.
+
+Excel-/CSV-Spalten `Wegpunkt`/`Waypoint`/`Name`, `Breitengrad`/`Latitude`, `Längengrad`/`Longitude`, `Ladedauer`/`Charge duration`, `Adresse`/`Address` und vorhandene Stationslinks werden gelesen. Formeln werden nicht ausgeführt und externe Links nicht geöffnet. Größenlimits gelten auch für die entpackten Excel-Daten.
 
 GPX-Erweiterungen `google_place_id`/`googleplaceid`, `operator` und `address` werden übernommen. Das eigene JSON enthält beispielsweise:
 

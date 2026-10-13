@@ -636,6 +636,7 @@ async def plan_route(trip_id:str,body:route_planning.RoutePlan,identity:Identity
         if route_planning.car(trip_id,body.planner_user_id)['id'] != vehicle['id']:
             raise HTTPException(409,'Planungsfahrzeug wurde gewechselt. Bitte erneut planen.')
         db.execute('UPDATE charging_plans SET current_stop=NULL WHERE trip_id=?',(trip_id,))
+        await hub.broadcast(trip_id,{'type':'charging_plan','charging_plan':charging_plans.snapshot(trip_id)})
         db.execute('INSERT INTO trip_planners VALUES (?,?,?) ON CONFLICT(trip_id) DO UPDATE SET user_id=excluded.user_id,vehicle_id=excluded.vehicle_id',(trip_id,body.planner_user_id,vehicle['id']))
         leader_car = route_planning.car(trip_id,trip['leader_id'])
         db.execute('INSERT INTO route_followers(trip_id,user_id,vehicle_id,accepted_at) VALUES (?,?,?,?) ON CONFLICT(trip_id,user_id) DO NOTHING',(trip_id,trip['leader_id'],leader_car['id'],sent_at))
@@ -668,6 +669,7 @@ async def adopt_vehicle_route(trip_id:str,user_id:str,identity:Identity=Depends(
         if navigation['status'] != 'active' or time.time()-navigation['updated_at'] > 300:
             raise HTTPException(409,'Dieses Auto liefert derzeit keine aktuelle aktive Navigation.')
         db.execute('UPDATE charging_plans SET current_stop=NULL WHERE trip_id=?',(trip_id,))
+        await hub.broadcast(trip_id,{'type':'charging_plan','charging_plan':charging_plans.snapshot(trip_id)})
         db.execute('INSERT INTO trip_planners VALUES (?,?,?) ON CONFLICT(trip_id) DO UPDATE SET user_id=excluded.user_id,vehicle_id=excluded.vehicle_id',(trip_id,user_id,vehicle['id']))
         db.execute('INSERT INTO trip_navigation VALUES (?,?,?) ON CONFLICT(trip_id) DO UPDATE SET vehicle_id=excluded.vehicle_id,data=excluded.data',(trip_id,vehicle['id'],json.dumps(navigation)))
         await route_planning.distribute(trip)
@@ -1099,8 +1101,9 @@ def preview_charging_plan(trip_id:str,body:charging_plans.Upload,identity:Identi
 async def save_charging_plan(trip_id:str,body:charging_plans.Plan,identity:Identity=Depends(current_user)):
     editable_charging_plan(trip_id,identity)
     async with route_planning.lock(trip_id):
-        editable_charging_plan(trip_id,identity)
+        trip=editable_charging_plan(trip_id,identity)
         result=charging_plans.save(trip_id,body)
+        await route_planning.broadcast(trip)
     await hub.broadcast(trip_id,{'type':'charging_plan','charging_plan':result})
     return result
 
@@ -1109,10 +1112,11 @@ async def save_charging_plan(trip_id:str,body:charging_plans.Plan,identity:Ident
 async def remove_charging_plan(trip_id:str,identity:Identity=Depends(current_user)):
     editable_charging_plan(trip_id,identity)
     async with route_planning.lock(trip_id):
-        editable_charging_plan(trip_id,identity)
+        trip=editable_charging_plan(trip_id,identity)
         with db.connect() as connection:
             for table in ('charging_plans','charging_confirmations','trip_planners','trip_navigation'):
                 connection.execute(f'DELETE FROM {table} WHERE trip_id=?',(trip_id,))
+        await route_planning.broadcast(trip)
     await hub.broadcast(trip_id,{'type':'charging_plan','charging_plan':None})
     return {'ok':True}
 
