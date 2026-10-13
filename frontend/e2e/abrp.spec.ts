@@ -21,7 +21,7 @@ async function fixture(page:Page,leader=true) {
 const plan={title:'Computed plan',source:'abrp',origin:{name:'Start',latitude:49.87,longitude:8.65,kind:'waypoint'},route_points:[[49.87,8.65],[51,9],[53.55,10]],distance_km:500,duration_minutes:300,
   stops:[{name:'IONITY station',latitude:51,longitude:9,kind:'charging',operator:'IONITY',address:'',google_place_id:'ChIJ_Verified',charger_id:42,arrival_soc:25,departure_soc:80,charge_minutes:20},
   {name:'Hamburg',latitude:53.55,longitude:10,kind:'destination',operator:'',address:'',google_place_id:null}]};
-async function fill(page:Page){const panel=page.getByRole('region',{name:'ABRP-Ladeplanung'});await panel.getByLabel('Fahrzeugmodell in ABRP',{exact:true}).selectOption(typecode);await panel.getByLabel('Start',{exact:true}).fill('Darmstadt');await panel.getByLabel('Ziel',{exact:true}).fill('Hamburg');return panel;}
+async function fill(page:Page){const panel=page.getByRole('region',{name:'ABRP-Ladeplanung'});await panel.getByRole('combobox',{name:'Fahrzeugmodell in ABRP',exact:true}).selectOption(typecode);await panel.getByLabel('Start',{exact:true}).fill('Darmstadt');await panel.getByLabel('Ziel',{exact:true}).fill('Hamburg');return panel;}
 
 test('ABRP tab selects limiting car, exact model, multiple networks and preserves real station references',async({page})=>{
   const trip=await fixture(page);let posts=0,saves=0,commands=0;let submitted:any;
@@ -37,7 +37,7 @@ test('ABRP tab selects limiting car, exact model, multiple networks and preserve
   const preview=page.getByRole('region',{name:'Gemeinsamer Ladeplan'});await expect(preview.getByLabel('Google-Places-ID (optional)').first()).toHaveValue('ChIJ_Verified');
   expect(submitted).toMatchObject({planner_user_id:'abrp-friend',typecode,departure_soc:45,network_ids:[85,86],exclusive:true,costs_confirmed:true});expect(submitted.destinations.map((row:any)=>row.value)).toEqual(['Darmstadt','Kassel','Hamburg']);
   expect(posts).toBe(1);expect(saves).toBe(0);expect(commands).toBe(0);await expect(preview.locator('.leaflet-container')).toBeVisible();
-  await preview.getByRole('button',{name:'Geprüften Ladeplan speichern',exact:true}).click();expect(saves).toBe(1);expect(commands).toBe(0);
+  await preview.getByRole('button',{name:'Geprüften Ladeplan speichern',exact:true}).click();await expect(preview.getByRole('heading',{name:'Computed plan',exact:true})).toBeVisible();expect(saves).toBe(1);expect(commands).toBe(0);
   await expect(preview).toContainText('Ankunftsakku 25%');await preview.getByRole('button',{name:'Diesen Halt an die freigegebenen Autos senden',exact:true}).first().click();await expect.poll(()=>commands).toBe(1);
 });
 

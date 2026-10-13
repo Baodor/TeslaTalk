@@ -17,7 +17,7 @@ export default function ChargingPlan({tripId,userId,leader,active,finished,drive
   const [result,setResult]=useState<any>(null),[uncertain,setUncertain]=useState<string|null>(null);
   async function upload(file:File) {
     if(busy)return;setBusy(true);setError('');
-    try {if(file.size>500000)throw new Error(t('Die Datei darf höchstens 500 KB groß sein.'));
+    try {const json=file.name.toLowerCase().endsWith('.json');if(file.size>(json?900000:500000))throw new Error(t(json?'Die JSON-Datei darf höchstens 900 KB groß sein.':'Die Datei darf höchstens 500 KB groß sein.'));
       const binary=file.name.toLowerCase().endsWith('.xlsx');
       const content=binary?await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(new Error(t('Die Datei konnte nicht gelesen werden.')));reader.readAsDataURL(file);}):await file.text();
       setPreview(await api(`/api/trips/${tripId}/charging-plan/preview`,'POST',{filename:file.name,content,encoding:binary?'base64':'text'}));

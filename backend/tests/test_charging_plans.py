@@ -193,3 +193,18 @@ def test_table_maps_links_never_infer_a_charger_from_viewport_or_route_origin():
     assert station_url('https://www.google.com/maps/dir/Start/End/data=!3d49.1!4d8.2!3d50.1!4d8.7') is None
     assert station_url('https://www.google.com/maps/dir/?api=1&origin=49.1,8.2&destination=50.1,8.7')==(50.1,8.7,None)
     assert station_url('https://www.google.com/maps/place/Charger/data=!3d50.1!4d8.7')==(50.1,8.7,None)
+
+
+def test_large_computed_route_export_reimports_all_points_and_station_references(owner):
+    ride=trip(owner);root='/api/trips/'+ride['id']
+    points=[[-89.123456,-179.123456]]*20000
+    proposal={'title':'Large computed plan','source':'abrp','stops':[{'name':'Charger','latitude':-89.123456,'longitude':-179.123456,'kind':'charging','google_place_id':'ChIJ_Real_Reference','charger_id':42}],
+              'origin':{'name':'Start','latitude':-89,'longitude':-179},'route_points':points,'distance_km':1000,'duration_minutes':800}
+    assert owner.put(root+'/charging-plan',json=proposal).status_code==200
+    exported=owner.get(root+'/charging-plan/export')
+    assert 500000<len(exported.content)<900000
+    imported=owner.post(root+'/charging-plan/preview',json={'filename':'teslatalk-route.json','content':exported.text})
+    assert imported.status_code==200,imported.text
+    assert imported.json()['route_points']==points
+    assert imported.json()['stops'][0]['google_place_id']=='ChIJ_Real_Reference'
+    assert imported.json()['source']=='abrp'

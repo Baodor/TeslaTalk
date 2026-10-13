@@ -95,7 +95,7 @@ DETAILS.update({'request_toilet': ('Fahrt und Pausen',
                     'Historie. Ende/Widerruf geben 404.'),
  'preview_charging_plan': ('Ladeplanung',
                            'Hochgeladene Excel-/CSV-/GPX-Stopp-Liste oder TeslaTalk-JSON-Datei zur Prüfung einlesen.',
-                           'Nur Fahrtleiter. Maximal 500 KB Datei/50 benannte Stopps; Excel-Inhalt base64 mit encoding=base64, Textdateien encoding=text. Keine externen Abrufe, keine XML-Entities, kein '
+                           'Nur Fahrtleiter. Maximal 500 KB Datei/50 benannte Stopps; TeslaTalk-JSON mit Routenlinie bis 900 KB. Excel-Inhalt base64 mit encoding=base64, Textdateien encoding=text. Keine externen Abrufe, keine XML-Entities, kein '
                            'Speichern und keine Tesla-Befehle.'),
  'save_charging_plan': ('Ladeplanung',
                         'Geprüften gemeinsamen Ladeplan speichern.',

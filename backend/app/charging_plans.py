@@ -66,7 +66,7 @@ class Plan(BaseModel):
 
 class Upload(BaseModel):
     filename: str = Field(min_length=1,max_length=200)
-    content: str = Field(min_length=1,max_length=700_000)
+    content: str = Field(min_length=1,max_length=900_000)
     encoding: Literal['text','base64'] = 'text'
 
 
@@ -93,7 +93,7 @@ def parse_upload(upload):
         if extension in ('xlsx','csv'):
             from .route_uploads import table_plan
             return Plan.model_validate(table_plan(upload)).model_dump()
-        if upload.encoding!='text' or len(upload.content.encode())>500_000:raise ValueError()
+        if upload.encoding!='text' or len(upload.content.encode())>(900_000 if extension=='json' else 500_000):raise ValueError()
         if extension=='json':
             document=json.loads(upload.content)
             if not isinstance(document,dict):raise ValueError()

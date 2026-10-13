@@ -4308,5 +4308,10 @@
     "en": "Plan shared charging stops and coordinate breaks. Immich albums are next on the roadmap.",
     "nl": "Plan samen laadstops en stem pauzes af. Immich-albums staan als volgende op de roadmap.",
     "de-AT": "Zamm Ladestopps planan und Pausn ausmachn. Immich-Albn san als Nächstes dran."
+  },
+  "Die JSON-Datei darf höchstens 900 KB groß sein.": {
+    "en": "The JSON file must not exceed 900 KB.",
+    "nl": "Het JSON-bestand mag maximaal 900 KB groot zijn.",
+    "de-AT": "Die JSON-Datei derf höchstens 900 KB groß sein."
   }
 }
