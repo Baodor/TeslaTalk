@@ -9,7 +9,7 @@ from .test_passenger_tesla import guest_trip
 
 
 @pytest.mark.parametrize('viewer',['driver','passenger'])
-def test_group_viewer_receives_all_driver_cars_when_their_browsers_are_closed(owner,monkeypatch,viewer):
+def test_group_viewer_sees_all_shared_browser_car_positions_without_paid_gps_polling(owner,monkeypatch,viewer):
     guest,ride,_=guest_trip(owner)
     friend=new_driver('Offline map driver')
     assert friend.post('/api/trips/join',json={'pin':ride['pin']}).status_code==200
@@ -30,7 +30,9 @@ def test_group_viewer_receives_all_driver_cars_when_their_browsers_are_closed(ow
     assert fetched==[]  # No open group: no new paid vehicle polling.
     hub.rooms[ride['id']]={object():uid}
     asyncio.run(main.background_cycle(0))
-    assert set(fetched)=={user['id'] for user in users} and len(fetched)==2
+    assert fetched==[]
+    for index,client in enumerate((owner,friend)):
+        assert client.post('/api/trips/'+ride['id']+'/samples',json={'source':'browser_vehicle','latitude':49+index,'longitude':8.65}).status_code==200
     for client in (owner,friend,guest):
         rows=client.get('/api/trips/'+ride['id']).json()['participants_detail']
         cars=[row for row in rows if row['role']=='driver']

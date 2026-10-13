@@ -1,6 +1,6 @@
 # Routenplanung in der Gruppe
 
-Der gemeinsame Ladeablauf ist noch nicht vollständig implementiert: TeslaTalk überträgt aktuell Zieladressen, keine identischen Ladehalte. Diese Grenze wird auch in der Oberfläche und im API-Export angezeigt.
+TeslaTalk kann Ziele und importierte Ladepläne abschnittsweise verteilen. Der Tourleiter sendet jeweils den nächsten gemeinsamen Halt; jeder Tesla berechnet diesen Abschnitt selbst. Native vollständige Ladehaltefolgen werden nicht aus dem Tesla exportiert und die Vorkonditionierung wird nur nach sichtbarer Prüfung im Auto bestätigt. [Ladeplan-Import](CHARGING-PLANS.de.md).
 
 ## Ablauf
 
@@ -15,10 +15,11 @@ Der gemeinsame Ladeablauf ist noch nicht vollständig implementiert: TeslaTalk �
 
 | Information | Quelle / Grenze |
 | --- | --- |
-| Akku, geschätzte Reichweite, Standort | Normale Tesla Fleet API; nach Tesla-Login mit freigegebenen Datenrechten |
+| Akku, geschätzte Reichweite | Zwischengespeicherte Tesla-/Telemetriewerte, Navigationsabfrage oder bewusster Datenabruf; Browser-GPS liefert diese Werte nicht |
+| Live-Fahrzeugstandort | Ausschließlich Fahrer-Browser-GPS des ausgewählten Autos, kein Tesla-GPS-Fallback |
 | Navigationsziel, Reststrecke, Restzeit, Akku bei Ankunft | `vehicle_data.drive_state.active_route_*`; Auto muss erreichbar sein, Felder können fehlen |
 | Tatsächlicher Straßenverlauf | Separater Fleet-Telemetry-Stream mit `RouteLine`, in TeslaTalk über persönlichen API-Schlüssel importiert |
-| Geplante vollständige Ladehaltefolge | Wird von dieser Integration nicht exportiert oder übertragen; `RouteLine` allein ersetzt diese Information nicht |
+| Gemeinsame Ladehaltefolge | Geprüfter GPX-/TeslaTalk-JSON-Import; geordnete Liste in TeslaTalk, nächster Halt einzeln übertragbar. Keine automatische Extraktion aus Tesla RouteLine |
 | Straßenvergleich | Mit aktuellen vollständigen Linien und vergleichbaren Startpunkten: geometrische Toleranz 200 m. Sonst unbestätigt; keine Garantie exakter Identität |
 
 Eine Tesla-Anmeldung ist ein Berechtigungsnachweis, kein vollständiger Datenstream. TeslaTalk deployt noch keinen Fleet-Telemetry-Empfänger. Die [offiziellen Datenfelder](https://developer.tesla.com/docs/fleet-api/fleet-telemetry/available-data) beschreiben, welche Daten über Telemetrie und welche über `vehicle_data` kommen.
@@ -32,10 +33,8 @@ Eine Tesla-Anmeldung ist ein Berechtigungsnachweis, kein vollständiger Datenstr
 
 Die App exponiert ausschließlich `navigation_request`, keine generische Fahrzeugbefehls-API. Schlafende Autos werden nicht geweckt. Befehle stoppen am Fahrtende oder bei Widerruf/Fahrzeugwechsel. Es werden keine echten Befehle bei den automatisierten Tests gesendet.
 
-## Gleiche Ladehalte und ABRP
+## Gemeinsame Ladehalte und ABRP
 
-Tesla dokumentiert `navigation_waypoints_request` für eine Zwischenzielliste. Der in der Tesla-App sichtbare Ladeplan ist über die hier verwendeten öffentlichen Lesefelder jedoch nicht als vollständige Liste dokumentiert. Ladenetz-Auswahl und ein eigener gemeinsamer Ladeplan über ABRP sind mögliche nächste Schritte. [CHARGING-PLANS.de.md](CHARGING-PLANS.de.md) trennt die vorhandenen Funktionen vom Integrationsentwurf, erläutert die Kosten/Zugänge und enthält Tests für die tatsächliche Zwischenstopp-Übertragung.
+Unter **Gemeinsamer Ladeplan** kann der Fahrtleiter eine Datei hochladen und die Stationen prüfen. Bestehende Fahrerzustimmungen gelten auch für den nächsten gemeinsamen Halt. Der Importmodus bewahrt Stationsreferenzen und verhindert, dass normale Routenupdates diese durch reine Koordinaten ersetzen. Jeder Fahrer bestätigt Stationszuordnung und angezeigte Vorkonditionierung im eigenen Tesla. [Formate, Ablauf und Grenzen](CHARGING-PLANS.de.md).
 
-## API und Tests
-
-Die Endpunkte und der vollständige LLM-Kopiertext stehen unter **Mein Profil → Persönliche API-Schlüssel → Alle API-Endpunkte & LLM-Kopierfunktion**. Details zum Telemetrieimport enthält [API.md](API.md); manuelle Prüfung am Server und Auto: [Testcheckliste](TEST-CHECKLIST.de.md).
+Bei geöffneter privater Gruppe wird nur die Navigation zustimmender Autos mit Planungsfahrzeug standardmäßig alle 600 Sekunden abgerufen. Browserpositionen aktualisieren die Karte unabhängig davon. Ein manueller Routenabruf bleibt möglich.

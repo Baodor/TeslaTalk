@@ -20,6 +20,7 @@ def delete_user(user_id, confirmed_username):
         remaining = set()
         deadline = time.time()+125  # Existing self-hosted LiveKit join tokens live <=120 s.
         for uid in removed:
+            connection.execute('DELETE FROM charging_batches WHERE trip_id IN (SELECT trip_id FROM members WHERE user_id=?)',(uid,))
             connection.execute('DELETE FROM control_batches WHERE leader_id=? OR trip_id IN (SELECT trip_id FROM members WHERE user_id=?)',(uid,uid))
             for row in connection.execute('SELECT trip_id FROM members WHERE user_id=?',(uid,)):
                 if row['trip_id'] not in owned:

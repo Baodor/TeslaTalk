@@ -179,11 +179,24 @@ async def _fetch_vehicle(user_id, vehicle):
 
 
 async def fetch_navigation(user_id, vehicle):
-    current = db.one('SELECT * FROM vehicles WHERE id=? AND user_id=?', (vehicle['id'],user_id)) or vehicle
-    cached = json.loads(current['data']).get('navigation')
-    if cached and cached.get('source') == 'telemetry' and time.time()-cached['updated_at'] <= TELEMETRY_MAX_AGE:
-        return cached
-    return (await fetch_vehicle(user_id, current)).get('navigation') or empty_navigation()
+    async with vehicle_lock(user_id,vehicle['id']):
+        current = db.one('SELECT * FROM vehicles WHERE id=? AND user_id=?', (vehicle['id'],user_id)) or vehicle
+        data = json.loads(current['data'])
+        cached = data.get('navigation')
+        if cached and cached.get('source') == 'telemetry' and time.time()-cached['updated_at'] <= TELEMETRY_MAX_AGE:
+            return cached
+        if time.time()-max(data.get('navigation_fetched_at',0),data.get('fleet_fetched_at',0)) < 60:
+            return cached or empty_navigation()
+        user = db.one('SELECT * FROM users WHERE id=?',(user_id,))
+        if user['provider']=='demo':
+            return cached if cached and cached.get('source')!='telemetry' else demo_navigation()
+        vin=quote(vehicle['id'].split(':')[-1],safe='')
+        payload=await request(user_id,f'/api/1/vehicles/{vin}/vehicle_data',{'endpoints':'drive_state;location_data;charge_state'})
+        fresh=normalize(payload)
+        data.update({key:fresh.get(key) for key in ('battery_pct','range_km','navigation','updated_at','source')})
+        data['navigation_fetched_at']=time.time()
+        db.execute('UPDATE vehicles SET data=? WHERE id=?',(json.dumps(data),vehicle['id']))
+        return data['navigation']
 
 
 def navigation_command_access(trip_id,user_id,vehicle_id):
@@ -194,11 +207,12 @@ def navigation_command_access(trip_id,user_id,vehicle_id):
         raise HTTPException(403,'Dieser Fahrer hat die Zielübernahme nicht erlaubt.')
 
 
-async def send_navigation(user_id, vehicle, destination, trip_id):
+async def send_navigation(user_id, vehicle, destination, trip_id, guard=None):
     """Only navigation_request, using the signed proxy when it is configured."""
     if vehicle['user_id'] != user_id:
         raise HTTPException(404,'Fahrzeug nicht gefunden.')
     navigation_command_access(trip_id,user_id,vehicle['id'])
+    if guard:guard()
     user = db.one('SELECT * FROM users WHERE id=?',(user_id,))
     if user['provider'] == 'demo':
         data = json.loads(vehicle['data'])
@@ -210,6 +224,7 @@ async def send_navigation(user_id, vehicle, destination, trip_id):
     if settings.command_proxy_url and not settings.command_proxy_ready:
         raise HTTPException(503,'Die Tesla-Befehlsanbindung benötigt eine gültige HTTPS-Proxy-Adresse ohne Zugangsdaten oder URL-Pfad.')
     token = await token_for(user_id)
+    if guard:guard()
     navigation_command_access(trip_id,user_id,vehicle['id'])
     vin = quote(vehicle['id'].split(':')[-1],safe='')
     body = {'type':'share_ext_content_raw','value':{'android.intent.extra.TEXT':destination},'locale':'de-DE','timestamp_ms':str(int(time.time()*1000))}
@@ -217,6 +232,7 @@ async def send_navigation(user_id, vehicle, destination, trip_id):
     verify = ssl.create_default_context(cafile=settings.command_proxy_ca) if settings.command_proxy_url and settings.command_proxy_ca else True
     async with httpx.AsyncClient(timeout=25,verify=verify,follow_redirects=False) as client:
         navigation_command_access(trip_id,user_id,vehicle['id'])
+        if guard:guard()
         response = await client.post(endpoint+f'/api/1/vehicles/{vin}/command/navigation_request',headers={'Authorization':'Bearer '+token},json=body)
     if response.status_code != 200:
         message = {401:'Tesla-Konto erneut verbinden.',403:'Tesla-Befehlsberechtigung vehicle_cmds oder virtueller Fahrzeugschlüssel fehlt.',408:'Das Fahrzeug schläft oder ist nicht erreichbar.',429:'Tesla-Anfragelimit erreicht.'}.get(response.status_code,'Tesla hat das Navigationsziel nicht angenommen.')
@@ -231,5 +247,6 @@ async def send_navigation(user_id, vehicle, destination, trip_id):
     # The received command is not proof the in-car route has been recalculated.
     data = json.loads(db.one('SELECT data FROM vehicles WHERE id=?',(vehicle['id'],))['data'])
     data['fleet_fetched_at'] = 0
+    data['navigation_fetched_at'] = 0
     db.execute('UPDATE vehicles SET data=? WHERE id=?',(json.dumps(data),vehicle['id']))
     return {'accepted':True,'demo':False}

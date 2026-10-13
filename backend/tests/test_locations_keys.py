@@ -15,19 +15,19 @@ def test_personal_and_vehicle_positions_stay_independent(owner):
     # Browser clients cannot use this endpoint to overwrite any vehicle metric.
     assert owner.post(root+'/samples', json={'source':'browser', 'latitude':50, 'longitude':8, 'battery_pct':1, 'odometer_km':999}).status_code == 200
     member = next(row for row in owner.get(root).json()['participants_detail'] if row['id'] == uid)
-    assert member['data']['latitude'] == 51
-    assert member['data']['longitude'] == 9
+    assert member['data']['latitude'] is None
+    assert member['data']['longitude'] is None
     assert member['data']['battery_pct'] == 72
     assert member['personal_location']['latitude'] == 50
     latest = db.one("SELECT * FROM samples WHERE trip_id=? AND source='browser' ORDER BY id DESC", (created['id'],))
     assert latest['battery_pct'] is None and latest['odometer_km'] is None
     assert owner.post(root+'/samples', headers=headers, json={'source':'telemetry','battery_pct':70}).status_code == 200
     member = owner.get(root).json()['participants_detail'][0]
-    assert member['data']['latitude'] == 51 and member['data']['battery_pct'] == 70
+    assert member['data']['latitude'] is None and member['data']['battery_pct'] == 70
     assert member['personal_location']['latitude'] == 50
     assert owner.delete(root+'/location').status_code == 200
     member = owner.get(root).json()['participants_detail'][0]
-    assert member['personal_location'] is None and member['data']['latitude'] == 51
+    assert member['personal_location'] is None and member['data']['latitude'] is None
     assert len(owner.get(root+'/history').json()) == 3
 
 

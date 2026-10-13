@@ -37,14 +37,31 @@ function MapTiles() {
   </>;
 }
 
-function Controls({ positions, focusKey }: { positions: [number, number][]; focusKey: string }) {
+function Controls({ positions, live, own, focusKey }: { positions: [number, number][]; live:[number,number][]; own:[number,number]|null; focusKey: string }) {
   const map = useMap();
   const fitted = useRef<string | null>(null);
+  const [mode,setMode]=useState<'group'|'me'|'off'>('group');
+  const paused=useRef(0),automatic=useRef(false);
   function center() {
     if (positions.length === 1) map.setView(positions[0], 13, { animate: false });
     else if (positions.length > 1) map.fitBounds(positions, { padding: [60, 60], maxZoom: 13, animate: false });
   }
   useEffect(() => { if (fitted.current !== focusKey && positions.length) { center(); fitted.current = focusKey; } }, [positions, focusKey]);
+  useEffect(()=>{
+    const pause=()=>{if(!automatic.current)paused.current=Date.now()+5000;};
+    map.on('dragstart',pause);map.on('zoomstart',pause);
+    function follow() {
+      if(mode==='off'||Date.now()<paused.current)return;
+      automatic.current=true;
+      try {
+        if(mode==='me'&&own)map.panTo(own,{animate:false});
+        else if(mode==='group'&&live.length===1)map.panTo(live[0],{animate:false});
+        else if(mode==='group'&&live.length>1)map.fitBounds(live,{padding:[60,60],maxZoom:13,animate:false});
+      }finally{automatic.current=false;}
+    }
+    follow();const timer=setInterval(follow,1500);
+    return()=>{clearInterval(timer);map.off('dragstart',pause);map.off('zoomstart',pause);};
+  },[map,mode,JSON.stringify(live),JSON.stringify(own)]);
   useEffect(() => {
     let active = true;
     const container = map.getContainer();
@@ -52,15 +69,22 @@ function Controls({ positions, focusKey }: { positions: [number, number][]; focu
     observer.observe(container);
     return () => { active = false; observer.disconnect(); };
   }, [map]);
-  return <button className="map-center" title={t("Gruppe zentrieren")} aria-label={t("Gruppe zentrieren")} onClick={center}><LocateFixed size={19} /></button>;
+  return <div className="map-follow"><button title={t('Gruppe zentrieren')} aria-label={t('Gruppe zentrieren')} aria-pressed={mode==='group'} onClick={()=>{paused.current=0;center();setMode('group');}}><LocateFixed size={19}/></button>
+    {own&&<button aria-pressed={mode==='me'} onClick={()=>{paused.current=0;map.setView(own,Math.max(map.getZoom(),13),{animate:false});setMode('me');}}>{t('Meinen Standort verfolgen')}</button>}
+    <button aria-pressed={mode==='off'} onClick={()=>setMode(mode==='off'?'group':'off')}>{mode==='off'?t('Karte mitlaufen lassen'):t('Kartenverfolgung pausieren')}</button></div>;
 }
 
-export default function TripMap({ participants, traces = [], navigation = null }: { participants: Participant[]; traces?: any[]; navigation?: NavigationData | null }) {
+export default function TripMap({ participants, traces = [], navigation = null,ownUserId }: { participants: Participant[]; traces?: any[]; navigation?: NavigationData | null;ownUserId?:string }) {
+  const [now,setNow]=useState(Date.now()/1000);
+  useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()/1000),10000);return()=>clearInterval(timer);},[]);
   const present = participants.filter(p => p.left_at === null);
   const driverVehicles = present.filter(p => p.role === 'driver' && p.vehicle_id);
   const vehicles = driverVehicles.filter(p => Number.isFinite(p.data.latitude) && Number.isFinite(p.data.longitude));
   const missingVehicles = driverVehicles.filter(p => !vehicles.includes(p));
   const people = present.filter(p => p.personal_location && Number.isFinite(p.personal_location.latitude) && Number.isFinite(p.personal_location.longitude));
+  const live: [number,number][]=[...vehicles.filter(p=>!p.data.position_updated_at||now-p.data.position_updated_at<90).map(p=>[p.data.latitude,p.data.longitude] as [number,number]),...people.map(p=>[p.personal_location!.latitude,p.personal_location!.longitude] as [number,number])];
+  const mine=vehicles.find(p=>p.id===ownUserId),myPerson=people.find(p=>p.id===ownUserId);
+  const own:[number,number]|null=mine?[mine.data.latitude,mine.data.longitude]:myPerson?[myPerson.personal_location!.latitude,myPerson.personal_location!.longitude]:null;
   const color = (id: string) => colors[Math.max(0, participants.findIndex(p => p.id === id)) % colors.length];
   const route = navigation?.status === 'active' ? navigation : null;
   const destination: [number, number] | null = route && route.destination_latitude !== null && route.destination_longitude !== null
@@ -85,17 +109,17 @@ export default function TripMap({ participants, traces = [], navigation = null }
         <Popup><strong>{t("Navigationsziel des Planungsfahrzeugs")}</strong><br />{route?.destination || t("Ziel aus dem Auto")}</Popup>
       </Marker>}
       {route && route.route_points.length > 1 && <Polyline positions={route.route_points} pathOptions={{ color: '#76d1b1', weight: 4, opacity: 0.9 }} />}
-      {vehicles.map(p => <Marker key={'vehicle:' + p.id} position={[p.data.latitude, p.data.longitude]} icon={car(color(p.id))} title={'Fahrzeug: ' + p.display_name}>
-        <Popup><strong>{t("Fahrzeug · ")}{p.vehicle_name || p.display_name}</strong><br />{p.display_name} · {p.model}<br />{p.data.battery_pct ?? '—'} {t(" % Akku")}</Popup>
+      {vehicles.map(p => <Marker key={'vehicle:' + p.id} position={[p.data.latitude, p.data.longitude]} icon={car(p.data.position_updated_at&&now-p.data.position_updated_at>90?'#73818a':color(p.id))} title={'Fahrzeug: ' + p.display_name}>
+        <Popup><strong>{t("Fahrzeug · ")}{p.vehicle_name || p.display_name}</strong><br />{p.display_name} · {p.model}<br />{p.data.battery_pct ?? '—'} {t(" % Akku")}<br/>{t('Standortquelle: Fahrer-Browser')}{p.data.position_updated_at&&<><br/>{t('Aktualisiert: ')}{new Date(p.data.position_updated_at*1000).toLocaleTimeString(getLocale())}</>}</Popup>
       </Marker>)}
       {people.map(p => <Marker key={'person:' + p.id} position={[p.personal_location!.latitude, p.personal_location!.longitude]} icon={person(p, color(p.id))} zIndexOffset={500} title={'Person: ' + p.display_name}>
         <Popup><strong>{t("Person · ")}{p.display_name}</strong><br />{p.role === 'passenger' ? t("Mitfahrer") : t("Fahrer")} {t(" · geteilter Browser-Standort")}<br />{t("Aktualisiert: ")}{new Date(p.personal_location!.updated_at * 1000).toLocaleTimeString(getLocale())}</Popup>
       </Marker>)}
       {Object.entries(grouped).map(([key, trace]) => <Polyline key={key} positions={trace.points} pathOptions={{ color: color(trace.userId), weight: 3, dashArray: trace.personal ? '5 7' : undefined }} />)}
-      <Controls positions={positions} focusKey={markerKey+':'+(route ? `${route.destination}:${destination}:${route.route_points.length}` : 'group')} />
+      <Controls positions={positions} live={live} own={own} focusKey={markerKey+':'+(route ? `${route.destination}:${destination}:${route.route_points.length}` : 'group')} />
     </MapContainer>
     <div className="map-label"><span className="status-dot" /> {t(" NUR DEINE FAHRT")}</div>
     {(positions.length > 0 || traces.length > 0) && <div className="map-legend"><span className="legend-person" />{t("Person")}<span className="legend-car" />{t("Fahrzeug")}{destination && <><span className="legend-destination" />{t("Ziel")}</>}{route && route.route_points.length > 1 && <><span className="legend-route" />{t("Route")}</>}</div>}
-    {!positions.length && !traces.length && <div className="map-empty"><MapPin size={22} /><span>{t("Noch keine Standortdaten.")}<small>{t("Fahrzeugdaten abrufen oder deinen persönlichen Standort teilen. Das geht auch als Mitfahrer.")}</small></span></div>}
-  </div>{driverVehicles.length > 0 && <p className="hint" aria-live="polite">{t("Fahrzeugpositionen: ")}{vehicles.length} {t(" von ")}{driverVehicles.length}.{missingVehicles.length > 0 && <> {t(" Position fehlt für ")}{missingVehicles.map(p => p.vehicle_name || p.display_name).join(', ')}{t(". Tesla muss Standortdaten liefern; ein geteilter Handy-Standort ersetzt keine Fahrzeugposition.")}</>}</p>}</>;
+    {!positions.length && !traces.length && <div className="map-empty"><MapPin size={22} /><span>{t("Noch keine Standortdaten.")}<small>{t('Bitte Browser-Standort aktivieren und die Seite während der Fahrt geöffnet lassen.')}</small></span></div>}
+  </div>{driverVehicles.length > 0 && <p className="hint" aria-live="polite">{t("Fahrzeugpositionen: ")}{vehicles.length} {t(" von ")}{driverVehicles.length}.{missingVehicles.length > 0 && <> {t(" Position fehlt für ")}{missingVehicles.map(p => p.vehicle_name || p.display_name).join(', ')}. {t('Bitte Browser-Standort aktivieren und die Seite während der Fahrt geöffnet lassen.')}</>}</p>}</>;
 }

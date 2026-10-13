@@ -44,6 +44,8 @@ def localize_payload(payload, language):
         'friend_request': ('{name} wants to connect with you.','{name} wil contact met je maken.','{name} mag si mit dir verbinden.'),
         'trip_invite': ('You are invited to the trip “{title}”.','Je bent uitgenodigd voor de rit ‘{title}’.','Du bist zur Fahrt „{title}“ eingladn.'),
         'chat': ('{name}: new message in “{title}”.','{name}: nieuw bericht in ‘{title}’.','{name}: neue Nachricht in „{title}“.'),
+        'toilet_request': ('{name} needs a toilet stop.','{name} vraagt om een toiletpauze.','{name} muss aufs Heisl.'),
+        'toilet_departure': ('We are taking the exit now for a toilet break. Please follow the group.','We nemen nu de afslag voor een toiletpauze. Volg de groep.','Ma fahrn jetzt für a Heislpause ab. Bitte da Partie folgen.'),
     }
     template = templates.get(data.pop('message_key',None))
     parameters = data.pop('parameters',{})

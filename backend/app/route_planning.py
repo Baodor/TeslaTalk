@@ -7,7 +7,7 @@ import time
 import httpx
 from fastapi import HTTPException
 from pydantic import BaseModel, Field
-from . import db, fleet, push
+from . import db, fleet, push, charging_plans
 from .navigation import empty_navigation
 from .realtime import hub
 
@@ -80,7 +80,7 @@ def overview(trip):
     rows = db.all_rows("SELECT u.id AS user_id,u.display_name,m.vehicle_id,v.name AS vehicle_name,v.model,v.data FROM members m JOIN users u ON u.id=m.user_id JOIN vehicles v ON v.id=m.vehicle_id AND v.user_id=m.user_id WHERE m.trip_id=? AND m.role='driver' AND m.left_at IS NULL",(trip['id'],))
     for row in rows:
         cached = json.loads(row.pop('data'))
-        measured = db.one("SELECT battery_pct,range_km,captured_at AS updated_at FROM samples WHERE trip_id=? AND user_id=? AND source!='browser' ORDER BY id DESC LIMIT 1",(trip['id'],row['user_id']))
+        measured = db.one("SELECT battery_pct,range_km,captured_at AS updated_at FROM samples WHERE trip_id=? AND user_id=? AND source NOT IN ('browser','browser_vehicle') ORDER BY id DESC LIMIT 1",(trip['id'],row['user_id']))
         if not trip['finished_at'] and time.time() < trip['ends_at'] and (not measured or (cached.get('updated_at') or 0) > measured['updated_at']):
             measured = {key:cached.get(key) for key in ('battery_pct','range_km','updated_at')}
         row.update(measured or {'battery_pct':None,'range_km':None,'updated_at':None})
@@ -91,7 +91,7 @@ def overview(trip):
     def minimum(field):
         known = [row for row in fresh if row[field] is not None]
         return min(known,key=lambda row:row[field])['user_id'] if known else None
-    return {'planner_user_id':selected,'vehicles':rows,'transfer_mode':'destination_only','comparison_tolerance_m':200,
+    return {'planner_user_id':selected,'vehicles':rows,'transfer_mode':'next_stop' if charging_plans.active_plan(trip['id']) else 'destination_only','comparison_tolerance_m':200,
             'recommendations':{'lowest_battery_user_id':minimum('battery_pct'),'lowest_range_user_id':minimum('range_km')},
             'charging_stops_confirmed':False}
 
@@ -159,6 +159,10 @@ async def broadcast(trip):
 
 
 async def distribute(trip):
+    if charging_plans.active_plan(trip['id']):
+        await charging_plans.distribute_current(trip)
+        await broadcast(trip)
+        return
     nav = snapshot(trip)
     if not nav or nav['status'] != 'active' or time.time()-nav['updated_at'] > 300:
         await broadcast(trip)

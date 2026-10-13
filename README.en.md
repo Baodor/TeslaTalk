@@ -87,7 +87,7 @@ Dates, application messages and offline recovery use the selected language. With
 - Passengers sign in with their **name and personal PIN**; no Tesla account is required.
 - Limit passenger access and photo uploads to the scheduled trip period. **Uploads are disabled after the trip ends.**
 - After the trip, create a separate, revocable **read-only link** that lets external visitors view the trip overview and album.
-- Public links never grant access to private chat, Tesla accounts or live locations.
+- Post-trip links omit live locations. A separate live viewer link exposes shared driver positions only, with no private chat or Tesla account access.
 
 ### Mobile PWA development
 
@@ -97,11 +97,9 @@ TeslaTalk starts as a website that can be installed on the home screen. Open you
 - Integrate shared charging stops and Immich into the PWA.
 - Make changing servers easier directly in the interface later.
 
-#### Idea: “I need a toilet break” 🚻
+#### Toilet break 🚻
 
-A button in the app tells the **trip leader** which participant needs a toilet break. The leader can find and select a suitable **rest area on the map**. TeslaTalk adds it as a shared waypoint and **updates the route for every participant**.
-
-The notification is a request for a break. The leader chooses the rest area. Multiple requests could later be combined into one shared stop.
+Active participants can request a toilet stop. The leader gets a visible alert and, after browser interaction, a tone. Confirming departure creates a group notice, chat message and tone. This does not automatically select a rest area; send a desired destination separately using navigation or the charging plan.
 
 ## Technical direction
 
@@ -186,10 +184,10 @@ Server Push delivery is tested with mocked push services; the browser consent te
 
 ## Known limitations
 
-- Vehicle polling runs every **120 seconds** by default for connected drivers in active trips. Personal browser location is sent at most once every ten seconds while sharing is enabled. This is not Fleet Telemetry streaming and may incur Tesla API charges.
+- Live car markers use the driver’s browser GPS only, at most every ten seconds, with no paid Tesla GPS fallback. The browser must remain open; locked phones may suspend updates. Markers become stale after 90 seconds and expire after five minutes. Navigation still comes from cars: default **600 seconds** (`NAVIGATION_POLL_INTERVAL`), the planning car and consenting cars in active watched groups. Explicit reads and commands may incur Tesla charges. Public viewers never trigger Tesla reads.
 - Consumption requires measured energy and odometer counters from a suitable integration. V1 does not estimate consumption from battery percentage.
-- Charging planning, synchronized routes, music control and Immich are **roadmap features**. QR guest access works already; photo uploads are not connected yet.
-- Microphone and browser availability while driving must be verified for the vehicle, region and firmware. V1 sends no vehicle commands.
+- Reviewed GPX stop imports, lossless TeslaTalk JSON export/import and consented next-stop transfers are implemented. Automatic Tesla charging-itinerary extraction, ABRP share-link/Planning API retrieval, music control and Immich remain open.
+- Microphone and browser availability while driving must be checked for the vehicle, region and firmware. Real destination/comfort commands require explicit activation and per-car consent.
 - The initial admin page is an operational overview. Server configuration uses environment variables.
 - One server runs one FastAPI process with SQLite. Multiple instances and distributed scaling come later.
 
@@ -198,3 +196,9 @@ Server Push delivery is tested with mocked push services; the browser consent te
 TeslaTalk is licensed under the [GNU Affero General Public License v3.0](LICENSE). Modified versions offered as a network service must make their corresponding source code available to users.
 
 TeslaTalk is not affiliated with, endorsed or supported by Tesla, Inc. Tesla and vehicle names are trademarks of their respective owners.
+
+## Browser GPS, live viewers and toilet breaks
+
+During an active trip, drivers share browser GPS for their selected car; passengers can share a separate personal position. Follow **Group**, **Me** or turn following off. The leader can create, rotate or revoke a read-only live viewer link/QR. **I need a toilet stop** alerts the leader; confirming departure shows a group notice, a persistent chat message and a browser tone. Sound needs browser interaction; background delivery depends on allowed Web Push and OS settings.
+
+Upload GPX containing named route stops/waypoints, review stop types and station references, then send one shared stop at a time to consenting cars. Superchargers and other chargers are supported as destinations. Coordinates or HTTP acceptance do not prove Tesla charger recognition or battery preconditioning: each driver confirms the in-car display. A full native waypoint itinerary is not sent by the current official proxy. ABRP share links and arbitrary proprietary JSON exports are not imported. [Guide](docs/CHARGING-PLANS.de.md) · [Acceptance checklist](docs/TEST-CHECKLIST.de.md).

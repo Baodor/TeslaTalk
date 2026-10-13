@@ -51,7 +51,7 @@ The machine-readable schema is at **`GET /api/openapi.json`**, after a user sign
 | POST | `/api/guest/{invite_key}/login` | Guest name/PIN sign-in inside the scheduled interval |
 | GET / POST | `/api/trips/{trip_id}/messages` | Read persistent chat / post before trip end |
 | POST | `/api/trips/{trip_id}/samples` | Store an active-trip personal browser position (drivers and passengers) or vehicle telemetry (drivers only) |
-| DELETE | `/api/trips/{trip_id}/location` | Stop sharing the current user's live person marker; vehicle position and history remain |
+| DELETE | `/api/trips/{trip_id}/location` | Stop current browser car/person sharing with source/device selection; recorded history remains |
 | GET | `/api/trips/{trip_id}/history` | Samples with `after_id` and `limit` pagination |
 | GET | `/api/trips/{trip_id}/export` | Stream all captured samples as JSON |
 | GET | `/api/trips/{trip_id}/ranking` | Measured consumption, captured duration and average speed |
@@ -147,11 +147,11 @@ The private navigation refresh and selected trip refresh share the existing vehi
 
 Real destination commands require `TESLA_NAVIGATION_COMMANDS=true`, Tesla-app authorization for `vehicle_cmds`, and reconnecting existing Tesla accounts so the new scope is granted. The only outbound navigation command is Tesla's REST `navigation_request`; this app does not expose arbitrary vehicle commands or wake up cars. If a command proxy is configured, destination requests use its verified HTTPS endpoint and optional CA; an invalid proxy is rejected and failures never cause a direct Fleet API retry. Tesla's official proxy forwards `navigation_request` through REST rather than converting it into a signed vehicle command. Public source information: [Tesla commands](https://developer.tesla.com/docs/fleet-api/endpoints/vehicle-commands) and [OAuth scopes](https://developer.tesla.com/docs/fleet-api/authentication/overview). The physical-car behavior and app/virtual-key requirements must be verified on the installation.
 
-**Identical charging stops are not implemented.** `route_overview.transfer_mode` is `destination_only`, and `charging_stops_confirmed` is `false`. Every Tesla calculates its own path and charging stops from the received destination. RouteLine alone is not an export of a complete ordered charging itinerary. No guessed waypoints or charging stops are sent. The desired identical group charging schedule needs an additional source/export of the planned stops and a supported transfer mechanism.
+**Charging plans use next-stop transfer.** Normal destination sharing has `transfer_mode: destination_only`. An active imported charging plan has `transfer_mode: next_stop`; all consenting cars receive the selected next stop with available station references. `charging_stops_confirmed` stays false: command acceptance is not proof of native itinerary identity or preconditioning.
 
 After consent, fresh route data can produce a deviation report: a different destination over 200 m away, negative reported battery-at-arrival, or a full-line geometric discrepancy beyond 200 m. Missing full lines, stale data and starts more than 1 km apart remain `unconfirmed`, not identical. The geometry comparison uses bounded sampling; it is not a proof of exact identity. A consenting driver can explicitly report `{"reason":"cannot_follow"}` or `{"reason":"different_route"}` through `POST .../route/problem`. The leader sees the affected member and receives one opt-in push per changed problem, with no location or destination in the notification. `POST .../route/adopt/{user_id}` selects that driver's fresh active navigation as the new reference. Public links still omit route data.
 
-Selected routes update on the existing vehicle poll cycle while any trip participant is connected, or through telemetry import. All driver cars are polled even when their owners' browsers are closed; unwatched trips are not polled. Finished trips keep the last snapshot privately; no more commands or live navigation updates are sent. All command access is checked again after token refresh, including membership, selected car, consent and trip expiry.
+Selected routes update every `NAVIGATION_POLL_INTERVAL` (default 600 seconds) for consenting current cars in active groups with a planning car and at least one private connected participant, or through telemetry import. Live GPS uses browser samples independently. Public viewers never trigger polling. Finished trips retain the last private route snapshot and allow no live commands.
 
 Own profiles and authorized trip participants include an optional `avatar_url`. The server accepts HTTPS image URLs from the Tesla account response; only the account owner can refresh their photo. Initials appear when Tesla supplies no image or the image fails to load. Public trip summaries omit these photos and participant identities.
 
@@ -160,6 +160,27 @@ The personal push test accepts the current browser's `PushSubscription.toJSON()`
 The personal push test returns `accepted_by_provider: true`, `provider_accepted_at` (Unix seconds) and `provider_elapsed_ms` when the push service accepts the message. Acceptance does not prove display on the device. Expired device subscriptions return HTTP 410 and require reactivation. API keys cannot send push tests; passenger access ends with the trip.
 
 The separate admin broadcast returns `queued_accounts` and `queued_devices`; delivery runs through the persistent outbox. It targets registered devices with valid browser sessions, including installed web apps. Opted-out and expired devices are excluded; guests must have an active trip and are checked again before delivery. Queued counts do not confirm device delivery.
+
+### Browser location, live viewers and pause events
+
+`POST /api/trips/{id}/samples` with `source: "browser_vehicle"` requires a browser session, active driver membership and the driver's current selected car. Send latitude/longitude, optional speed/heading, `captured_at` (Unix seconds, no more than 60 seconds old or 30 seconds ahead) and a stable device ID up to 64 alphanumeric/underscore/hyphen characters. Browser battery/energy fields are stripped. `source: "browser"` remains a separate personal dot, available to passengers. `DELETE .../location?source=browser_vehicle&device_id=...` clears only that device's current fix; personal and car fixes can be stopped independently. Car map coordinates come exclusively from fresh browser fixes, not Fleet/telemetry GPS. Rankings exclude both browser sources.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST / DELETE | `/api/trips/{id}/spectator-link` | Leader creates/rotates or revokes a capability link; may prepare before start |
+| GET | `/api/spectator/{key}` | Public read-only current car positions; no VIN, plates, chat, guest GPS or Tesla photos; expires with trip |
+| POST | `/api/trips/{id}/toilet` | Active member creates one pending pause request; duplicates produce no new event |
+| POST | `/api/trips/{id}/toilet/confirm` | Active leader resolves displayed `request_ids` and creates one group system message |
+| POST | `/api/trips/{id}/charging-plan/preview` | Leader parses supplied `filename`, `content` as named GPX stops or TeslaTalk JSON; no commands |
+| PUT / DELETE | `/api/trips/{id}/charging-plan` | Leader saves reviewed `{title,stops}` / removes plan |
+| GET | `/api/trips/{id}/charging-plan/export` | Authorized member downloads lossless JSON stops |
+| POST | `/api/trips/{id}/charging-plan/send` | Active leader sends `{request_id:UUID,version,stop_index}` to current consenting cars |
+| GET | `/api/trips/{id}/charging-plan/requests/{request_id}` | Leader reads saved result without replaying commands |
+| POST | `/api/trips/{id}/charging-plan/confirm` | Active driver confirms own current stop's charger recognition/preconditioning |
+
+A stop contains `name`, `latitude`, `longitude`, `kind` (`charging`, `waypoint`, `destination`), optional `operator`, `address`, `google_place_id`. Maximum 50 stops/500 KB. Send uses only `navigation_request`, one shared stop at a time, preserving supplied station references. A successful response never proves charger recognition or preconditioning. Manual confirmations contain `version`, `stop_index`, `recognized`, `preconditioning`; they bind the current car and cannot confirm preconditioning without recognition. Import mode prevents ordinary route updates replacing the station with bare coordinates. Arbitrary ABRP JSON and share-link retrieval are not supported. [Guide](CHARGING-PLANS.de.md).
+
+Trip detail adds `pause_requests`, `charging_plan`, and leader-only `spectator_link_active`. A `pause` WebSocket event carries requests and, for a new request, an alert addressed to the leader. Departure uses `type:"message"`, `sound:true`, `message.kind:"toilet_departure"`; the persistent system message remains in chat. `charging_plan` events update the reviewed plan/confirmations. Viewer polling never triggers a Fleet read. Navigation polling defaults to `NAVIGATION_POLL_INTERVAL=600`, the planning car and consenting current cars in active trips and a private connected member; map GPS is independent.
 
 ### Normalized sample
 
@@ -179,7 +200,7 @@ The separate admin broadcast returns `queued_accounts` and `queued_devices`; del
 
 Telemetry samples require a driver's personal Bearer key. `energy_used_kwh` is a **cumulative measured counter**, not energy consumed by this one sample or an estimate from SOC. Odometer is cumulative kilometres. Unknown fields may be omitted; latitude/longitude must come as a pair. A browser sample uses `source: "browser"`, requires latitude and longitude, and can supply only personal location, speed and heading. Drivers and named passengers may share it during their own active trip. It never changes the vehicle's position, energy, SOC or odometer.
 
-Each member in `participants_detail` and WebSocket `participants` has `data` for vehicle state and a separate `personal_location` object (or `null`). Both positions can appear simultaneously on the map. Live personal positions expire after five minutes without updates, disappear when explicitly stopped and are removed at trip end. Recorded browser samples remain in private trip history/export; personal and vehicle traces are drawn separately. Vehicle rankings exclude browser samples and passengers' positions.
+Each private member has `data` for cached vehicle metrics with live browser-car coordinates, and separate `personal_location`. Both browser sources expire after five minutes and are removed at trip end. Browser-car samples remain private vehicle traces, personal samples separate person traces. Both browser sources and passenger positions are excluded from energy rankings.
 
 For a key without an expiry, use `POST /api/keys` with `{"label":"My integration","days":null}`. Creation and listing return `expires_at: null`; fixed lifetimes return a Unix timestamp. The default remains 30 days when `days` is omitted. There is no total key-count cap; creation remains rate limited to prevent abuse. `DELETE /api/keys/{id}` revokes either kind immediately.
 
@@ -189,4 +210,4 @@ Chat returns the latest 100 messages in chronological order. Use `before=<create
 
 WebSocket payloads contain a `type`: `participants`, `message`, `navigation`, `heartbeat`, or `ended`. A navigation event is `{"type":"navigation","navigation":<snapshot or null>}`. Authentication and guest expiry are checked at connection, periodically and before broadcasts. Audio is carried by LiveKit, not this WebSocket.
 
-Photo uploads, Immich administration, arbitrary vehicle commands and synchronized charging itineraries are not implemented. Navigation retrieval, planning-car selection, consented destination sharing, deviation reports and Fleet Telemetry navigation imports are implemented.
+Photo uploads, Immich, full native waypoint itineraries and automatic extraction of Tesla charging-stop lists remain unimplemented. Browser GPS, viewer links, pause requests, reviewed file imports and consented next-stop sharing are implemented.

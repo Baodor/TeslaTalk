@@ -73,6 +73,39 @@ CREATE TABLE IF NOT EXISTS personal_locations (
  updated_at REAL NOT NULL, latitude REAL NOT NULL, longitude REAL NOT NULL, speed_kmh REAL, heading REAL,
  PRIMARY KEY (trip_id,user_id)
 );
+CREATE TABLE IF NOT EXISTS browser_vehicle_locations (
+ trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+ user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ vehicle_id TEXT NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+ updated_at REAL NOT NULL, latitude REAL NOT NULL, longitude REAL NOT NULL, speed_kmh REAL, heading REAL,
+ device_id TEXT,
+ PRIMARY KEY (trip_id,user_id)
+);
+CREATE TABLE IF NOT EXISTS spectator_links (
+ trip_id TEXT PRIMARY KEY REFERENCES trips(id) ON DELETE CASCADE,
+ token_hash TEXT UNIQUE NOT NULL, created_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS toilet_requests (
+ id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+ user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ created_at REAL NOT NULL, resolved_at REAL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS toilet_pending ON toilet_requests(trip_id,user_id) WHERE resolved_at IS NULL;
+CREATE TABLE IF NOT EXISTS charging_plans (
+ trip_id TEXT PRIMARY KEY REFERENCES trips(id) ON DELETE CASCADE,
+ version TEXT NOT NULL, data TEXT NOT NULL, current_stop INTEGER, created_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS charging_batches (
+ trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE, request_id TEXT NOT NULL,
+ payload TEXT NOT NULL, result TEXT NOT NULL, PRIMARY KEY(trip_id,request_id)
+);
+CREATE TABLE IF NOT EXISTS charging_confirmations (
+ trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+ user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ vehicle_id TEXT NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+ version TEXT NOT NULL, stop_index INTEGER NOT NULL, recognized INTEGER NOT NULL,
+ preconditioning INTEGER NOT NULL, updated_at REAL NOT NULL, PRIMARY KEY(trip_id,user_id)
+);
 CREATE TABLE IF NOT EXISTS api_keys (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), token_hash TEXT UNIQUE NOT NULL, label TEXT NOT NULL, expires_at REAL NOT NULL, created_at REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS push_subscriptions (
  endpoint_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id),
@@ -123,6 +156,12 @@ def initialize():
             db.execute('ALTER TABLE users ADD COLUMN last_login_at REAL')
         if 'purpose' not in {row['name'] for row in db.execute('PRAGMA table_info(oauth_states)')}:
             db.execute("ALTER TABLE oauth_states ADD COLUMN purpose TEXT NOT NULL DEFAULT 'driver'")
+        if 'kind' not in {row['name'] for row in db.execute('PRAGMA table_info(messages)')}:
+            db.execute("ALTER TABLE messages ADD COLUMN kind TEXT NOT NULL DEFAULT 'chat'")
+        if 'parameters' not in {row['name'] for row in db.execute('PRAGMA table_info(messages)')}:
+            db.execute("ALTER TABLE messages ADD COLUMN parameters TEXT NOT NULL DEFAULT '{}'")
+        if 'device_id' not in {row['name'] for row in db.execute('PRAGMA table_info(browser_vehicle_locations)')}:
+            db.execute('ALTER TABLE browser_vehicle_locations ADD COLUMN device_id TEXT')
 
 
 def one(sql, args=()):

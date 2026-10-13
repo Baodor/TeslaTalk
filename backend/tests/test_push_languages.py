@@ -90,3 +90,17 @@ def test_legacy_subscription_defaults_to_german(configured,monkeypatch):
     monkeypatch.setattr(push,'webpush',lambda **kwargs:sent.append(kwargs))
     configured.post('/api/push/test',json={'endpoint':data['endpoint']})
     assert json.loads(sent[0]['data'])['title']=='TeslaTalk · Testnachricht'
+
+
+@pytest.mark.parametrize('language,pause_text,departure',[
+    ('en','Karte needs a toilet stop.','We are taking the exit now for a toilet break. Please follow the group.'),
+    ('nl','Karte vraagt om een toiletpauze.','We nemen nu de afslag voor een toiletpauze. Volg de groep.'),
+    ('de-AT','Karte muss aufs Heisl.','Ma fahrn jetzt für a Heislpause ab. Bitte da Partie folgen.'),
+])
+def test_pause_notifications_localize_events_without_rewriting_user_names(language,pause_text,departure):
+    for key,expected in [('toilet_request',pause_text),('toilet_departure',departure)]:
+        payload=json.dumps({'title':'TeslaTalk','body':'fallback','url':'/trip/test','tag':'unique',
+                            'message_key':key,'parameters':{'name':'Karte'}})
+        result=json.loads(push.localize_payload(payload,language))
+        assert result['body']==expected
+        assert 'message_key' not in result and 'parameters' not in result

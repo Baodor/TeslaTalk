@@ -32,7 +32,7 @@ DETAILS = {
     'refresh_navigation': ('Navigation', 'Navigation des eigenen Fahrzeugs ohne Aufwecken abrufen.', 'Navigation-Schema. Importierte Telemetrie bis 120 Sekunden wird bevorzugt, ansonsten vehicle_data mit 60 Sekunden Cache. Fünf manuelle Abrufe pro Minute zusammen mit Fahrzeug-/Fahrtenabruf. Kein öffentliches Teilen.'),
     'import_navigation_telemetry': ('Navigation', 'Navigationssnapshot eines eigenen Fahrzeugs aus einer Fleet-Telemetry-Integration importieren.', 'Navigation-Schema. Vollständiger Snapshot, keine partiellen Updates. RouteLine: Standard-Base64 einer ASCII-Polyline mit Genauigkeit 6, maximal 20.000 Punkte. captured_at: Unixsekunden, höchstens 120 Sekunden alt/30 Sekunden zukünftig; ältere/gleiche Telemetrie gibt 409. Beendet: active=false und Ziel/Kennzahlen/RouteLine weglassen. 30 Importe pro Minute. Freigegebene aktive Fahrten werden aktualisiert.'),
     'import_trip_navigation': ('Navigation', 'Berechnete Navigation des zuvor ausgewählten Planungsfahrzeugs aktualisieren.', 'Navigation-Schema. Fahrtleiter einer aktiven Fahrt. Vor der Auswahl eines Planungsfahrzeugs keine Gruppenroute. Die berechnete Route erscheint automatisch, nicht per manueller Freigabe.'),
-    'accept_route': ('Navigation', 'Automatische Zielübernahme im eigenen Fahrzeug für diese aktive Fahrt erlauben oder nach Fehler erneut versuchen.', 'route_overview. Fahrer-Berechtigung, eigenes aktuelles Mitgliedsfahrzeug; Zustimmung bindet diese Fahrt und dieses Auto. Neue Ziele werden einmalig übernommen. Kein Aufwecken, keine anderen Fahrzeugbefehle. 3 Aktionen/Minute. Tesla plant selbst; gemeinsame Ladestopps werden nicht übertragen.'),
+    'accept_route': ('Navigation', 'Automatische Zielübernahme im eigenen Fahrzeug für diese aktive Fahrt erlauben oder nach Fehler erneut versuchen.', 'route_overview. Fahrer-Berechtigung, eigenes aktuelles Mitgliedsfahrzeug; Zustimmung bindet diese Fahrt und dieses Auto. Neue Ziele werden einmalig übernommen. Kein Aufwecken, keine anderen Fahrzeugbefehle. 3 Aktionen/Minute. Tesla plant selbst. Ein zusätzlich importierter Ladeplan verteilt dieselben nächsten Stopps einzeln; keine vollständige native Tesla-Zwischenzielliste.'),
     'stop_following_route': ('Navigation', 'Automatische Zielübernahme im eigenen Auto widerrufen.', '{ok:true}; weitere Befehle für dieses Auto entfallen. Sichtbarkeit der Gruppenroute bleibt automatisch.'),
     'plan_route': ('Navigation', 'Planungsauto auswählen und Zieladresse zur Berechnung an diesen Tesla senden.', '{command_accepted,demo,route_overview,navigation}. Fahrtleiter und aktive Fahrt erforderlich. Andere Fahrer müssen zuvor ihre Zustimmung für das ausgewählte Auto geben. Eigenes Auto des Fahrtleiters wird bei dieser Aktion ebenfalls zur Zielübernahme angemeldet. Erst eine aktuelle Antwort/Telemetrie wird als Gruppenroute verwendet. Empfehlung separat für geringsten Akku und geringste gemeldete Reichweite; Messwerte älter als fünf Minuten ausgeschlossen.'),
     'adopt_vehicle_route': ('Navigation', 'Als Fahrtleiter die aktuelle Route eines zugestimmten Fahrerfahrzeugs als Gruppenroute übernehmen.', '{navigation,route_overview}; nur aktuelle aktive Navigation, höchstens fünf Minuten alt. Weitere zustimmende Fahrer erhalten das Ziel; der Straßenverlauf und Ladestopps werden nicht erzwungen.'),
@@ -76,9 +76,53 @@ DETAILS = {
     'trip_socket': ('WebSocket', 'Autorisierte Präsenz und Fahrtupdates empfangen.', 'Serverevents: participants (Teilnehmerliste), message (Nachricht), navigation (Snapshot oder null), controls (Komfortfreigaben), heartbeat, ended. Kein Audio. Berechtigung bei Verbindung, regelmäßig und vor Broadcasts geprüft. Schließen: 1008 unerlaubt/abgelaufen, 1009 bei Clientnachrichten über 1.024 Zeichen.'),
     'tesla_public_key': ('Tesla-Registrierung', 'Öffentlichen Tesla-Fahrzeugschlüssel für die Domain lesen.', 'PEM-Datei; 404 ohne eingerichteten öffentlichen Schlüssel. Kein privater Schlüssel.'),
 }
-PUBLIC = {'health','config','tesla_login','tesla_callback','admin_login','admin_callback','logout','demo_login','guest_info','guest_register','guest_login','public_trip','tesla_public_key'}
-DRIVERS = {'profile','refresh_tesla_profile','vehicles','sync_vehicles','select_vehicle','refresh_vehicle','refresh_navigation','import_navigation_telemetry','friends','request_friend','accept_friend','delete_friend','create_trip','join_trip','invite','accept_invite','add_passenger','keys','create_key','delete_key','import_trip_navigation','accept_route','stop_following_route','plan_route','adopt_vehicle_route','report_route_problem'}
-LEADERS = {'invite','add_passenger','finish_trip','share_trip','revoke_share','import_trip_navigation','plan_route','adopt_vehicle_route'}
+DETAILS.update({'request_toilet': ('Fahrt und Pausen',
+                    'Eine Toilettenpause beim Fahrtleiter anfragen.',
+                    'Aktive Mitgliedschaft; pro Benutzer eine offene Anfrage. Echtzeithinweis und Push an den Fahrtleiter, kein '
+                    'Fahrzeugbefehl.'),
+ 'confirm_toilet': ('Fahrt und Pausen',
+                    'Abfahrt zur Toilettenpause für offene Anfragen bestätigen.',
+                    'Nur Fahrtleiter, aktive Fahrt. Einmalige gespeicherte Gruppennachricht, Hinweiston-Ereignis und Push an Teilnehmer. '
+                    'Doppelte Bestätigung sendet nichts erneut.'),
+ 'create_spectator': ('Freigaben',
+                      'Widerrufbaren Live-Zuschauerlink erstellen oder rotieren.',
+                      'Nur Fahrtleiter. Ein zufälliges Leserecht für Fahrer-Browserpositionen, ohne Chat, Kennzeichen, Tesla-Identitäten '
+                      'oder Mitfahrer-GPS. Token wird nur gehasht gespeichert.'),
+ 'revoke_spectator': ('Freigaben', 'Live-Zuschauerlink widerrufen.', 'Nur Fahrtleiter; bisheriger Link verliert sofort sein Leserecht.'),
+ 'view_spectator': ('Freigaben',
+                    'Live-Fahrt über einen gültigen Zuschauerlink lesen.',
+                    'Nur begrenzte Fahrerpositionen und Fahrtinformationen. Keine Anmeldung, keine Fahrzeugbefehle, kein Chat, keine '
+                    'Historie. Ende/Widerruf geben 404.'),
+ 'preview_charging_plan': ('Ladeplanung',
+                           'Hochgeladene GPX-Stopp-Liste oder TeslaTalk-JSON-Datei zur Prüfung einlesen.',
+                           'Nur Fahrtleiter. Maximal 500.000 Zeichen/50 benannte Stopps. Keine externen Abrufe, keine XML-Entities, kein '
+                           'Speichern und keine Tesla-Befehle.'),
+ 'save_charging_plan': ('Ladeplanung',
+                        'Geprüften gemeinsamen Ladeplan speichern.',
+                        'Nur Fahrtleiter, vor Fahrtende. Versionierter Plan mit Namen, Koordinaten und optionaler '
+                        'Google-Places-Stationsreferenz. Keine Befehle beim Speichern.'),
+ 'remove_charging_plan': ('Ladeplanung',
+                          'Importierten Ladeplan und Gruppenreferenz entfernen.',
+                          'Nur Fahrtleiter. Beendet automatische Übernahme; bereits im Auto aktive Navigation wird nicht abgebrochen.'),
+ 'export_charging_plan': ('Ladeplanung',
+                          'Geprüften Ladeplan als wieder importierbares JSON exportieren.',
+                          'Eigene Mitgliedschaft. Nur Titel und Stopps, keine Fahrzeug-IDs, Tokens oder Stationsbestätigungen.'),
+ 'send_charging_stop': ('Ladeplanung',
+                        'Den ausgewählten nächsten Halt an freigegebene Gruppenautos senden.',
+                        'Nur Fahrtleiter, aktive Fahrt. Navigation_request über bestehenden Proxy; kein Aufwecken. UUID und Planversion '
+                        'verhindern Wiederholung/veraltete Ziele. HTTP-Annahme beweist keine Ladestationszuordnung oder '
+                        'Vorkonditionierung.'),
+ 'charging_request_result': ('Ladeplanung',
+                             'Ergebnis einer Stoppübertragung ohne erneuten Befehl lesen.',
+                             'Nur Fahrtleiter. Gespeichertes Ergebnis oder 404; nach unbekanntem Ergebnis tatsächlich am Auto prüfen.'),
+ 'confirm_charging_stop': ('Ladeplanung',
+                           'Eigene Tesla-Ladestationszuordnung und sichtbare Vorkonditionierung melden.',
+                           'Aktiver Fahrer mit eigenem Mitgliedsfahrzeug; Version und aktueller Stopp müssen passen. Manuelle Rückmeldung, '
+                           'kein Heizbefehl und keine automatisch behauptete Erkennung.')})
+
+PUBLIC = {'health','config','tesla_login','tesla_callback','admin_login','admin_callback','logout','demo_login','guest_info','guest_register','guest_login','public_trip','tesla_public_key','view_spectator'}
+DRIVERS = {'confirm_charging_stop','preview_charging_plan','save_charging_plan','remove_charging_plan','send_charging_stop','charging_request_result','profile','refresh_tesla_profile','vehicles','sync_vehicles','select_vehicle','refresh_vehicle','refresh_navigation','import_navigation_telemetry','friends','request_friend','accept_friend','delete_friend','create_trip','join_trip','invite','accept_invite','add_passenger','keys','create_key','delete_key','import_trip_navigation','accept_route','stop_following_route','plan_route','adopt_vehicle_route','report_route_problem'}
+LEADERS = {'invite','add_passenger','finish_trip','share_trip','revoke_share','import_trip_navigation','plan_route','adopt_vehicle_route','confirm_toilet','create_spectator','revoke_spectator','preview_charging_plan','save_charging_plan','remove_charging_plan','send_charging_stop','charging_request_result'}
 
 
 def documented_routes(app):
@@ -163,9 +207,9 @@ def catalog(app):
             'Komfortsteuerung braucht eine separate Zustimmung pro aktiver Fahrt und aktuellem eigenen Fahrerfahrzeug. Nur der Fahrtleiter sendet die sechs definierten Aktionen per Browsersitzung; kein Bearer und keine Mitfahrer. TLS-verified signierter Command-Proxy, vehicle_cmds und virtueller Schlüssel nötig. UUID verhindert erneute Ausführung desselben Auftrags, GET-Auftragsstatus ist rein lesend; nach unklarem Ergebnis tatsächlichen Zustand am Auto prüfen. Keine Türverriegelung/Entriegelung.',
             'QR-Mitfahrer dürfen Tesla ausschließlich für Profilbild und Mail verknüpfen: GET /auth/tesla/passenger?trip_id=<TRIP_ID> mit eigener aktiver QR-Browsersitzung. openid/user_data, keine gespeicherten Tesla-Tokens oder Fahrzeugrechte; QR-Name/PIN und Zugangsende bleiben erhalten. DELETE /api/me/tesla-profile-link entfernt die Verknüpfung.',
             'Benutzerlöschung nur über separate Admin-Sitzung und exakten aktuellen Benutzernamen im Body. Löscht dauerhaft Konto, Zugänge, eigene Daten und geleitete Fahrten samt Gruppendaten und verwaisten QR-Konten. Fremde Fahrten bleiben bestehen. Kein Löschversuch durch Kopieren des API-Katalogs.',
-            'Zuerst wählt der Fahrtleiter anhand Akku/Reichweite ein Planungsauto. Dessen berechnete Route erscheint automatisch für die Gruppe. Weitere Fahrer müssen Zielübernahme im eigenen Auto erlauben. Straßenverlauf/Ladestopps werden damit nicht identisch übernommen; charging_stops_confirmed=false. Ohne vollständige Linien bleibt der Vergleich unconfirmed, mit Linien wird eine geometrische Toleranz von 200 m verwendet. Öffentliche Leselinks enthalten keine Navigation.',
+            'Zuerst wählt der Fahrtleiter anhand Akku/Reichweite ein Planungsauto. Dessen berechnete Route erscheint automatisch für die Gruppe. Weitere Fahrer müssen Zielübernahme im eigenen Auto erlauben. Straßenverlauf/Ladestopps werden damit nicht identisch übernommen; charging_stops_confirmed=false. Ein GPX-/JSON-Ladeplan wird separat geprüft und Halt für Halt gesendet. Stationsreferenzen bleiben erhalten; Vorkonditionierung wird nur als manuelle fahrzeugbezogene Rückmeldung angezeigt. Ohne vollständige Linien bleibt der Vergleich unconfirmed, mit Linien wird eine geometrische Toleranz von 200 m verwendet. Öffentliche Leselinks enthalten keine Navigation.',
             'WebSocket: wss bei HTTPS, ws lokal. Browser senden tt_session und Origin; externe Clients können Bearer-Header setzen. Ohne Origin ist Bearer erforderlich. Events sind Serverupdates; Chat und Messwerte werden über HTTP gesendet.',
-            'Personenstandorte und Fahrzeugdaten getrennt; Live-Browserstandorte verfallen nach fünf Minuten. Historie bleibt intern. Verbrauch braucht echte kumulative Energie-/Kilometerzähler.',
+            'Live-Positionen für Autos kommen ausschließlich aus browser_vehicle und benötigen ein eigenes ausgewähltes Fahrerfahrzeug sowie eine Browsersitzung; browser bleibt ein persönlicher Personenstandort. Batterie und Reichweite werden nicht aus Browser-GPS erfunden. Live-Browserstandorte verfallen nach fünf Minuten. Historie bleibt intern. Verbrauch braucht echte kumulative Energie-/Kilometerzähler.',
             'Immich und Foto-Uploads noch nicht implementiert. album.status=planned und album.url=null bedeuten keine Fotobibliothekanbindung.',
             'Export nur mit statischen Informationen und Schemas. Keine tatsächlichen Tokens, Cookies, PINs, VINs oder Kontodaten. Platzhalter bewusst ersetzen; keine Endpunkte automatisch ausführen.',
         ],

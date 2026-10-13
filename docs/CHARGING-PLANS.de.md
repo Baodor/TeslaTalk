@@ -1,58 +1,60 @@
-# Gemeinsame Ladestopps und ABRP
+# Gemeinsame Ladepläne und ABRP
 
-Stand: 5. Oktober 2026. Dies ist ein Integrationsentwurf; TeslaTalk implementiert derzeit Fahrzeugauswahl, Navigationsabruf und zustimmungsgebundene Zielbefehle. ABRP-Anbindung und Übertragung einer vollständigen Ladehaltefolge sind noch nicht implementiert.
+Stand: 13. Oktober 2026. Import, Vorschau, JSON-Rückexport und Übertragung des nächsten gemeinsamen Halts sind implementiert. Eine komplette native Tesla-Zwischenzielliste und das automatische Auslesen sämtlicher Tesla-Ladehalte sind weiterhin offen.
 
-## Gewünschter Rückimport eines Teilen-Links
+## Datei hochladen
 
-TeslaTalk soll den tatsächlich gespeicherten Plan einschließlich geordneter Ladestopps abrufen. Ein abgelegter Link, ein ausgehender Deep Link oder eine neue Berechnung gilt dafür nicht als Import.
+Unter **Fahrt → Karte → Gemeinsamer Ladeplan** lädt der Fahrtleiter eine Datei hoch. Unterstützt sind:
 
-Die geprüfte [offizielle Iternio-v2-Spezifikation](https://api.iternio.com/swagger-ui/) dokumentiert `GET /abrp/plan/{planId}/request` für die ursprünglichen **Planungsparameter**, mit API-Schlüssel und ABRP-Sitzung. Dieser Aufruf liefert nicht die vollständig berechnete Route eines beliebigen öffentlichen Teilen-Links. `POST /plan` erstellt dagegen einen neuen, gegebenenfalls kostenpflichtigen Plan. Die [ABRP-API-Seite](https://abetterrouteplanner.com/resources/api) nennt OAuth `get_plan`, verweist für die genauen Planinhalte jedoch auf den Anbieter.
+| Format | Inhalt |
+| --- | --- |
+| GPX | Genau eine Route mit benannten `rtept`-Stopps oder eine geordnete Liste benannter `wpt`-Wegpunkte; Koordinaten verpflichtend |
+| TeslaTalk JSON | Der eigene verlustfreie Export mit `title` und `stops`; kein beliebiges proprietäres ABRP-JSON |
 
-Ein öffentlich dokumentierter, hier verifizierter Abrufvertrag für gewöhnliche gespeicherte Teilen-Links liegt noch nicht vor. Deshalb ist der Rückimport offen und wird in TeslaTalk nicht als verfügbar dargestellt. Der nächste Schritt braucht einen konkreten Beispiel-Link zum Prüfen des Linkformats und einen freigegebenen Abruf samt Antwortschema. API-Geheimnisse gehören nur in die lokale Serverkonfiguration, nicht in einen Chat oder einen öffentlich geteilten Link.
+Maximal 500 KB und 50 Stopps. Reine `trkpt`-Tracks werden abgewiesen: Straßenpunkte sind keine sicheren Ladehalte. XML-Entitäten werden nicht aufgelöst; URLs werden beim Import nicht geöffnet. Falls dein ABRP-Export nur einen Track oder keine benannten Ladehalte enthält, ist er für diesen Import ungeeignet. Das konkrete Exportangebot hängt von ABRP-Version und Konto ab; eine Menüfolge wird hier nicht vorausgesetzt.
 
-## Tesla-App: Lesen und Senden sind zwei getrennte Funktionen
+Die Vorschau zeigt Reihenfolge, Namen, Koordinaten, Stationstyp und vorhandene Adresse/Google-Places-ID. Bekannte Stationsnamen dienen nur als Vorschlag für den Typ: vor dem Speichern prüfen und nötigenfalls korrigieren. Eine echte Places-ID kann ergänzt werden; keine ID erfinden. **Geprüften Ladeplan speichern** speichert nur Daten und sendet keinen Fahrzeugbefehl. **Ladeplan exportieren** erstellt einen TeslaTalk-JSON-Export, der dieselben Stationen und Referenzen wieder einlesen kann.
 
-Tesla dokumentiert [`navigation_waypoints_request`](https://developer.tesla.com/docs/fleet-api/endpoints/vehicle-commands) zum Senden einer Zwischenzielliste und `navigation_gps_request` mit Reihenfolgeoption. Das bedeutet noch nicht, dass TeslaTalk die geplanten Ladehalte lesen kann: Die [öffentlichen Fahrzeug-/Telemetriefelder](https://developer.tesla.com/docs/fleet-api/fleet-telemetry/available-data) dokumentieren Navigationsziel und Kennzahlen sowie die Routenlinie, keine vollständige geordnete Ladestoppliste. Aus der Linie können weder sichere Stationszuordnung noch nötige Ladeziele abgeleitet werden. Dass die Tesla-App diese Angaben anzeigt, belegt keine freigegebene Leseschnittstelle für Drittanbieter.
+GPX-Erweiterungen `google_place_id`/`googleplaceid`, `operator` und `address` werden übernommen. Das eigene JSON enthält beispielsweise:
 
-Vor einer Umsetzung der Zwischenstopp-Befehle müssen Payload, Fahrzeugunterstützung und gegebenenfalls signierte Vehicle-Command-Verbindung geprüft werden. Beim geprüften offiziellen [Command-Proxy](https://github.com/teslamotors/vehicle-command/blob/main/pkg/proxy/command.go) fehlt am genannten Datum ein Handler für `navigation_waypoints_request`; der dazugehörige [Pull Request 443](https://github.com/teslamotors/vehicle-command/pull/443) ist offen. Die bestehende TeslaTalk-Verbindung über `navigation_request` ist daher kein Nachweis für Mehrfachstopps. Die API-Dokumentation allein ersetzt den Test im Fahrzeug nicht.
+```json
+{
+  "format": "teslatalk-route",
+  "version": 1,
+  "title": "Gemeinsame Fahrt",
+  "stops": [
+    {"name": "Konkrete Ladestation", "latitude": 50.1, "longitude": 8.7,
+     "kind": "charging", "operator": "", "address": "", "google_place_id": null},
+    {"name": "Ziel", "latitude": 53.55, "longitude": 10,
+     "kind": "destination", "operator": "", "address": "", "google_place_id": null}
+  ]
+}
+```
 
-## ABRP als zusätzliche Planungsquelle
+Dies sind Formatbeispiele, keine geprüften Ladestationskoordinaten.
 
-Die [offizielle ABRP-API-Seite](https://abetterrouteplanner.com/resources/api) unterscheidet diese Wege:
+## An die Autos senden
 
-| Weg | Nutzen für TeslaTalk | Voraussetzung / Grenze |
-| --- | --- | --- |
-| Deep Link zu ABRP | Start, Ziel, Fahrzeugmodell und Ladestand für eine Planung in ABRP vorbelegen | Ein ausgehender Link liefert keinen automatischen Rückimport der berechneten Ladehalte |
-| OAuth mit `get_plan` | Einen vom Nutzer freigegebenen ABRP-Plan importieren | Freigabe/Anwendungszugang bei Iternio nötig; laut Anbieter gekürzter Plan, genaue Inhalte auf Anfrage klären |
-| Planning API v2 | Gemeinsamen Ladeplan im Backend berechnen und strukturiert übernehmen | Separater API-Zugang, Einrichtungskosten und Preis pro Plan; ein kostenloser Telemetrie-Schlüssel ersetzt diesen Zugang nicht |
-| Telemetry API | Mit Einwilligung aktuelle Fahrzeugwerte an ABRP liefern | Optional; Nutzer-Token nötig. Kein Ersatz für die Planning API |
+1. Jeder Fahrer erlaubt **Automatische Zielübernahme in meinem Auto** für sein aktuelles Auto und diese Fahrt. Mitfahrer und reine Zuschauer haben keine Fahrzeugrechte.
+2. Der Fahrtleiter wählt **Diesen Halt an die freigegebenen Autos senden** beim nächsten gemeinsamen Stopp. Sein eigenes Auto wird durch diese ausdrückliche Aktion ebenfalls angemeldet. Alle zustimmenden Autos erhalten denselben Halt als Navigationstext mit Stationsnamen, Adresse und Google-Maps-Link; eine vorhandene Places-ID bleibt erhalten. Supercharger und andere Betreiber können in der Liste stehen.
+3. Jeder Tesla berechnet den Abschnitt selbst. Die App liest die Navigation nach erfolgreichem Senden sowie im sparsamen Routenintervall aus dem Planungsauto; ein sofortiges Auslesen kann noch vor der Neuberechnung liegen. **Route aus Auto abrufen** bleibt verfügbar. Eine vollständige Straßenlinie braucht weiterhin Fleet Telemetry `RouteLine`.
+4. Jeder Fahrer prüft am Auto **Tesla zeigt diesen Halt als Ladestation** und danach gegebenenfalls **Vorkonditionierung wird im Auto angezeigt**. Der Fahrtleiter sieht diese Rückmeldungen. Bestätigungen gelten nur für Planversion, aktuellen Halt und eigenes aktuelles Fahrzeug; Plan-/Autowechsel macht alte Bestätigungen ungültig.
+5. Beim nächsten Abschnitt sendet der Fahrtleiter den nächsten Halt. Speichern/Löschen eines Plans oder eine Pausenmeldung brechen eine schon laufende Fahrzeugnavigation nicht automatisch ab.
 
-ABRP unterstützt [Ladenetze bevorzugen oder vermeiden](https://abrp.featurebase.app/help/articles/4671857-avoid-and-prefer) und [Ladekarten](https://abrp.featurebase.app/help/articles/5884894-charge-cards). Damit kann die Planung beispielsweise andere Netze bevorzugen und Supercharger vermeiden. Restriktive Vorgaben können eine Route unmöglich machen; dann soll TeslaTalk die Vorgabe sichtbar melden und keine stillen Ausnahmen machen. Welche Filter die freigegebene API-Version anbietet, muss mit deren Schema geprüft werden.
+Befehlsergebnisse werden mit Auftrags-ID gespeichert. Ein wiederholter identischer Auftrag sendet nicht erneut. Bei Verbindungsabbruch den **Auftragsstatus abrufen** und tatsächlich am Auto prüfen; es gibt keine automatischen Befehlswiederholungen. Ein erneuter Versuch braucht die bewusste erneute Freigabe durch den jeweiligen Besitzer. Fahrtende und Widerruf stoppen weitere Befehle. Navigationsbefehle brauchen `TESLA_NAVIGATION_COMMANDS=true`, `vehicle_cmds` und die passende Fahrzeug-/Proxy-Anbindung, siehe [Fahrzeugsteuerung](VEHICLE-CONTROLS.de.md).
 
-## Empfohlener Ablauf für die Gruppe
+## Ladestation und Vorkonditionierung
 
-1. Der Fahrtleiter sieht weiterhin ganz oben niedrigsten Akku und geringste gemeldete Reichweite. Das Fahrzeug mit der geringsten Reichweite ist die erste Empfehlung, die Auswahl bleibt ausdrücklich beim Fahrtleiter.
-2. Zusätzlich werden das konkrete Fahrzeugmodell, aktueller Akku, Verbrauchsannahmen, Ladeanschluss und Reserve je Auto benötigt. Reichweite und Prozent allein reichen für eine belastbare Ladeplanung nicht.
-3. Der Leiter wählt **Tesla-Planung** oder künftig **ABRP-Planung**, Ziel, bevorzugte/ausgeschlossene Netze und gewünschte Ankunftsreserve. Ein ABRP-Aufruf muss mit dem ausgewählten Fahrzeugmodell erfolgen, nicht mit einem beliebigen Standardmodell.
-4. Die Planungsquelle liefert eine geordnete Liste gemeinsamer Stationen. Jeder Stopp bekommt Stations-ID, Namen, Koordinaten und Netz; je Fahrzeug werden erwarteter Ankunftsakku, nötiger Abfahrtsakku und Ladezeit gespeichert. Der Plan erhält eine Version, damit Rückmeldungen einem konkreten Plan zugeordnet werden.
-5. Alle Abschnitte werden für jedes Gruppenfahrzeug geprüft. Das Auto mit der geringsten angezeigten Reichweite ist nicht zwangsläufig auf jedem Abschnitt das begrenzende Auto. Fehlende/veraltete Daten bleiben unbestätigt. Schafft ein Auto einen Abschnitt nicht, erhält der Leiter eine Meldung und einen Vorschlag zur gemeinsamen Neuplanung.
-6. Erst nach Zustimmung der jeweiligen Besitzer geht dieselbe Stoppreihenfolge an alle Autos. Die App unterscheidet Befehl angenommen, Zwischenstopps im Auto bestätigt und Ladeziele geprüft. Automatische Tesla-Neuplanung darf nicht als Bestätigung identischer Ladehalte gelten.
-7. Für die gemeinsame Weiterfahrt zählt die längste erforderliche Ladezeit. Fahrzeuge mit mehr Reserve dürfen weniger laden; die Gruppe wartet auf das begrenzende Fahrzeug. Gleiche Stationen garantieren weder freie Ladesäulen noch sekundengleichen Ladebeginn. Genügend passende Ladeplätze und die gemeinsame Abfahrt müssen separat berücksichtigt werden.
+Eine Koordinate oder erfolgreiche HTTP-Antwort beweist keine Zuordnung zum Tesla-Ladestationsverzeichnis. Auch eine Google-Places-Referenz wird erhalten, aber ihre Erkennung durch Tesla ist damit noch nicht verifiziert. Insbesondere bei Fremdladern hängen Zuordnung und Vorkonditionierung vom Fahrzeug und seiner Software ab. Die Checkboxen sind manuelle Rückmeldungen, kein Heizbefehl und keine automatische Fahrzeugprüfung.
 
-Falls vollständige Zwischenziellisten am Fahrzeug nicht zuverlässig unterstützt werden, ist eine mögliche Alternative: Den gesamten Plan in TeslaTalk anzeigen und jeweils **den nächsten gemeinsamen Ladestopp** als Ziel übertragen. Der Leiter gibt den nächsten Abschnitt frei. Diese Alternative muss sichtbar als abschnittsweise Navigation bezeichnet werden; sie ist noch nicht implementiert. Batterie-Vorkonditionierung bei per Koordinate gesendeten Fremdladern muss ebenfalls geprüft werden.
+ABRP beschreibt seine eigene Funktion [Send to Tesla](https://abetterrouteplanner.com/resources/article/2023-09-08_abrp-4-6-0) mit echten Ladestationsdetails für Vorkonditionierung. Das bestätigt nicht, dass ein beliebiger GPX-Koordinatenexport dieselben Details enthält. Falls Tesla den importierten Halt nicht als Ladeziel erkennt, die konkrete Station im Fahrzeugnavi auswählen und die Anzeige prüfen.
 
-## Konfiguration und Betrieb
+Die [Tesla-API](https://developer.tesla.com/docs/fleet-api/endpoints/vehicle-commands) dokumentiert eigene GPS-, Supercharger- und Waypoint-Befehle. Im aktuell geprüften offiziellen [Command-Proxy](https://github.com/teslamotors/vehicle-command/blob/main/pkg/proxy/command.go) ist unter den Navigationsbefehlen nur `navigation_request` implementiert, als REST-Weiterleitung. TeslaTalk sendet deshalb den nächsten Halt einzeln, keine ungetestete vollständige Zwischenzielliste. Die [Telemetriefelder](https://developer.tesla.com/docs/fleet-api/fleet-telemetry/available-data) liefern Ziel/Kennzahlen und RouteLine, keine vollständige geordnete Ladehaltefolge.
 
-Ein ABRP-Zugang wäre serverseitig zu konfigurieren; Zugangsdaten gehören nicht in Links, Frontend oder LLM-Kopiertext. Ein ausgehender Deep Link würde Standort/Planungswerte an ABRP übermitteln und soll deshalb erst durch eine bewusste Nutzeraktion geöffnet werden. Nutzerspezifischer Planimport bzw. Telemetrie braucht eine getrennte ABRP-Einwilligung. Der Tesla-Login erteilt keine ABRP-Rechte.
+## ABRP-Zugänge und weitere Planung
 
-ABRP-Aufrufe und Tesla-Befehle wären ausgehende HTTPS-Verbindungen. Dafür ist am VPS mit CGNAT/WireGuard keine neue eingehende Portweiterleitung nötig. Ein zusätzlicher signierender Command-Proxy sollte nur im internen Dienstnetz erreichbar sein.
+Normale ABRP-Teilen-Links werden noch nicht als gespeicherter Plan abgerufen. Eine Neuberechnung ist kein Import desselben Plans. Die [offizielle API-Seite](https://abetterrouteplanner.com/resources/api) unterscheidet OAuth `get_plan`, kostenpflichtige Planning API und Telemetry API; Antwortschema und Freigabe müssen vor einem direkten Planabruf verifiziert werden. Ein Telemetrie-Schlüssel ersetzt keinen Planungszugang.
 
-## Akzeptanztests vor Freigabe der Integration
+In ABRP können [Netze bevorzugt/vermieden](https://abrp.featurebase.app/help/articles/4671857-avoid-and-prefer) und [Ladekarten](https://abrp.featurebase.app/help/articles/5884894-charge-cards) berücksichtigt werden. Die dort exportierten konkreten Stationen können nach Prüfung über die Datei übernommen werden. TeslaTalk berechnet derzeit keine Ladezeiten/Reserven für die ganze Gruppe und garantiert keine freien Ladeplätze oder identischen Ladebeginn. Live-Belegungsanzeigen bleiben Roadmap.
 
-- [ ] Autorisierter ABRP-Plan liefert alle Ladehalte mit Reihenfolge und Koordinaten; ein bloßer Plan-Link reicht nicht.
-- [ ] Gewünschte Fremdnetze erscheinen, ausgeschlossene Supercharger werden nicht stillschweigend wieder eingefügt.
-- [ ] Alle Fahrzeuge schaffen jeden Abschnitt mit ihrer eigenen Reserve; veraltete/unbekannte Werte werden nicht als Zusage behandelt.
-- [ ] Nach Zwischenstopp-Übertragung zeigt jedes echte Auto dieselbe Stoppreihenfolge; Mehrfachstopps ersetzen/ergänzen bestehende Navigation wie erwartet.
-- [ ] Vorkonditionierung und Verhalten bei Tesla-Neuberechnung an Superchargern und Fremdladern prüfen.
-- [ ] Widerruf, Fahrzeugwechsel und Fahrtende stoppen weitere Befehle; Fehler lösen keine wiederholten Sendeschleifen aus.
-- [ ] Gruppenabfahrt richtet sich nach dem langsamsten nötigen Ladevorgang; nicht nur nach gleichen Ankunftszeiten.
+Alle Tesla-Befehle gehen ausgehend über HTTPS. Für den vorhandenen CGNAT-/WireGuard-Aufbau sind keine zusätzlichen öffentlichen Ports nötig. Der Command-Proxy bleibt intern. [Testcheckliste](TEST-CHECKLIST.de.md).

@@ -15,7 +15,7 @@ Nach dem Update mit einem Fahrer-Konto testen. Die automatisierten Tests verwend
 - [ ] QR-Mitfahrer verbindet in **Mein Profil** sein Tesla-Konto: Bild erscheint, Name/PIN und Mitfahrerrolle bleiben. Nach Abmelden über denselben QR-Link anmelden; Bild bleibt. Verknüpfung entfernen: PIN funktioniert weiter, kein Fahrzeugzugriff.
 - [ ] Im Adminmenü mit einem eigens angelegten Testkonto **Löschen** wählen. Falsche Groß-/Kleinschreibung im Bestätigungsnamen hält den Knopf gesperrt; Abbrechen löscht nichts. Erst mit exaktem Namen bestätigen. Konto und eigene geleitete Testfahrten verschwinden, seine alten Sitzungen/API-Schlüssel funktionieren nicht mehr, fremde Fahrten bleiben bestehen.
 - [ ] Logo aus Profil/Fahrt/Admin anklicken: Startseite. Mac/Safari neu laden und Desktop-Favicon prüfen; gegebenenfalls alten Safari-Favicon-Cache abwarten. Auf dem Arbeitsplatz-PC OSM-Karte prüfen: bei Netzwerksperre verständliche Fehlermeldung und erneutes Laden. Der Referrer enthält nur die Domain, keinen Fahrtpfad.
-- [ ] **ABRP noch nicht als erfolgreichen Import testen:** Für normale Teilen-Links ist der gespeicherte Planabruf noch nicht integriert. Ein konkreter Beispiel-Link und ein verifizierter Abrufvertrag bzw. freigegebener Iternio-Zugang sind für diesen nächsten Schritt nötig.
+- [ ] ABRP-/anderer GPX-Export mit benannten Stopps lässt sich prüfen und speichern; reine Tracks werden abgewiesen. TeslaTalk-JSON exportieren und wieder hochladen: Reihenfolge, Stationstyp und vorhandene Places-ID bleiben erhalten. Normale ABRP-Teilen-Links werden weiterhin nicht als Plan abgerufen.
 
 ## Tesla-Erstanmeldung und Administration
 
@@ -69,10 +69,26 @@ Ohne diese Integration zeigt `vehicle_data` Ziel und Kennzahlen, keinen vollstä
 
 ## Kurzer Regressionstest
 
-- [ ] Fahrtleiter, weiterer Fahrer und QR-Mitfahrer sehen auf der gemeinsamen Karte alle Fahrerfahrzeuge mit bekannter GPS-Position. Browser eines Fahrers schließen: dessen Auto wird weiterhin im bisherigen Poll-Intervall aktualisiert, solange jemand die Gruppe geöffnet hat. Ohne Zuschauer erfolgen keine neuen Gruppenabfragen. Neu eintreffende Fahrzeugpositionen werden automatisch in den Kartenausschnitt aufgenommen; fehlende GPS-Daten werden benannt statt erfunden.
+- [ ] Alle Gruppenmitglieder sehen aktuelle Fahrer-Browserpositionen. Fahrerbrowser schließen: keine automatische Tesla-GPS-Abfrage; Marker nach 90 Sekunden grau und nach fünf Minuten weg. Gruppenansicht folgt mehreren Autos, Eigenansicht dem eigenen Marker; manuelles Verschieben pausiert das Folgen kurz. Ohne private Gruppenverbindung erfolgt keine Navigationsabfrage.
 - [ ] **Klima an/aus** funktioniert unabhängig vom Standort-/Parkdatenabruf. Falls der Befehl weiterhin scheitert, das Ergebnis pro Fahrzeug prüfen: Demo, HTTP-Code/Berechtigung, schlafendes Auto oder unklarer Ausgang. TLS-Verbindung und aktivierte Flags allein bestätigen keinen Fahrzeugbefehl. Kein automatischer Wiederholungsversuch.
 - [ ] Chat und gemeinsame Karte mit zwei Fahrern; persönlicher Standort bleibt von der Fahrzeugposition getrennt.
 - [ ] Sprachfunk mit zwei gleichzeitig geöffneten Mikrofonen über Mobilfunk; bei CGNAT die vorhandenen VPS-Weiterleitungen 7881/TCP und 7882/UDP weiter nutzen.
 - [ ] Persönlichen Benachrichtigungstest aus der installierten Handy-PWA senden, PWA schließen/Handy sperren und Eingang prüfen. Providerannahme und tatsächliche Geräteanzeige getrennt beurteilen.
 
 Diese Checkliste ergänzt automatisierte Backend-, Browser- und Containerprüfungen. Bei künftigen Änderungen werden passende manuelle Testpunkte im Abschluss mit angegeben.
+
+## Browser-GPS, Zuschauer und Toilettenpause
+
+- [ ] Zwei Fahrer erlauben Handy-GPS in einer aktiven Fahrt: beide Autos werden live angezeigt. Mitfahrer-GPS erscheint als Personenmarker; Akkudaten werden durch Browser-GPS nicht überschrieben.
+- [ ] **Gruppe / Ich / Aus** testen, Karte kurz verschieben, Fahrer-GPS stoppen, Handy sperren und erneut öffnen: veraltete Positionen werden erkennbar und frische Updates setzen wieder ein. Keine kostenpflichtige Tesla-GPS-Ausweichabfrage.
+- [ ] Zuschauerlink erstellen, ohne Anmeldung öffnen und auf einem zweiten Gerät verfolgen. Keine Chats, Kennzeichen, Tesla-Bilder oder Mitfahrerpositionen. Erneuern/Widerrufen/Fahrtende machen alte Links unbrauchbar.
+- [ ] Bei allen Teilnehmern **Hinweistöne aktivieren**. Mitfahrer klickt Toilettenknopf: nur Fahrtleiter bekommt Bedarfston und Bestätigungsknopf. Zweimalige gleiche Anfrage erzeugt keine doppelten Hinweise.
+- [ ] Fahrtleiter bestätigt Abfahrt: sichtbarer Hinweis in jedem Tab, gespeicherte Chatnachricht und genau ein Ton pro Gerät. Neue spätere Anfrage bleibt offen. Push zusätzlich mit gesperrtem iPhone/Android und erlaubten Mitteilungen testen; Fokusmodus berücksichtigen.
+
+## Importierte Ladehalte
+
+- [ ] GPX mit benannten Supercharger-/Fremdlader-Stopps hochladen. Vorschau/Stationsarten korrigieren; Speichern sendet keine Befehle. Reiner Track wird klar abgewiesen. JSON exportieren und identisch wieder importieren.
+- [ ] Nur ein zweiter Fahrer erlaubt Zielübernahme. Tourleiter sendet Ladehalt: nur freigegebene aktuelle Fahrzeuge erhalten ihn. Dasselbe Ziel nach gewöhnlichem Routenupdate behält seine Stationsreferenz; es wird nicht automatisch erneut gesendet.
+- [ ] An jedem echten Tesla prüfen, ob die konkrete Station als **Ladestation** erkannt wird und ob **Vorkonditionierung** angezeigt wird. Erst dann entsprechende Rückmeldung setzen; fehlende Erkennung bleibt unbestätigt. Sowohl Supercharger als auch mindestens einen unterstützten Fremdlader testen.
+- [ ] Nächsten Halt senden, Stationsanzeige erneut prüfen. Plan-/Fahrzeugwechsel entfernt alte Bestätigungen. Nicht freigegebene Fahrzeuge, Mitfahrer, Zuschauer und beendete Fahrten können keine Befehle senden.
+- [ ] Verbindung beim Senden unterbrechen: Auftragsstatus lesen und Auto prüfen, keine automatische Doppelübertragung. Danach ausdrücklich erneut freigeben, wenn ein weiterer Versuch gewünscht ist.

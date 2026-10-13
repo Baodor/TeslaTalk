@@ -53,7 +53,7 @@ export default function RoutePlanning({ tripId, userId, leader, active, finished
           {row.accepted && row.problem && row.problem !== 'command_error' && <button disabled={busy} onClick={()=>void act(`route/adopt/${encodeURIComponent(row.user_id)}`)}>{t("Route dieses Autos übernehmen")}</button>}
           {!row.can_plan && <small>{t("Dieser Fahrer muss die Zielübernahme zuerst erlauben.")}</small>}</div>}
       </article>)}</div>
-      <p className="hint">{t("Aktuell überträgt TeslaTalk das Ziel. Jeder Tesla plant selbst. Identische Ladestopps werden damit noch nicht übernommen oder bestätigt; dafür fehlen die vollständigen Ladeplan-Daten und deren Übertragung. Ein Straßenvergleich benötigt Fleet Telemetry und verwendet 200 m Toleranz; verschiedene Startpunkte können unbestätigt bleiben.")}</p>
+      <p className="hint">{t("TeslaTalk überträgt das aktuelle Ziel. Ein importierter Ladeplan kann Halt für Halt an die Gruppe gesendet werden. Die vollständige Ladehaltefolge wird nicht automatisch aus dem Tesla ausgelesen.")}</p>
     </section>
     <NavigationPanel navigation={navigation} shared finished={finished} fetchRoute={leader && active && overview?.planner_user_id ? async()=>{await act('navigation');} : undefined}/>
   </section>;

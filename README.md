@@ -36,7 +36,7 @@ TeslaTalk verbindet Freunde, die gemeinsam mit ihren Teslas unterwegs sind. Eine
 | Fahrzeuge | Fahrzeuge des Kontos abrufen, Fahrzeug auswählen und Favoriten festlegen |
 | Freunde | Anfragen, Annahme und Einladungen über Benutzername, Kennzeichen oder vorhandene E-Mail-Adresse |
 | Fahrten | Name, Ziel, Beginn und Ende; Beitritt per PIN oder Einladung |
-| Karte | Personenmarker mit Tesla-Profilbild und Browser-Standort, separate Fahrzeugmarker; auch Mitfahrer können ihren Standort teilen |
+| Karte | Fahrzeugpositionen aus dem Browser der Fahrer statt kostenpflichtiger Tesla-GPS-Abfragen; mitlaufende Gruppen-/Eigenansicht und getrennte Mitfahrerpositionen |
 | Fahrzeugnavigation | Navigationsziel, Reststrecke, Restzeit und Akku bei Ankunft aus dem eigenen Tesla abrufen; Empfehlungen nach Akku/Reichweite, Auswahl des Planungsautos, automatische Anzeige seiner Route und zustimmungsgebundene Zielübernahme; genaue Linie über Telemetrie |
 | Komfortsteuerung | Fahrtleiter steuert freigegebene Fahrerfahrzeuge gesammelt: Frunk, Heckklappe, Fenster und Klima; separate Zustimmung und signierte Tesla-Befehlsanbindung erforderlich |
 | Sprachfunk | Mehrere Sprecher gleichzeitig; Mikrofon per Antippen an/aus und Sprachaktivierung; selbst gehosteter LiveKit-Server |
@@ -46,7 +46,13 @@ TeslaTalk verbindet Freunde, die gemeinsam mit ihren Teslas unterwegs sind. Eine
 | Historie | Vollständige Speicherung der erfassten Daten und Export; Rankings für Verbrauch, Zeit und Durchschnittstempo |
 | Administration | Separater OIDC-Zugang; Benutzerliste mit Tesla-Mail, Benutzername, Kennzeichen, Tesla-Profilbild und zuletzt erfasstem Login |
 | API | Persönliche, widerrufbare API-Schlüssel; vollständige Endpunktübersicht unter `/api-docs` mit Suche, Schemas und Kopierbutton für den gesamten LLM-Kontext |
-| Teilen | Separater, widerrufbarer Leselink zur Fahrtübersicht nach Fahrtende; Albumzugriff folgt mit Immich |
+| Teilen | Widerrufbarer Live-Zuschauerlink mit Fahrerpositionen; separater Leselink nach Fahrtende; Albumzugriff folgt mit Immich |
+| Pausen | Toilettenknopf meldet Bedarf beim Fahrtleiter; bestätigte Abfahrt als Gruppenhinweis, Chatnachricht und Hinweiston |
+| Ladeplan | GPX mit benannten Stopps hochladen, prüfen und als TeslaTalk-JSON exportieren; nächsten gemeinsamen Supercharger/Fremdlader an zustimmende Autos senden |
+
+## Browser-GPS, Zuschauer und Toilettenpause
+
+In der aktiven Fahrt teilen Fahrer den Browserstandort für ihr ausgewähltes Auto. Die Karte kann **Gruppe**, **Ich** oder **Aus** folgen. Der Fahrtleiter erstellt unter **Zuschauerlink** einen QR-/Leselink und kann ihn erneuern oder widerrufen. **Ich muss aufs Klo** zeigt dem Fahrtleiter Bedarf und spielt nach Browserinteraktion einen Ton; mit **Wir fahren jetzt zur Toilettenpause ab** informiert er alle Teilnehmer mit Hinweis, gespeicherter Chatnachricht und Ton. Hintergrundzustellung nutzt erlaubte Web-Push-Mitteilungen und die Geräteeinstellungen. [Anleitung](docs/TOUR-FEATURES.de.md) · [Testcheckliste](docs/TEST-CHECKLIST.de.md).
 
 ## Sprache auf Handy und im Browser
 
@@ -89,7 +95,7 @@ Datumsanzeigen, Anwendungsmeldungen und die Offline-Seite verwenden die gewählt
 - Mitfahrer scannen den QR-Code und registrieren sich selbst mit **eigenem Namen und selbst gewähltem sechsstelligen PIN**; ein Tesla-Konto ist dafür nicht erforderlich. Für spätere Anmeldungen verwenden sie denselben Namen/PIN. Der Fahrtleiter muss keine Zugangsdaten vorab anlegen.
 - Zugang und Bild-Uploads auf den eingegebenen Fahrtzeitraum begrenzen. **Nach Fahrtende sind Uploads gesperrt.**
 - Nach der Fahrt einen separaten, widerrufbaren **Leselink** erstellen, über den auch externe Personen die Fahrtübersicht und das Album anschauen können.
-- Öffentliche Freigaben erhalten keinen Zugang zu privaten Chats, Tesla-Konten oder Live-Standorten.
+- Der öffentliche Abschlusslink enthält keine Live-Standorte. Der separat erstellte Live-Zuschauerlink zeigt ausdrücklich freigegebene Fahrerpositionen, aber keine privaten Chats oder Tesla-Konten.
 
 ### Mobile Weiterentwicklung der PWA
 
@@ -99,11 +105,9 @@ TeslaTalk wird zunächst als Website umgesetzt, die sich auf dem Home-Bildschirm
 - Gemeinsame Ladestopps und Immich in die PWA integrieren.
 - Einen Serverwechsel direkt in der Oberfläche später erleichtern.
 
-#### Idee: „Ich muss aufs Klo“ 🚻
+#### Toilettenpause 🚻
 
-Ein Knopf in der App meldet dem **Fahrtleiter**, welcher Teilnehmer eine Toilettenpause braucht. Der Fahrtleiter kann auf der Karte einen passenden **Rastplatz** suchen und auswählen. Dieser wird als gemeinsamer Zwischenstopp übernommen; anschließend **aktualisiert TeslaTalk die Route für alle Teilnehmer**.
-
-Die Meldung ist ein Pausenwunsch. Die Entscheidung über den Rastplatz bleibt beim Fahrtleiter. Mehrere Wünsche können später zu einem gemeinsamen Pausenstopp zusammengefasst werden.
+Alle aktiven Teilnehmer können eine Toilettenpause anfragen. Der Fahrtleiter sieht Namen und Hinweis, hört nach Browserinteraktion einen Ton und bestätigt die Abfahrt. Danach erscheinen Hinweis, Chatnachricht und Ton bei allen Teilnehmern. Die Meldung wählt keine Raststätte automatisch; ein gewünschter Halt kann separat über die Navigation oder den Ladeplan gesendet werden. [Bedienung](docs/TOUR-FEATURES.de.md).
 
 ## Technische Richtung
 
@@ -172,7 +176,7 @@ In der aktiven Fahrt stehen **geringste gemeldete Reichweite** und **niedrigster
 
 Das ausgewählte Auto erhält eine Zieladresse und berechnet seine Navigation. Seine aktuelle Antwort/Telemetrie wird danach automatisch als Gruppenroute angezeigt. Andere Fahrer können die automatische Zielübernahme in ihrem eigenen Auto für diese Fahrt erlauben und jederzeit beenden. Abweichender Straßenverlauf oder eine gemeldete nicht fahrbare Route wird dem Fahrtleiter angezeigt; er kann die aktuelle Route dieses Autos als neuen Ausgangspunkt übernehmen. Die Route bleibt innerhalb der berechtigten Gruppe; öffentliche Leselinks enthalten keine Navigation.
 
-**Noch keine identischen Ladestopps:** Der implementierte Tesla-Befehl `navigation_request` überträgt eine Zieladresse. Jeder Tesla berechnet seinen eigenen Weg und seine eigenen Ladehalte. Der Straßenverlauf kommt ausschließlich über eine angebundene Fleet-Telemetry-Integration (`RouteLine`, Base64 + Polyline6). Die genaue Ladehaltefolge wird damit nicht automatisch exportiert oder an andere Autos übertragen. Der gewünschte gemeinsame Ladeablauf ist deshalb noch nicht vollständig umgesetzt und wird in der Oberfläche nicht als bestätigt dargestellt. Tesla dokumentiert einen separaten Zwischenstopp-Befehl; eine öffentlich dokumentierte Leseschnittstelle für die in der Tesla-App sichtbare Ladehaltefolge fehlt. Der [Entwurf für Ladepläne und ABRP](docs/CHARGING-PLANS.de.md) beschreibt eine zusätzliche Planungsquelle und die noch nötige Fahrzeugprüfung.
+**Gemeinsame Ladehalte:** Der Fahrtleiter kann einen GPX-Plan mit benannten Stopps hochladen, prüfen und Halt für Halt an zustimmende Autos senden, einschließlich Superchargern und anderen Ladestationen. Vorhandene Google-Places-Stationsreferenzen bleiben erhalten. Ein TeslaTalk-JSON-Export lässt sich vollständig wieder einlesen. Jeder Tesla berechnet den Abschnitt selbst. Eine bestätigte Übertragung beweist weder Stationszuordnung noch Vorkonditionierung; jeder Fahrer bestätigt diese Anzeigen im Auto. Die vollständige Tesla-Ladehaltefolge und eine komplette native Zwischenzielliste werden weiterhin nicht automatisch ausgelesen/übertragen. [Import und Stationsprüfung](docs/CHARGING-PLANS.de.md).
 
 Unter **Mein Profil → Route aus deinem Auto** liest du Navigation weiterhin privat. Echte Zielbefehle erfordern `TESLA_NAVIGATION_COMMANDS=true`, Freigabe von `vehicle_cmds` in der Tesla-Anwendung und erneutes Verbinden jedes Tesla-Kontos. Diese Routenfreigabe erlaubt ausschließlich Navigationsziele und kein Aufwecken. Die [Routenanleitung](docs/ROUTES.de.md) erklärt Datenquellen, Rechte und Grenzen.
 
@@ -216,9 +220,9 @@ Push-Versand wird im Backend mit simulierten Push-Diensten geprüft; der Browser
 
 ## Bekannte Grenzen
 
-- Fahrzeugabfragen laufen standardmäßig alle **120 Sekunden** für alle Fahrerfahrzeuge einer aktiven Fahrt, solange mindestens ein Teilnehmer die Gruppe geöffnet hat. Die Browser der Fahrzeugbesitzer dürfen geschlossen sein. Ohne verbundenen Teilnehmer erfolgen keine neuen Gruppenabfragen. Alle Teilnehmer sehen die bekannten Fahrzeugpositionen auf der gemeinsamen Karte; fehlende GPS-Daten werden angezeigt. Persönliche Browser-Standorte werden bei aktiver Freigabe höchstens alle zehn Sekunden übertragen. Das ist noch kein Fleet-Telemetry-Streaming und kann Tesla-API-Kosten verursachen.
+- Die Live-Karte nutzt ausschließlich Fahrer-Browser-GPS, höchstens alle zehn Sekunden, ohne Tesla-GPS-Fallback. Fahrer geben den Standortzugriff im geöffneten Browser frei; bei gesperrtem Handy kann das Betriebssystem ihn anhalten. Veraltete Marker werden grau und nach fünf Minuten entfernt. Navigation bleibt eine Fahrzeugquelle: standardmäßig alle **600 Sekunden** (`NAVIGATION_POLL_INTERVAL`), nur für das Planungsauto und zugestimmte Autos aktiver Fahrten und verbundenem Gruppenmitglied; explizite Abrufe/Befehle können weiterhin Tesla-API-Kosten verursachen. Zuschauerabrufe lösen keine Tesla-Abfrage aus.
 - Verbrauchswerte erscheinen nur mit gemessenen Energie- und Kilometerzählern aus einer passenden Integration. V1 leitet keinen Verbrauch aus dem Akkustand ab.
-- Ladeplanung, Übertragung von Routen an andere Autos, Musiksteuerung und Immich sind **Roadmap-Funktionen**. Routenabruf, Planungsfahrzeugauswahl und automatische Gruppenanzeige sind implementiert; Ziele werden mit Zustimmung übernommen, identische Ladehalte noch nicht. Der QR-Zugang ist bereits nutzbar; Foto-Uploads sind noch nicht angebunden.
+- Importierte Ladepläne und zustimmungsgebundene Übertragung des nächsten Halts sind implementiert. Automatische vollständige Ladehalte aus Tesla, ABRP-Linkabruf/Planning API, Musiksteuerung und Immich bleiben offen. Der QR-Zugang ist nutzbar; Foto-Uploads sind noch nicht angebunden.
 - Ob Mikrofon und Browser während der Fahrt verfügbar sind, muss für Fahrzeug, Region und Firmware geprüft werden. Zielbefehle brauchen eine ausdrücklich aktivierte Tesla-Befehlsanbindung; sonst bleiben Fahrzeugzugriffe lesend.
 - Die Administration bietet eine Statusübersicht und die Benutzerliste mit Tesla-Mail, Benutzername, Kennzeichen, Profilbild und zuletzt erfasstem Login. Serverkonfiguration erfolgt über Umgebungsvariablen.
 - Ein Server nutzt einen FastAPI-Prozess mit SQLite. Mehrere Instanzen und verteilte Skalierung folgen später.

@@ -3518,5 +3518,390 @@
     "en": "Automatic uses the language of your phone or browser. Your choice is saved on this device.",
     "nl": "Automatisch gebruikt de taal van je telefoon of browser. Je keuze wordt op dit apparaat opgeslagen.",
     "de-AT": "Automatisch nimmt de Sprach vo deim Handy oder Browser. Dei Auswahl merk ma uns auf dem Gerät."
+  },
+  "ABRP-Plan als GPX mit benannten Stopps exportieren und hier hochladen. Ein TeslaTalk-JSON-Export kann ebenfalls eingelesen werden.": {
+    "en": "Export an ABRP plan as GPX with named stops and upload it here. You can also import a TeslaTalk JSON export.",
+    "nl": "Exporteer een ABRP-plan als GPX met benoemde stops en upload het hier. Je kunt ook een TeslaTalk-JSON-export importeren.",
+    "de-AT": "Exportier den ABRP-Plan als GPX mit benannten Stopps und lad'n da hoch. An TeslaTalk-JSON-Export kannst a einlesn."
+  },
+  "Art des Stopps": {
+    "en": "Stop type",
+    "nl": "Soort stop",
+    "de-AT": "Art vom Stopp"
+  },
+  "Bitte Browser-Standort aktivieren und die Seite während der Fahrt geöffnet lassen.": {
+    "en": "Enable browser location and keep this page open during the trip.",
+    "nl": "Activeer de browserlocatie en houd deze pagina tijdens de rit open.",
+    "de-AT": "Schalt den Browser-Standort ein und lass de Seite während da Fahrt offen."
+  },
+  "Bitte den Link manuell kopieren.": {
+    "en": "Please copy the link manually.",
+    "nl": "Kopieer de link handmatig.",
+    "de-AT": "Kopier den Link bitte selber."
+  },
+  "Bitte eine GPX-Datei mit benannten Stopps oder einen TeslaTalk-JSON-Export hochladen.": {
+    "en": "Upload a GPX file with named stops or a TeslaTalk JSON export.",
+    "nl": "Upload een GPX-bestand met benoemde stops of een TeslaTalk-JSON-export.",
+    "de-AT": "Lad a GPX-Datei mit benannten Stopps oder an TeslaTalk-JSON-Export hoch."
+  },
+  "Browser-Standort für mein Auto aktivieren": {
+    "en": "Enable browser location for my car",
+    "nl": "Browserlocatie voor mijn auto activeren",
+    "de-AT": "Browser-Standort für mei Auto einschalten"
+  },
+  "Der Export enthält keine Stopp-Liste oder mehr als 50 Stopps. Reine GPS-Tracks sind keine Ladepläne.": {
+    "en": "The export has no stop list or more than 50 stops. GPS tracks alone are not charging plans.",
+    "nl": "De export bevat geen stoplijst of meer dan 50 stops. Alleen GPS-tracks zijn geen laadplannen.",
+    "de-AT": "Im Export is ka Stopp-Liste oder es san mehr als 50 Stopps. A reiner GPS-Track is ka Ladeplan."
+  },
+  "Der Fahrtleiter wurde informiert.": {
+    "en": "The trip leader has been notified.",
+    "nl": "De ritorganisator is geïnformeerd.",
+    "de-AT": "Der Fahrtleiter weiß Bescheid."
+  },
+  "Der Ladeplan wurde geändert. Bitte die Übersicht aktualisieren.": {
+    "en": "The charging plan has changed. Please refresh the overview.",
+    "nl": "Het laadplan is gewijzigd. Vernieuw het overzicht.",
+    "de-AT": "Der Ladeplan hat si geändert. Lad de Übersicht bitte neu."
+  },
+  "Der Link zeigt während der Fahrt die freigegebenen Fahrer-Browserpositionen. Zuschauer können nichts steuern und sehen keine Chats, Kennzeichen oder Mitfahrer-Standorte.": {
+    "en": "During the trip, this link shows shared driver browser positions. Spectators cannot control anything or see chats, plates or passenger locations.",
+    "nl": "Deze link toont tijdens de rit de gedeelde browserposities van bestuurders. Toeschouwers kunnen niets bedienen en zien geen chats, kentekens of passagierslocaties.",
+    "de-AT": "Der Link zeigt während da Fahrt de freigebenen Fahrer-Browserpositionen. Zuschauer können nix steuern und sehn ka Chats, Taferln oder Mitfahrer-Standorte."
+  },
+  "Die Datei darf höchstens 500 KB groß sein.": {
+    "en": "The file must be no larger than 500 KB.",
+    "nl": "Het bestand mag maximaal 500 KB groot zijn.",
+    "de-AT": "De Datei darf höchstens 500 KB groß sein."
+  },
+  "Die Gruppe erhält denselben nächsten Halt. Tesla berechnet den Abschnitt selbst. Koordinaten allein bestätigen keine Ladestation oder Vorkonditionierung.": {
+    "en": "The group receives the same next stop. Tesla plans each leg itself. Coordinates alone do not confirm charger recognition or preconditioning.",
+    "nl": "De groep ontvangt dezelfde volgende stop. Tesla berekent zelf elke etappe. Alleen coördinaten bevestigen geen laadstation of voorverwarming.",
+    "de-AT": "De Partie kriegt denselben nächsten Halt. Tesla rechnet den Abschnitt selber aus. Koordinaten allein bestätigen ka Ladestation oder Vorkonditionierung."
+  },
+  "Die Routen-Datei ist ungültig oder enthält kein unterstütztes Stopp-Format.": {
+    "en": "The route file is invalid or has no supported stop format.",
+    "nl": "Het routebestand is ongeldig of bevat geen ondersteund stopformaat.",
+    "de-AT": "De Routen-Datei passt ned oder hat ka unterstütztes Stopp-Format."
+  },
+  "Die Stationsbestätigung gehört nicht zum aktuellen Routenstopp.": {
+    "en": "This station confirmation is not for the current route stop.",
+    "nl": "Deze stationsbevestiging hoort niet bij de huidige routestop.",
+    "de-AT": "De Stationsbestätigung gehört ned zum aktuellen Routenstopp."
+  },
+  "Diese Auftrags-ID gehört zu einem anderen Routenstopp.": {
+    "en": "This request ID belongs to another route stop.",
+    "nl": "Deze opdracht-ID hoort bij een andere routestop.",
+    "de-AT": "De Auftrags-ID gehört zu am andern Routenstopp."
+  },
+  "Diesen Halt an die freigegebenen Autos senden": {
+    "en": "Send this stop to the authorised cars",
+    "nl": "Deze stop naar de toegestane auto's sturen",
+    "de-AT": "Den Halt an de freigebenen Autos schickn"
+  },
+  "Dieser Routenstopp existiert nicht.": {
+    "en": "This route stop does not exist.",
+    "nl": "Deze routestop bestaat niet.",
+    "de-AT": "Den Routenstopp gibt's ned."
+  },
+  "Ergebnisse der Stoppübertragung": {
+    "en": "Stop transfer results",
+    "nl": "Resultaten van stopoverdracht",
+    "de-AT": "Ergebnisse vo da Stoppübertragung"
+  },
+  "Fahrt und Pausen": {
+    "en": "Trip and breaks",
+    "nl": "Rit en pauzes",
+    "de-AT": "Fahrt und Pausen"
+  },
+  "Gemeinsamer Ladeplan": {
+    "en": "Shared charging plan",
+    "nl": "Gezamenlijk laadplan",
+    "de-AT": "Ladeplan für de Partie"
+  },
+  "Geprüften Ladeplan speichern": {
+    "en": "Save reviewed charging plan",
+    "nl": "Gecontroleerd laadplan opslaan",
+    "de-AT": "Geprüften Ladeplan speichern"
+  },
+  "Google-Places-ID (optional)": {
+    "en": "Google Places ID (optional)",
+    "nl": "Google-Places-ID (optioneel)",
+    "de-AT": "Google-Places-ID (wennst ane hast)"
+  },
+  "Hinweistöne aktivieren": {
+    "en": "Enable alert sounds",
+    "nl": "Meldingsgeluiden activeren",
+    "de-AT": "Hinweistöne einschalten"
+  },
+  "Hinweistöne an": {
+    "en": "Alert sounds on",
+    "nl": "Meldingsgeluiden aan",
+    "de-AT": "Hinweistöne ein"
+  },
+  "Hinweistöne funktionieren im geöffneten Browser nach einer Interaktion. Bei gesperrtem Handy gelten deine Push- und Mitteilungseinstellungen.": {
+    "en": "Alert sounds work in the open browser after an interaction. With a locked phone, your push and notification settings apply.",
+    "nl": "Meldingsgeluiden werken na een interactie in de geopende browser. Bij een vergrendelde telefoon gelden je push- en meldingsinstellingen.",
+    "de-AT": "Hinweistöne gehn im offenen Browser, wennst amoi draufdrückt hast. Bei gsperrtem Handy gelten deine Push- und Mitteilungseinstellungen."
+  },
+  "Ich muss aufs Klo": {
+    "en": "I need a toilet stop",
+    "nl": "Ik moet naar het toilet",
+    "de-AT": "I muss aufs Heisl"
+  },
+  "Im GPX fehlen benannte Stopps. Bitte den Plan mit Ladehalten exportieren.": {
+    "en": "Named stops are missing from the GPX. Export the plan with charging stops.",
+    "nl": "Benoemde stops ontbreken in de GPX. Exporteer het plan met laadstops.",
+    "de-AT": "Im GPX fehlen benannte Stopps. Exportier den Plan bitte mit Ladehalten."
+  },
+  "Import vor dem Speichern prüfen": {
+    "en": "Review import before saving",
+    "nl": "Import controleren vóór opslaan",
+    "de-AT": "Schau den Import vorm Speichern an"
+  },
+  "Importierten Ladeplan löschen": {
+    "en": "Delete imported charging plan",
+    "nl": "Geïmporteerd laadplan verwijderen",
+    "de-AT": "Importierten Ladeplan löschn"
+  },
+  "Karte mitlaufen lassen": {
+    "en": "Follow the map automatically",
+    "nl": "Kaart automatisch laten volgen",
+    "de-AT": "Kartn mitlaufen lassn"
+  },
+  "Kartenverfolgung pausieren": {
+    "en": "Pause map following",
+    "nl": "Kaartvolgen pauzeren",
+    "de-AT": "Kartenverfolgung pausiern"
+  },
+  "Keine eindeutige Stationsreferenz. Zuordnung im Tesla prüfen.": {
+    "en": "No unique station reference. Check the mapping in Tesla.",
+    "nl": "Geen unieke stationsreferentie. Controleer de koppeling in Tesla.",
+    "de-AT": "Ka eindeutige Stationsreferenz. Schau de Zuordnung im Tesla an."
+  },
+  "LIVE ZUSCHAUEN": {
+    "en": "WATCH LIVE",
+    "nl": "LIVE MEEKIJKEN",
+    "de-AT": "LIVE ZUSCHAUN"
+  },
+  "Ladeplan exportieren": {
+    "en": "Export charging plan",
+    "nl": "Laadplan exporteren",
+    "de-AT": "Ladeplan exportiern"
+  },
+  "Ladestation": {
+    "en": "Charging station",
+    "nl": "Laadstation",
+    "de-AT": "Ladestation"
+  },
+  "Ladestation im Tesla bestätigt": {
+    "en": "Charger confirmed in Tesla",
+    "nl": "Laadstation in Tesla bevestigd",
+    "de-AT": "Ladestation im Tesla bestätigt"
+  },
+  "Live-Positionen kommen aus dem Browser. Ein Zuschauerlink kann Fahrerpositionen freigeben.": {
+    "en": "Live positions come from the browser. A spectator link can share driver positions.",
+    "nl": "Liveposities komen uit de browser. Een toeschouwerslink kan bestuurdersposities delen.",
+    "de-AT": "De Live-Positionen kumman ausm Browser. A Zuschauerlink kann Fahrerpositionen freigeben."
+  },
+  "Meinen Standort verfolgen": {
+    "en": "Follow my location",
+    "nl": "Mijn locatie volgen",
+    "de-AT": "Meinen Standort verfolgen"
+  },
+  "Name des Ladeplans": {
+    "en": "Charging plan name",
+    "nl": "Naam van het laadplan",
+    "de-AT": "Nam vom Ladeplan"
+  },
+  "Name des Stopps": {
+    "en": "Stop name",
+    "nl": "Naam van de stop",
+    "de-AT": "Nam vom Stopp"
+  },
+  "Noch keine Fahrer-Browserpositionen freigegeben.": {
+    "en": "No driver browser positions shared yet.",
+    "nl": "Nog geen browserposities van bestuurders gedeeld.",
+    "de-AT": "Ma ham no ka Fahrer-Browserpositionen freigeben."
+  },
+  "Nur ansehen. Der Link endet mit der Fahrt und kann jederzeit widerrufen werden.": {
+    "en": "View only. The link ends with the trip and can be revoked at any time.",
+    "nl": "Alleen bekijken. De link eindigt met de rit en kan altijd worden ingetrokken.",
+    "de-AT": "Nur anschaun. Der Link endet mit da Fahrt und kann jederzeit zruckgnommen werdn."
+  },
+  "QR-Code für Zuschauer": {
+    "en": "QR code for spectators",
+    "nl": "QR-code voor toeschouwers",
+    "de-AT": "QR-Code für Zuschauer"
+  },
+  "Routen-Datei hochladen": {
+    "en": "Upload route file",
+    "nl": "Routebestand uploaden",
+    "de-AT": "Routen-Datei hochladn"
+  },
+  "Standortquelle: Fahrer-Browser": {
+    "en": "Location source: driver browser",
+    "nl": "Locatiebron: browser van de bestuurder",
+    "de-AT": "Standortquelle: Fahrer-Browser"
+  },
+  "Stationsadresse": {
+    "en": "Station address",
+    "nl": "Adres van het station",
+    "de-AT": "Stationsadress"
+  },
+  "Stationsreferenz vorhanden; Erkennung im Auto prüfen.": {
+    "en": "Station reference supplied; check recognition in the car.",
+    "nl": "Stationsreferentie aanwezig; controleer herkenning in de auto.",
+    "de-AT": "Stationsreferenz is da; schau de Erkennung im Auto an."
+  },
+  "Stationszuordnung noch nicht bestätigt": {
+    "en": "Station mapping not confirmed yet",
+    "nl": "Stationskoppeling nog niet bevestigd",
+    "de-AT": "Stationszuordnung no ned bestätigt"
+  },
+  "Tesla zeigt diesen Halt als Ladestation.": {
+    "en": "Tesla shows this stop as a charging station.",
+    "nl": "Tesla toont deze stop als laadstation.",
+    "de-AT": "Tesla zeigt den Halt als Ladestation."
+  },
+  "Toilettenpause angefragt": {
+    "en": "Toilet stop requested",
+    "nl": "Toiletpauze aangevraagd",
+    "de-AT": "Heislpause angfragt"
+  },
+  "Vorkonditionierung bestätigt": {
+    "en": "Preconditioning confirmed",
+    "nl": "Voorverwarming bevestigd",
+    "de-AT": "Vorkonditionierung bestätigt"
+  },
+  "Vorkonditionierung erst bestätigen, wenn die Ladestation im Tesla erkannt wurde.": {
+    "en": "Only confirm preconditioning once Tesla has recognised the charging station.",
+    "nl": "Bevestig de voorverwarming pas als Tesla het laadstation heeft herkend.",
+    "de-AT": "Bestätig de Vorkonditionierung erst, wenn Tesla de Ladestation erkannt hat."
+  },
+  "Vorkonditionierung nicht bestätigt": {
+    "en": "Preconditioning not confirmed",
+    "nl": "Voorverwarming niet bevestigd",
+    "de-AT": "Vorkonditionierung ned bestätigt"
+  },
+  "Vorkonditionierung wird im Auto angezeigt.": {
+    "en": "Preconditioning is displayed in the car.",
+    "nl": "Voorverwarming wordt in de auto weergegeven.",
+    "de-AT": "De Vorkonditionierung wird im Auto angzeigt."
+  },
+  "Wir fahren jetzt zur Toilettenpause ab": {
+    "en": "We are taking the exit now for a toilet break",
+    "nl": "We nemen nu de afslag voor een toiletpauze",
+    "de-AT": "Ma fahrn jetzt für a Heislpause ab"
+  },
+  "Wir fahren jetzt zur Toilettenpause ab. Bitte der Gruppe folgen.": {
+    "en": "We are taking the exit now for a toilet break. Please follow the group.",
+    "nl": "We nemen nu de afslag voor een toiletpauze. Volg de groep.",
+    "de-AT": "Ma fahrn jetzt für a Heislpause ab. Bitte da Partie folgen."
+  },
+  "Zuordnung im eigenen Tesla bestätigen": {
+    "en": "Confirm recognition in your own Tesla",
+    "nl": "Herkenning in je eigen Tesla bevestigen",
+    "de-AT": "Zuordnung im eignen Tesla bestätigen"
+  },
+  "Zuschaueransicht": {
+    "en": "Spectator view",
+    "nl": "Toeschouwersweergave",
+    "de-AT": "Zuschaueransicht"
+  },
+  "Zuschauerlink": {
+    "en": "Spectator link",
+    "nl": "Toeschouwerslink",
+    "de-AT": "Zuschauerlink"
+  },
+  "Zuschauerlink erneuern": {
+    "en": "Renew spectator link",
+    "nl": "Toeschouwerslink vernieuwen",
+    "de-AT": "Zuschauerlink neu machn"
+  },
+  "Zuschauerlink erstellen": {
+    "en": "Create spectator link",
+    "nl": "Toeschouwerslink maken",
+    "de-AT": "Zuschauerlink anlegn"
+  },
+  "Zuschauerlink ist nicht mehr aktiv.": {
+    "en": "The spectator link is no longer active.",
+    "nl": "De toeschouwerslink is niet meer actief.",
+    "de-AT": "Der Zuschauerlink gilt nimmer."
+  },
+  "Zuschauerlink widerrufen": {
+    "en": "Revoke spectator link",
+    "nl": "Toeschouwerslink intrekken",
+    "de-AT": "Zuschauerlink zrucknehmen"
+  },
+  "Zwischenstopp": {
+    "en": "Waypoint",
+    "nl": "Tussenstop",
+    "de-AT": "Zwischenstopp"
+  },
+  "Browser-Fahrzeugstandort benötigt dein ausgewähltes Fahrerfahrzeug.": {
+    "en": "Browser car location requires your selected driver vehicle.",
+    "nl": "Browserlocatie voor een auto vereist je geselecteerde bestuurdersvoertuig.",
+    "de-AT": "Fürn Browser-Autostandort brauchst dei ausgsuchtes Fahrerauto."
+  },
+  "Browser-Fahrzeugstandort benötigt eine Browser-Anmeldung.": {
+    "en": "Browser car location requires a browser sign-in.",
+    "nl": "Browserlocatie voor een auto vereist een browseraanmelding.",
+    "de-AT": "Fürn Browser-Autostandort musst im Browser angmeldt sein."
+  },
+  "Browser-Standort ist zu alt oder liegt in der Zukunft.": {
+    "en": "Browser location is too old or in the future.",
+    "nl": "De browserlocatie is te oud of ligt in de toekomst.",
+    "de-AT": "Der Browser-Standort is z'alt oder liegt in da Zukunft."
+  },
+  "Der Ladeplan kann nach Fahrtende nicht mehr geändert werden.": {
+    "en": "The charging plan cannot be changed after the trip ends.",
+    "nl": "Het laadplan kan na het einde van de rit niet meer worden gewijzigd.",
+    "de-AT": "Nach Fahrtende kannst den Ladeplan nimmer ändern."
+  },
+  "Kein importierter Ladeplan vorhanden.": {
+    "en": "No imported charging plan.",
+    "nl": "Geen geïmporteerd laadplan aanwezig.",
+    "de-AT": "Da is ka importierter Ladeplan."
+  },
+  "Eine Stationsbestätigung benötigt dein ausgewähltes Fahrerfahrzeug.": {
+    "en": "A station confirmation requires your selected driver vehicle.",
+    "nl": "Een stationsbevestiging vereist je geselecteerde bestuurdersvoertuig.",
+    "de-AT": "Für a Stationsbestätigung brauchst dei ausgsuchtes Fahrerauto."
+  },
+  "Navi-Befehl angenommen; Ladestation und Vorkonditionierung im Auto prüfen.": {
+    "en": "Navigation command accepted; check charger recognition and preconditioning in the car.",
+    "nl": "Navigatieopdracht geaccepteerd; controleer laadstationherkenning en voorverwarming in de auto.",
+    "de-AT": "Navi-Befehl angenommen; schau Ladestation und Vorkonditionierung im Auto an."
+  },
+  "Ergebnis der bisherigen Übertragung prüfen; zum Wiederholen eigene Routenfreigabe erneut bestätigen.": {
+    "en": "Check the previous transfer result; to retry, confirm your own route consent again.",
+    "nl": "Controleer het resultaat van de vorige overdracht; bevestig je eigen routetoestemming opnieuw om te herhalen.",
+    "de-AT": "Schau des bisherige Ergebnis an; zum Wiederholen bestätig dei eigne Routenfreigabe no amoi."
+  },
+  "Fahrt beginnt am {0}.": {
+    "en": "The trip starts on {0}.",
+    "nl": "De rit begint op {0}.",
+    "de-AT": "De Fahrt fangt am {0} an."
+  },
+  "Bitte genau eine Route mit ihren Stopps exportieren.": {
+    "en": "Export exactly one route with its stops.",
+    "nl": "Exporteer precies één route met de bijbehorende stops.",
+    "de-AT": "Exportier bitte genau ane Route mit ihre Stopps."
+  },
+  "Dieser Stopp ist keine Ladestation.": {
+    "en": "This stop is not a charging station.",
+    "nl": "Deze stop is geen laadstation.",
+    "de-AT": "Der Stopp is ka Ladestation."
+  },
+  "TeslaTalk überträgt das aktuelle Ziel. Ein importierter Ladeplan kann Halt für Halt an die Gruppe gesendet werden. Die vollständige Ladehaltefolge wird nicht automatisch aus dem Tesla ausgelesen.": {
+    "en": "TeslaTalk transfers the current destination. An imported charging plan can be sent to the group one stop at a time. The full charging itinerary is not automatically read from Tesla.",
+    "nl": "TeslaTalk verstuurt de huidige bestemming. Een geïmporteerd laadplan kan stop voor stop naar de groep worden gestuurd. De volledige laadstopreeks wordt niet automatisch uit de Tesla gelezen.",
+    "de-AT": "TeslaTalk schickt des aktuelle Ziel. An importierten Ladeplan kannst Halt für Halt an de Partie schickn. De ganze Ladehaltefolge lesen ma ned automatisch ausm Tesla."
+  },
+  "Routenabfrageintervall bei geöffneter Gruppenfahrt": {
+    "en": "Route retrieval interval while the group trip is open",
+    "nl": "Interval voor route-opvragen bij een geopende groepsrit",
+    "de-AT": "Routenabfrage-Takt bei offener Gruppenfahrt"
   }
 }

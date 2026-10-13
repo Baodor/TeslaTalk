@@ -18,7 +18,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSock
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from . import db, fleet, push, api_documentation, route_planning, accounts, vehicle_controls
+from . import db, fleet, push, api_documentation, route_planning, accounts, vehicle_controls, tour, charging_plans
 from .config import settings
 from .metrics import ranking
 from .middleware import BodyLimitMiddleware, MAX_REQUEST_BYTES
@@ -67,11 +67,19 @@ def trip_summary(trip):
 
 
 def participants(trip_id):
-    rows = db.all_rows('SELECT u.id,u.display_name,u.username,u.plate,u.avatar_url,m.role,m.vehicle_id,m.left_at,v.name AS vehicle_name,v.model FROM members m JOIN users u ON u.id=m.user_id LEFT JOIN vehicles v ON v.id=m.vehicle_id WHERE m.trip_id=?', (trip_id,))
+    rows = db.all_rows('SELECT u.id,u.display_name,u.username,u.plate,u.avatar_url,m.role,m.vehicle_id,m.left_at,v.name AS vehicle_name,v.model,v.data AS vehicle_cache FROM members m JOIN users u ON u.id=m.user_id LEFT JOIN vehicles v ON v.id=m.vehicle_id WHERE m.trip_id=?', (trip_id,))
     for row in rows:
+        cached = json.loads(row.pop('vehicle_cache') or '{}')
         if row['role'] != 'driver':
             row.update(vehicle_id=None,vehicle_name=None,model=None)
-        row['data'] = (db.one("SELECT captured_at AS updated_at,latitude,longitude,speed_kmh,heading,battery_pct,range_km,source FROM samples WHERE trip_id=? AND user_id=? AND source!='browser' ORDER BY id DESC LIMIT 1", (trip_id,row['id'])) or {}) if row['role'] == 'driver' else {}
+        row['data'] = (db.one("SELECT captured_at AS updated_at,battery_pct,range_km,source FROM samples WHERE trip_id=? AND user_id=? AND source NOT IN ('browser','browser_vehicle') ORDER BY id DESC LIMIT 1", (trip_id,row['id'])) or {}) if row['role'] == 'driver' else {}
+        if row['role'] == 'driver':
+            if (cached.get('updated_at') or 0) > (row['data'].get('updated_at') or 0):
+                row['data'].update({key:cached.get(key) for key in ('battery_pct','range_km','source','updated_at')})
+            position = db.one('SELECT updated_at AS position_updated_at,latitude,longitude,speed_kmh,heading FROM browser_vehicle_locations WHERE trip_id=? AND user_id=? AND vehicle_id=? AND updated_at>?',
+                              (trip_id,row['id'],row['vehicle_id'],time.time()-300))
+            row['data'].update(position or {'latitude':None,'longitude':None,'position_updated_at':None})
+            row['data']['position_source'] = 'browser'
         row['personal_location'] = db.one('SELECT updated_at,latitude,longitude,speed_kmh,heading FROM personal_locations WHERE trip_id=? AND user_id=? AND updated_at>?', (trip_id,row['id'],time.time()-300))
         row['online'] = row['id'] in hub.online()
     return rows
@@ -93,29 +101,33 @@ async def store_sample(trip_id, user_id, data):
         return
     data = dict(data)
     personal = data.get('source') == 'browser'
-    member = db.one('SELECT role,left_at FROM members WHERE trip_id=? AND user_id=?',(trip_id,user_id))
-    if not member or member['left_at'] is not None or not personal and member['role'] != 'driver':
+    browser_vehicle = data.get('source') == 'browser_vehicle'
+    member = db.one('SELECT role,left_at,vehicle_id FROM members WHERE trip_id=? AND user_id=?',(trip_id,user_id))
+    if not member or member['left_at'] is not None or not personal and member['role'] != 'driver' or browser_vehicle and not member['vehicle_id']:
         return
-    if personal:
+    if personal or browser_vehicle:
         # A person's browser position must never inherit vehicle position or metrics.
         if data.get('latitude') is None or data.get('longitude') is None:
             return
-        data = {key:data.get(key) for key in ('latitude','longitude','speed_kmh','heading','source')}
+        data = {key:data.get(key) for key in ('latitude','longitude','speed_kmh','heading','source','captured_at','device_id')}
     else:
-        previous = db.one("SELECT * FROM samples WHERE trip_id=? AND user_id=? AND source!='browser' ORDER BY id DESC LIMIT 1", (trip_id,user_id)) or {}
+        previous = db.one("SELECT * FROM samples WHERE trip_id=? AND user_id=? AND source NOT IN ('browser','browser_vehicle') ORDER BY id DESC LIMIT 1", (trip_id,user_id)) or {}
         # Keep vehicle display state without carrying forward measured counters.
         for field in fields[:6]:
             if data.get(field) is None and previous.get(field) is not None:
                 data[field] = previous[field]
     if not any(data.get(key) is not None for key in fields):
         return
-    now = time.time()
+    now = (data.get('captured_at') or time.time()) if personal or browser_vehicle else time.time()
     with db.connect() as connection:
         connection.execute('INSERT INTO samples(trip_id,user_id,captured_at,latitude,longitude,speed_kmh,heading,battery_pct,range_km,odometer_km,energy_used_kwh,source) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
                            (trip_id,user_id,now,*(data.get(key) for key in fields),data.get('source','telemetry')))
         if personal:
             connection.execute('INSERT INTO personal_locations VALUES (?,?,?,?,?,?,?) ON CONFLICT(trip_id,user_id) DO UPDATE SET updated_at=excluded.updated_at,latitude=excluded.latitude,longitude=excluded.longitude,speed_kmh=excluded.speed_kmh,heading=excluded.heading',
                                (trip_id,user_id,now,*(data.get(key) for key in fields[:4])))
+        if browser_vehicle:
+            connection.execute('INSERT INTO browser_vehicle_locations(trip_id,user_id,vehicle_id,updated_at,latitude,longitude,speed_kmh,heading,device_id) VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(trip_id,user_id) DO UPDATE SET vehicle_id=excluded.vehicle_id,updated_at=excluded.updated_at,latitude=excluded.latitude,longitude=excluded.longitude,speed_kmh=excluded.speed_kmh,heading=excluded.heading,device_id=excluded.device_id WHERE excluded.updated_at>=browser_vehicle_locations.updated_at',
+                               (trip_id,user_id,member['vehicle_id'],now,*(data.get(key) for key in fields[:4]),data.get('device_id')))
     await hub.broadcast(trip_id, {'type':'participants','participants':participants(trip_id)})
 
 
@@ -135,17 +147,18 @@ async def background_cycle(next_poll):
     db.execute('DELETE FROM oauth_states WHERE expires_at<?', (now,))
     await clean_deleted_voice()
     db.execute('DELETE FROM personal_locations WHERE updated_at<=? OR trip_id IN (SELECT id FROM trips WHERE ends_at<=? OR finished_at IS NOT NULL)', (now-300,now))
+    db.execute('DELETE FROM browser_vehicle_locations WHERE updated_at<=? OR trip_id IN (SELECT id FROM trips WHERE ends_at<=? OR finished_at IS NOT NULL)', (now-300,now))
     for trip in db.all_rows('SELECT * FROM trips WHERE (ends_at<=? OR finished_at IS NOT NULL) AND voice_cleaned=0', (now,)):
         if await delete_voice_room(trip['id']):
             db.execute('UPDATE trips SET voice_cleaned=1 WHERE id=?', (trip['id'],))
         await hub.broadcast(trip['id'], {'type':'ended'})
     if now>=next_poll:
-        next_poll = now+settings.poll_interval
-        members = db.all_rows("SELECT m.trip_id,m.user_id,m.vehicle_id FROM members m JOIN trips t ON t.id=m.trip_id WHERE m.role='driver' AND m.left_at IS NULL AND m.vehicle_id IS NOT NULL AND t.starts_at<=? AND t.ends_at>? AND t.finished_at IS NULL", (now,now))
+        next_poll = now+settings.navigation_poll_interval
+        members = db.all_rows("SELECT m.trip_id,m.user_id,m.vehicle_id FROM members m JOIN trips t ON t.id=m.trip_id LEFT JOIN route_followers f ON f.trip_id=m.trip_id AND f.user_id=m.user_id AND f.vehicle_id=m.vehicle_id WHERE (f.user_id IS NOT NULL OR EXISTS(SELECT 1 FROM trip_planners chosen WHERE chosen.trip_id=m.trip_id AND chosen.user_id=m.user_id AND chosen.vehicle_id=m.vehicle_id)) AND m.role='driver' AND m.left_at IS NULL AND m.vehicle_id IS NOT NULL AND t.starts_at<=? AND t.ends_at>? AND t.finished_at IS NULL AND EXISTS(SELECT 1 FROM trip_planners p WHERE p.trip_id=t.id)", (now,now))
         cache = {}
         for member in members:
-            # A connected group member needs every driver's car, even when
-            # that driver's browser is closed. Do not poll unobserved trips.
+            # Only selected/consenting cars supply navigation to a watched group.
+            # Browser GPS is independent; never fetch car positions here.
             if not hub.rooms.get(member['trip_id']):
                 continue
             try:
@@ -153,9 +166,8 @@ async def background_cycle(next_poll):
                 if not vehicle:
                     continue
                 if vehicle['id'] not in cache:
-                    cache[vehicle['id']] = await fleet.fetch_vehicle(member['user_id'], vehicle)
-                await store_sample(member['trip_id'], member['user_id'], cache[vehicle['id']])
-                await update_shared_navigation(vehicle['id'], member['user_id'], await fleet.fetch_navigation(member['user_id'],vehicle))
+                    cache[vehicle['id']] = await fleet.fetch_navigation(member['user_id'],vehicle)
+                await update_shared_navigation(vehicle['id'], member['user_id'], cache[vehicle['id']])
             except (HTTPException,httpx.HTTPError,ValueError) as error:
                 log.info('Fleet retrieval unavailable: %s', type(error).__name__)
     return next_poll
@@ -212,7 +224,7 @@ async def security_headers(request, call_next):
     response.headers['Referrer-Policy']='no-referrer'
     response.headers['X-Frame-Options']='DENY'
     response.headers['Permissions-Policy']='camera=(), microphone=(self), geolocation=(self)'
-    response.headers['Cache-Control']='no-store' if request.url.path.startswith(('/api','/auth','/guest','/share')) else 'no-cache'
+    response.headers['Cache-Control']='no-store' if request.url.path.startswith(('/api','/auth','/guest','/share','/watch')) else 'no-cache'
     media_origin = urlparse(settings.livekit_url)
     lk = f'{media_origin.scheme}://{media_origin.netloc}'
     lk_http = lk.replace('wss://','https://').replace('ws://','http://')
@@ -623,6 +635,7 @@ async def plan_route(trip_id:str,body:route_planning.RoutePlan,identity:Identity
         access(trip_id,identity,active=True,leader=True)
         if route_planning.car(trip_id,body.planner_user_id)['id'] != vehicle['id']:
             raise HTTPException(409,'Planungsfahrzeug wurde gewechselt. Bitte erneut planen.')
+        db.execute('UPDATE charging_plans SET current_stop=NULL WHERE trip_id=?',(trip_id,))
         db.execute('INSERT INTO trip_planners VALUES (?,?,?) ON CONFLICT(trip_id) DO UPDATE SET user_id=excluded.user_id,vehicle_id=excluded.vehicle_id',(trip_id,body.planner_user_id,vehicle['id']))
         leader_car = route_planning.car(trip_id,trip['leader_id'])
         db.execute('INSERT INTO route_followers(trip_id,user_id,vehicle_id,accepted_at) VALUES (?,?,?,?) ON CONFLICT(trip_id,user_id) DO NOTHING',(trip_id,trip['leader_id'],leader_car['id'],sent_at))
@@ -654,6 +667,7 @@ async def adopt_vehicle_route(trip_id:str,user_id:str,identity:Identity=Depends(
             raise HTTPException(409,'Planungsfahrzeug wurde gewechselt. Bitte erneut auswählen.')
         if navigation['status'] != 'active' or time.time()-navigation['updated_at'] > 300:
             raise HTTPException(409,'Dieses Auto liefert derzeit keine aktuelle aktive Navigation.')
+        db.execute('UPDATE charging_plans SET current_stop=NULL WHERE trip_id=?',(trip_id,))
         db.execute('INSERT INTO trip_planners VALUES (?,?,?) ON CONFLICT(trip_id) DO UPDATE SET user_id=excluded.user_id,vehicle_id=excluded.vehicle_id',(trip_id,user_id,vehicle['id']))
         db.execute('INSERT INTO trip_navigation VALUES (?,?,?) ON CONFLICT(trip_id) DO UPDATE SET vehicle_id=excluded.vehicle_id,data=excluded.data',(trip_id,vehicle['id'],json.dumps(navigation)))
         await route_planning.distribute(trip)
@@ -802,12 +816,15 @@ def accept_invite(trip_id:str,identity:Identity=Depends(current_user)):
 def trip_detail(trip_id:str,identity:Identity=Depends(current_user)):
     trip,member=access(trip_id,identity)
     result=trip_summary(trip) | {'participants_detail':participants(trip_id),'my_role':member['role'],
+        'pause_requests':tour.pauses(trip_id),
+        'charging_plan':charging_plans.snapshot(trip_id),
         'navigation':shared_navigation(trip_id),'route_overview':route_planning.overview(trip),'vehicle_controls':vehicle_controls.overview(trip_id) if member['role']=='driver' else None,
         'album':{'status':'planned','name':album_name(trip),'url':None}}
     if trip['leader_id']==identity.user['id']:
         result['guest_url']=settings.app_url+'/guest/'+trip['guest_key']
         result['share_url']=settings.app_url+'/share/'+trip['public_key'] if trip['public_key'] else None
         result['passengers']=db.all_rows('SELECT id,name,user_id FROM passengers WHERE trip_id=?',(trip_id,))
+        result['spectator_link_active']=bool(db.one('SELECT trip_id FROM spectator_links WHERE trip_id=?',(trip_id,)))
     return result
 
 
@@ -962,7 +979,7 @@ async def post_message(trip_id:str,body:Message,identity:Identity=Depends(curren
     limiter.check(('chat',identity.user['id']),30,60)
     message={'id':str(uuid.uuid4()),'trip_id':trip_id,'user_id':identity.user['id'],'text':body.text,
              'created_at':time.time(),'display_name':identity.user['display_name']}
-    db.execute('INSERT INTO messages VALUES (?,?,?,?,?)',tuple(message[key] for key in ('id','trip_id','user_id','text','created_at')))
+    db.execute('INSERT INTO messages(id,trip_id,user_id,text,created_at) VALUES (?,?,?,?,?)',tuple(message[key] for key in ('id','trip_id','user_id','text','created_at')))
     for row in db.all_rows('SELECT user_id FROM members WHERE trip_id=? AND user_id!=? AND left_at IS NULL',(trip_id,identity.user['id'])):
         push.enqueue(row['user_id'],identity.user['display_name']+': neue Nachricht in „'+trip['title']+'“.','/trip/'+trip_id,'chat-'+trip_id,trip_id,message_key='chat',parameters={'name':identity.user['display_name'],'title':trip['title']})
     await hub.broadcast(trip_id,{'type':'message','message':message})
@@ -971,13 +988,21 @@ async def post_message(trip_id:str,body:Message,identity:Identity=Depends(curren
 
 @app.post('/api/trips/{trip_id}/samples')
 async def upload_sample(trip_id:str,body:Sample,request:Request,identity:Identity=Depends(current_user)):
-    access(trip_id,identity,active=True)
+    _,member=access(trip_id,identity,active=True)
     limiter.check(('sample',identity.user['id']),15,60)
     data=body.model_dump()
-    if body.source=='browser':
+    if body.source in ('browser','browser_vehicle'):
         if body.latitude is None:
             raise HTTPException(422,'Der persönliche Standort benötigt Breite und Länge.')
-        data={key:data[key] for key in ('latitude','longitude','speed_kmh','heading','source')}
+        if body.source=='browser_vehicle':
+            driver(identity)
+            if member['role']!='driver' or not member['vehicle_id']:
+                raise HTTPException(403,'Browser-Fahrzeugstandort benötigt dein ausgewähltes Fahrerfahrzeug.')
+            if request.headers.get('authorization'):
+                raise HTTPException(403,'Browser-Fahrzeugstandort benötigt eine Browser-Anmeldung.')
+        if body.captured_at is not None and not time.time()-60 <= body.captured_at <= time.time()+30:
+            raise HTTPException(422,'Browser-Standort ist zu alt oder liegt in der Zukunft.')
+        data={key:data[key] for key in ('latitude','longitude','speed_kmh','heading','source','captured_at','device_id')}
     else:
         driver(identity)
         if not request.headers.get('authorization'):
@@ -987,9 +1012,15 @@ async def upload_sample(trip_id:str,body:Sample,request:Request,identity:Identit
 
 
 @app.delete('/api/trips/{trip_id}/location')
-async def stop_location(trip_id:str,identity:Identity=Depends(current_user)):
+async def stop_location(trip_id:str,source:str='all',device_id:str='',identity:Identity=Depends(current_user)):
     access(trip_id,identity)
-    db.execute('DELETE FROM personal_locations WHERE trip_id=? AND user_id=?',(trip_id,identity.user['id']))
+    if source not in ('all','browser','browser_vehicle') or len(device_id)>64:
+        raise HTTPException(422,'Bitte Eingaben prüfen.')
+    if source in ('all','browser'):
+        db.execute('DELETE FROM personal_locations WHERE trip_id=? AND user_id=?',(trip_id,identity.user['id']))
+    if source in ('all','browser_vehicle'):
+        if device_id:db.execute('DELETE FROM browser_vehicle_locations WHERE trip_id=? AND user_id=? AND device_id=?',(trip_id,identity.user['id'],device_id))
+        else:db.execute('DELETE FROM browser_vehicle_locations WHERE trip_id=? AND user_id=?',(trip_id,identity.user['id']))
     await hub.broadcast(trip_id,{'type':'participants','participants':participants(trip_id)})
     return {'ok':True}
 
@@ -1022,7 +1053,7 @@ def export_history(trip_id:str,identity:Identity=Depends(current_user)):
 @app.get('/api/trips/{trip_id}/ranking')
 def trip_ranking(trip_id:str,identity:Identity=Depends(current_user)):
     access(trip_id,identity)
-    return ranking(db.all_rows("SELECT s.* FROM samples s JOIN members m ON m.trip_id=s.trip_id AND m.user_id=s.user_id WHERE s.trip_id=? AND m.role='driver' AND s.source!='browser' ORDER BY s.captured_at",(trip_id,)))
+    return ranking(db.all_rows("SELECT s.* FROM samples s JOIN members m ON m.trip_id=s.trip_id AND m.user_id=s.user_id WHERE s.trip_id=? AND m.role='driver' AND s.source NOT IN ('browser','browser_vehicle') ORDER BY s.captured_at",(trip_id,)))
 
 
 @app.post('/api/trips/{trip_id}/voice-token')
@@ -1042,10 +1073,129 @@ async def finish_trip(trip_id:str,identity:Identity=Depends(current_user)):
     access(trip_id,identity,leader=True)
     db.execute('UPDATE trips SET finished_at=? WHERE id=? AND finished_at IS NULL',(time.time(),trip_id))
     db.execute('DELETE FROM personal_locations WHERE trip_id=?',(trip_id,))
+    db.execute('DELETE FROM browser_vehicle_locations WHERE trip_id=?',(trip_id,))
     await hub.broadcast(trip_id,{'type':'ended'})
     if await delete_voice_room(trip_id):
         db.execute('UPDATE trips SET voice_cleaned=1 WHERE id=?',(trip_id,))
     return {'ok':True}
+
+
+def editable_charging_plan(trip_id,identity):
+    trip,member=access(trip_id,identity,leader=True)
+    driver(identity)
+    if member['left_at'] is not None or effective_end(trip)<=time.time():
+        raise HTTPException(403,'Der Ladeplan kann nach Fahrtende nicht mehr geändert werden.')
+    return trip
+
+
+@app.post('/api/trips/{trip_id}/charging-plan/preview')
+def preview_charging_plan(trip_id:str,body:charging_plans.Upload,identity:Identity=Depends(current_user)):
+    editable_charging_plan(trip_id,identity)
+    limiter.check(('plan-upload',identity.user['id']),5,60)
+    return charging_plans.parse_upload(body)
+
+
+@app.put('/api/trips/{trip_id}/charging-plan')
+async def save_charging_plan(trip_id:str,body:charging_plans.Plan,identity:Identity=Depends(current_user)):
+    editable_charging_plan(trip_id,identity)
+    async with route_planning.lock(trip_id):
+        editable_charging_plan(trip_id,identity)
+        result=charging_plans.save(trip_id,body)
+    await hub.broadcast(trip_id,{'type':'charging_plan','charging_plan':result})
+    return result
+
+
+@app.delete('/api/trips/{trip_id}/charging-plan')
+async def remove_charging_plan(trip_id:str,identity:Identity=Depends(current_user)):
+    editable_charging_plan(trip_id,identity)
+    async with route_planning.lock(trip_id):
+        editable_charging_plan(trip_id,identity)
+        with db.connect() as connection:
+            for table in ('charging_plans','charging_confirmations','trip_planners','trip_navigation'):
+                connection.execute(f'DELETE FROM {table} WHERE trip_id=?',(trip_id,))
+    await hub.broadcast(trip_id,{'type':'charging_plan','charging_plan':None})
+    return {'ok':True}
+
+
+@app.get('/api/trips/{trip_id}/charging-plan/export')
+def export_charging_plan(trip_id:str,identity:Identity=Depends(current_user)):
+    access(trip_id,identity)
+    plan=charging_plans.snapshot(trip_id)
+    if not plan:raise HTTPException(404,'Kein importierter Ladeplan vorhanden.')
+    return JSONResponse({'format':'teslatalk-route','version':1,'title':plan['title'],'stops':plan['stops']},
+                        headers={'Content-Disposition':'attachment; filename="teslatalk-route.json"'})
+
+
+@app.post('/api/trips/{trip_id}/charging-plan/send')
+async def send_charging_stop(trip_id:str,body:charging_plans.SendStop,request:Request,identity:Identity=Depends(current_user)):
+    trip,_=access(trip_id,identity,active=True,leader=True)
+    driver(identity)
+    limiter.check(('plan-send',trip_id),5,60)
+    def guard():access(trip_id,authenticate(request.headers,request.cookies),active=True,leader=True)
+    result=await charging_plans.send(trip,body,route_planning,guard)
+    await hub.broadcast(trip_id,{'type':'charging_plan','charging_plan':charging_plans.snapshot(trip_id)})
+    return result
+
+
+@app.get('/api/trips/{trip_id}/charging-plan/requests/{request_id}')
+def charging_request_result(trip_id:str,request_id:uuid.UUID,identity:Identity=Depends(current_user)):
+    access(trip_id,identity,leader=True)
+    row=db.one('SELECT result FROM charging_batches WHERE trip_id=? AND request_id=?',(trip_id,str(request_id)))
+    if not row:raise HTTPException(404,'Auftrag wurde nicht gefunden. Kein Befehl wird durch diese Abfrage gesendet.')
+    return json.loads(row['result'])
+
+
+@app.post('/api/trips/{trip_id}/charging-plan/confirm')
+async def confirm_charging_stop(trip_id:str,body:charging_plans.ChargerConfirmation,identity:Identity=Depends(current_user)):
+    trip,member=access(trip_id,identity,active=True)
+    driver(identity)
+    if member['role']!='driver' or not member['vehicle_id']:
+        raise HTTPException(403,'Eine Stationsbestätigung benötigt dein ausgewähltes Fahrerfahrzeug.')
+    result=charging_plans.confirm(trip_id,identity.user['id'],member['vehicle_id'],body)
+    await hub.broadcast(trip_id,{'type':'charging_plan','charging_plan':result})
+    return result
+
+
+@app.post('/api/trips/{trip_id}/toilet')
+async def request_toilet(trip_id:str,identity:Identity=Depends(current_user)):
+    trip,_=access(trip_id,identity,active=True)
+    limiter.check(('toilet',trip_id,identity.user['id']),3,60)
+    result=tour.request_pause(trip,identity.user)
+    rows=tour.pauses(trip_id)
+    if result['created']:
+        await hub.broadcast(trip_id,{'type':'pause','pause_requests':rows,'alert':{'id':result['id'],'recipient_id':trip['leader_id'],'name':identity.user['display_name']}})
+    return {'pause_requests':rows}
+
+
+@app.post('/api/trips/{trip_id}/toilet/confirm')
+async def confirm_toilet(trip_id:str,body:tour.PauseConfirm,identity:Identity=Depends(current_user)):
+    trip,_=access(trip_id,identity,active=True,leader=True)
+    message=tour.confirm_pause(trip,identity.user,body.request_ids)
+    rows=tour.pauses(trip_id)
+    if message:
+        await hub.broadcast(trip_id,{'type':'pause','pause_requests':rows})
+        await hub.broadcast(trip_id,{'type':'message','message':message,'sound':True})
+    return {'pause_requests':rows,'message':message}
+
+
+@app.post('/api/trips/{trip_id}/spectator-link')
+def create_spectator(trip_id:str,identity:Identity=Depends(current_user)):
+    trip,member=access(trip_id,identity,leader=True)
+    if member['left_at'] is not None or effective_end(trip)<=time.time():raise HTTPException(403,'Die Fahrt ist bereits beendet.')
+    limiter.check(('spectator-link',trip_id),5,60)
+    return tour.create_spectator_link(trip_id)
+
+
+@app.delete('/api/trips/{trip_id}/spectator-link')
+def revoke_spectator(trip_id:str,identity:Identity=Depends(current_user)):
+    access(trip_id,identity,leader=True)
+    db.execute('DELETE FROM spectator_links WHERE trip_id=?',(trip_id,))
+    return {'ok':True}
+
+
+@app.get('/api/spectator/{key}')
+def view_spectator(key:str):
+    return tour.spectator_trip(key,participants)
 
 
 @app.post('/api/trips/{trip_id}/share')
@@ -1104,7 +1254,7 @@ def admin(identity:Identity=Depends(current_admin)):
     return {'version':'0.1.0','users':db.one('SELECT count(*) n FROM users')['n'],
             'trips':db.one('SELECT count(*) n FROM trips')['n'],'samples':db.one('SELECT count(*) n FROM samples')['n'],
             'online':len(hub.online()),'tesla_ready':settings.tesla_ready,'voice_ready':settings.voice_ready,
-            'poll_interval':settings.poll_interval,'demo':settings.demo,'push_ready':settings.push_ready,
+            'poll_interval':settings.navigation_poll_interval,'demo':settings.demo,'push_ready':settings.push_ready,
             'storage':'SQLite / persistentes Volume'}
 
 
