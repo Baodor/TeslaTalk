@@ -15,7 +15,7 @@ Nach dem Update mit einem Fahrer-Konto testen. Die automatisierten Tests verwend
 - [ ] QR-Mitfahrer verbindet in **Mein Profil** sein Tesla-Konto: Bild erscheint, Name/PIN und Mitfahrerrolle bleiben. Nach Abmelden über denselben QR-Link anmelden; Bild bleibt. Verknüpfung entfernen: PIN funktioniert weiter, kein Fahrzeugzugriff.
 - [ ] Im Adminmenü mit einem eigens angelegten Testkonto **Löschen** wählen. Falsche Groß-/Kleinschreibung im Bestätigungsnamen hält den Knopf gesperrt; Abbrechen löscht nichts. Erst mit exaktem Namen bestätigen. Konto und eigene geleitete Testfahrten verschwinden, seine alten Sitzungen/API-Schlüssel funktionieren nicht mehr, fremde Fahrten bleiben bestehen.
 - [ ] Logo aus Profil/Fahrt/Admin anklicken: Startseite. Mac/Safari neu laden und Desktop-Favicon prüfen; gegebenenfalls alten Safari-Favicon-Cache abwarten. Auf dem Arbeitsplatz-PC OSM-Karte prüfen: bei Netzwerksperre verständliche Fehlermeldung und erneutes Laden. Der Referrer enthält nur die Domain, keinen Fahrtpfad.
-- [ ] ABRP-/anderer GPX-Export mit benannten Stopps lässt sich prüfen und speichern; reine Tracks werden abgewiesen. TeslaTalk-JSON exportieren und wieder hochladen: Reihenfolge, Stationstyp und vorhandene Places-ID bleiben erhalten. Normale ABRP-Teilen-Links werden weiterhin nicht als Plan abgerufen.
+- [ ] ABRP-Excel-Export oder GPX/CSV mit benannten Stopps und Koordinaten lässt sich prüfen und speichern; reine Tracks werden abgewiesen. TeslaTalk-JSON exportieren und wieder hochladen: Reihenfolge, Stationstyp und vorhandene Places-ID bleiben erhalten. Normale ABRP-Teilen-Links werden weiterhin nicht als Plan abgerufen.
 
 ## Tesla-Erstanmeldung und Administration
 

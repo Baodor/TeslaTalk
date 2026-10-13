@@ -30,7 +30,7 @@ def station_url(value):
     query=parse_qs(url.query)
     target=next((query[key][0] for key in ('query','q','destination','daddr') if key in query),'')
     match=COORD.fullmatch(target)
-    if not match:
+    if not match and url.path.startswith('/maps/place/'):
         match=re.search(r'!3d([-+]?\d+(?:\.\d+)?)!4d([-+]?\d+(?:\.\d+)?)',url.path)
     if not match:
         match=COORD.fullmatch(unquote(url.path.removeprefix('/maps/place/')).rstrip('/')) if url.path.startswith('/maps/place/') else None
@@ -44,7 +44,7 @@ def excel_rows(content):
     if len(raw)>500_000:raise ValueError()
     with ZipFile(io.BytesIO(raw)) as archive:
         info=archive.infolist()
-        if len(info)>100 or sum(item.file_size for item in info)>8_000_000 or any(item.file_size>2_000_000 for item in info):raise ValueError()
+        if any(item.compress_type not in (0,8) or item.flag_bits&1 for item in info) or len(info)>100 or sum(item.file_size for item in info)>8_000_000 or any(item.file_size>2_000_000 for item in info):raise ValueError()
         def read(path):return xml(archive.read(path))
         ns={'s':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
         shared=[]

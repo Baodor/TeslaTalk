@@ -185,3 +185,11 @@ def test_excel_archive_size_limit_is_checked_before_decompression(owner):
     with ZipFile(data,'w',compression=ZIP_DEFLATED) as archive:archive.writestr('xl/huge.xml',b'x'*2_000_001)
     ride=trip(owner)
     assert owner.post('/api/trips/'+ride['id']+'/charging-plan/preview',json={'filename':'bad.xlsx','encoding':'base64','content':base64.b64encode(data.getvalue()).decode()}).status_code==422
+
+
+def test_table_maps_links_never_infer_a_charger_from_viewport_or_route_origin():
+    from app.route_uploads import station_url
+    assert station_url('https://www.google.com/maps/@50.1,8.7,14z') is None
+    assert station_url('https://www.google.com/maps/dir/Start/End/data=!3d49.1!4d8.2!3d50.1!4d8.7') is None
+    assert station_url('https://www.google.com/maps/dir/?api=1&origin=49.1,8.2&destination=50.1,8.7')==(50.1,8.7,None)
+    assert station_url('https://www.google.com/maps/place/Charger/data=!3d50.1!4d8.7')==(50.1,8.7,None)
